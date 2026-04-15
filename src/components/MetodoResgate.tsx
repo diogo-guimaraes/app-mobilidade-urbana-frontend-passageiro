@@ -1,0 +1,254 @@
+import AdicionarMetodoResgatePix from "@/components/AdicionarMetodoResgatePix";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  BackHandler,
+  Dimensions,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import InformacoesMetodoResgateConta from "./InformacoesMetodoResgateConta";
+const { width } = Dimensions.get("window");
+
+interface props {
+  visible: boolean;
+  onClose: () => void;
+  duration?: number;
+}
+
+export default function MetodosResgate({
+  visible,
+  onClose,
+  duration = 200,
+}: props) {
+  const translateX = useRef(new Animated.Value(width)).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const [isMounted, setIsMounted] = useState(visible);
+
+  const [visibleMetodoResgatePix, setVisibleAdicionarMetodoResgatePix] =
+    useState(false);
+  const [
+    visibleInformacoesMetodoResgateConta,
+    setVisibleInformaceosMetodoResgateConta,
+  ] = useState(false);
+
+  const mostrarAdicionarMetodoResgatePix = () => {
+    setVisibleAdicionarMetodoResgatePix(true);
+  };
+
+  const mostrarAdicionarMetodoResgateConta = () => {
+    setVisibleInformaceosMetodoResgateConta(true);
+  };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      if (visible) {
+        onClose();
+        return true;
+      }
+      return false;
+    };
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onBackPress
+    );
+    return () => subscription.remove();
+  }, [visible, onClose]);
+
+  useEffect(() => {
+    if (visible) {
+      setIsMounted(true);
+      Animated.parallel([
+        Animated.timing(translateX, {
+          toValue: 0,
+          duration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: duration * 0.8,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(translateX, {
+          toValue: width,
+          duration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 0,
+          duration: duration * 0.8,
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => finished && setIsMounted(false));
+    }
+  }, [visible, duration]);
+
+  if (!isMounted) return null;
+
+  return (
+    <>
+      <View style={[StyleSheet.absoluteFill, { zIndex: 50 }]}>
+        {/* Background escurecido */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: "rgba(0,0,0,0.3)", opacity: overlayOpacity },
+            ]}
+          />
+        </Pressable>
+
+        {/* Drawer deslizante */}
+        <Animated.View
+          style={[
+            styles.drawer,
+            {
+              transform: [{ translateX }],
+            },
+          ]}
+        >
+          {/* HEADER */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onClose} style={styles.backBtn}>
+              <Ionicons name="chevron-back" size={28} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Método de resgate</Text>
+          </View>
+
+          {/* BODY */}
+          <View style={styles.body}>
+            <Text style={styles.mainTitle}>Método de resgate</Text>
+
+            {/* ITEM: CHAVE PIX */}
+            <TouchableOpacity
+              onPress={mostrarAdicionarMetodoResgatePix}
+              style={styles.methodItem}
+            >
+              <View style={styles.leftContent}>
+                <View
+                  style={[styles.iconCircle, { backgroundColor: "#1DB963" }]}
+                >
+                  <MaterialCommunityIcons
+                    name="rhombus-split"
+                    size={22}
+                    color="#FFF"
+                  />
+                </View>
+                <Text style={styles.methodLabel}>Chave Pix</Text>
+              </View>
+              <View style={styles.rightContent}>
+                <Text style={styles.actionText}>Adicionar</Text>
+                <Ionicons name="chevron-forward" size={18} color="#999" />
+              </View>
+            </TouchableOpacity>
+
+            {/* ITEM: CONTA BANCÁRIA */}
+            <TouchableOpacity
+              onPress={mostrarAdicionarMetodoResgateConta}
+              style={styles.methodItem}
+            >
+              <View style={styles.leftContent}>
+                <View
+                  style={[styles.iconCircle, { backgroundColor: "#FF6600" }]}
+                >
+                  <Ionicons name="home" size={20} color="#FFF" />
+                </View>
+                <Text style={styles.methodLabel}>Conta bancária</Text>
+              </View>
+              <View style={styles.rightContent}>
+                <Text style={styles.actionText}>Ver</Text>
+                <Ionicons name="chevron-forward" size={18} color="#999" />
+              </View>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </View>
+      <AdicionarMetodoResgatePix
+        visible={visibleMetodoResgatePix}
+        onClose={() => setVisibleAdicionarMetodoResgatePix(false)}
+      />
+      <InformacoesMetodoResgateConta
+        visible={visibleInformacoesMetodoResgateConta}
+        onClose={() => setVisibleInformaceosMetodoResgateConta(false)}
+      />
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  drawer: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: "100%",
+    backgroundColor: "#FFF",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: 50,
+    paddingBottom: 15,
+    paddingHorizontal: 15,
+  },
+  backBtn: {
+    padding: 5,
+    marginRight: 10,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+  },
+  body: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  mainTitle: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#000",
+    marginTop: 10,
+    marginBottom: 40,
+  },
+  methodItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 20,
+    borderBottomWidth: 0, // A imagem não mostra bordas visíveis, apenas espaçamento
+  },
+  leftContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  iconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 15,
+  },
+  methodLabel: {
+    fontSize: 17,
+    fontWeight: "500",
+    color: "#111",
+  },
+  rightContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  actionText: {
+    fontSize: 16,
+    color: "#333",
+    marginRight: 8,
+  },
+});

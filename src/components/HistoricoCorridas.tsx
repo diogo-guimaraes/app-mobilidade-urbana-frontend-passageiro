@@ -1,0 +1,446 @@
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  BackHandler,
+  Dimensions,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import HistoricoCorridasDetalhes from "./HistoricoCorridasDetalhes";
+
+const { width } = Dimensions.get("window");
+
+interface RideHistory {
+  id: string;
+  date: string;
+  time: string;
+  type: string;
+  paymentMethod: "cash" | "app";
+  origin: string;
+  destination: string;
+  value: string;
+  status: string;
+  isTip?: boolean;
+}
+
+const DATA: RideHistory[] = [
+  {
+    id: "1",
+    date: "27/01/2026",
+    time: "18:30",
+    type: "Pop",
+    paymentMethod: "cash",
+    origin: "Avenida Sete de Setembro, Nossa Sra. das Graças, Porto Velho - RO",
+    destination: "2343, Flodoaldo Pontes Pinto, Porto Velho - RO",
+    value: "R$8,30",
+    status: "Pedido finalizado",
+  },
+  {
+    id: "2",
+    date: "27/01/2026",
+    time: "18:28",
+    type: "Negocia",
+    paymentMethod: "cash",
+    origin: "Rua Paulo Leal, Nossa Senhora das Graças, Porto Velho - RO",
+    destination:
+      "Avenida Sete de Setembro, Nossa Sra. das Graças, Porto Velho - RO",
+    value: "R$6,11",
+    status: "Pedido finalizado",
+  },
+  {
+    id: "3",
+    date: "27/01/2026",
+    time: "13:52",
+    type: "Gorjeta",
+    paymentMethod: "app",
+    origin: "",
+    destination: "",
+    value: "R$2,00",
+    status: "",
+    isTip: true,
+  },
+  {
+    id: "4",
+    date: "27/01/2026",
+    time: "18:28",
+    type: "Negocia",
+    paymentMethod: "cash",
+    origin: "Rua Paulo Leal, Nossa Senhora das Graças, Porto Velho - RO",
+    destination:
+      "Avenida Sete de Setembro, Nossa Sra. das Graças, Porto Velho - RO",
+    value: "R$6,11",
+    status: "Pedido finalizado",
+  },
+  {
+    id: "5",
+    date: "27/01/2026",
+    time: "18:28",
+    type: "Negocia",
+    paymentMethod: "cash",
+    origin: "Rua Paulo Leal, Nossa Senhora das Graças, Porto Velho - RO",
+    destination:
+      "Avenida Sete de Setembro, Nossa Sra. das Graças, Porto Velho - RO",
+    value: "R$6,11",
+    status: "Pedido finalizado",
+  },
+];
+
+interface props {
+  visible: boolean;
+  onClose: () => void;
+  duration?: number;
+}
+
+export default function HistoricoCorridas({
+  visible,
+  onClose,
+  duration = 200,
+}: props) {
+  const translateX = useRef(new Animated.Value(width)).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const [isMounted, setIsMounted] = useState(visible);
+  const [historicoCorridasDetalhes, setHistoricoCorridasDetalhes] =
+    useState(false);
+
+  const mostrarHistoricoCorridasDetalhes = () => {
+    setHistoricoCorridasDetalhes(true);
+  };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      if (visible) {
+        onClose();
+        return true;
+      }
+      return false;
+    };
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onBackPress
+    );
+    return () => subscription.remove();
+  }, [visible, onClose]);
+
+  useEffect(() => {
+    if (visible) {
+      setIsMounted(true);
+      Animated.parallel([
+        Animated.timing(translateX, {
+          toValue: 0,
+          duration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: duration * 0.8,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.timing(translateX, {
+          toValue: width,
+          duration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 0,
+          duration: duration * 0.8,
+          useNativeDriver: true,
+        }),
+      ]).start(({ finished }) => finished && setIsMounted(false));
+    }
+  }, [visible, translateX, overlayOpacity, duration]);
+
+  const renderItem = ({ item }: { item: RideHistory }) => (
+    <TouchableOpacity
+      onPress={mostrarHistoricoCorridasDetalhes}
+      style={styles.card}
+    >
+      <View style={styles.cardHeader}>
+        <Text style={styles.dateTimeText}>
+          {item.date} {item.time}
+        </Text>
+      </View>
+
+      <View style={styles.paymentInfo}>
+        <Ionicons
+          name={
+            item.paymentMethod === "cash"
+              ? "cash-outline"
+              : "phone-portrait-outline"
+          }
+          size={16}
+          color={item.paymentMethod === "cash" ? "#2196F3" : "#4CAF50"}
+        />
+        <Text style={styles.paymentText}>
+          {item.paymentMethod === "cash"
+            ? "Ganhos pagos em dinheiro"
+            : "Ganhos pagos no app"}
+        </Text>
+      </View>
+
+      <View style={styles.mainRow}>
+        <View style={styles.typeContainer}>
+          <View style={styles.iconCircle}>
+            <MaterialCommunityIcons
+              name={item.isTip ? "gift-outline" : "car-side"}
+              size={20}
+              color="#666"
+            />
+          </View>
+          <Text style={styles.typeText}>{item.type}</Text>
+        </View>
+        <View style={styles.valueContainer}>
+          <Text style={styles.valueText}>{item.value}</Text>
+          <Ionicons name="chevron-forward" size={18} color="#ccc" />
+        </View>
+      </View>
+
+      {!item.isTip && (
+        <View style={styles.addressSection}>
+          <View style={styles.timeline}>
+            <View style={[styles.dot, { backgroundColor: "#999" }]} />
+            <View style={styles.line} />
+            <View style={[styles.dot, { backgroundColor: "#666" }]} />
+          </View>
+          <View style={styles.addresses}>
+            <Text style={styles.addressText} numberOfLines={1}>
+              {item.origin}
+            </Text>
+            <Text
+              style={[styles.addressText, { marginTop: 12 }]}
+              numberOfLines={1}
+            >
+              {item.destination}
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {item.status ? (
+        <View style={styles.statusRow}>
+          <Ionicons name="checkmark-circle" size={16} color="#4CAF50" />
+          <Text style={styles.statusText}>{item.status}</Text>
+        </View>
+      ) : null}
+    </TouchableOpacity>
+  );
+
+  if (!isMounted) return null;
+
+  return (
+    <>
+      <View style={[StyleSheet.absoluteFill, { zIndex: 30 }]}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: "rgba(0,0,0,0.4)", opacity: overlayOpacity },
+            ]}
+          />
+        </Pressable>
+
+        <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="arrow-back-outline" size={26} color="#111" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Histórico de corridas</Text>
+              <View style={{ width: 26 }} />
+            </View>
+
+            <View style={styles.filterBar}>
+              <TouchableOpacity style={styles.filterItem}>
+                <Ionicons name="calendar-outline" size={16} color="#333" />
+                <Text style={styles.filterText}>21/1-27/1</Text>
+                <Ionicons name="chevron-down" size={14} color="#333" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.filterItem}>
+                <Text style={styles.filterText}>Taxas</Text>
+                <Ionicons name="chevron-down" size={14} color="#333" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.filterItem}>
+                <Text style={styles.filterText}>Pagamento</Text>
+                <Ionicons name="chevron-down" size={14} color="#333" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.body}>
+            <FlatList
+              data={DATA}
+              keyExtractor={(item) => item.id}
+              renderItem={renderItem}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
+        </Animated.View>
+      </View>
+      <HistoricoCorridasDetalhes
+        visible={historicoCorridasDetalhes}
+        onClose={() => setHistoricoCorridasDetalhes(false)}
+      />
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  drawer: {
+    position: "absolute",
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: "100%",
+    backgroundColor: "#F2F2F2",
+  },
+  header: {
+    backgroundColor: "#fff",
+    paddingTop: 45,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    elevation: 4,
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 15,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#111",
+  },
+  filterBar: {
+    flexDirection: "row",
+    paddingBottom: 10,
+    gap: 15,
+  },
+  filterItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  filterText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  body: {
+    flex: 1,
+    padding: 12,
+  },
+  card: {
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 12,
+    elevation: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  cardHeader: {
+    marginBottom: 4,
+  },
+  dateTimeText: {
+    fontSize: 12,
+    color: "#888",
+  },
+  paymentInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginBottom: 10,
+  },
+  paymentText: {
+    fontSize: 13,
+    color: "#555",
+    fontWeight: "500",
+  },
+  mainRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  typeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F0F0F0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  typeText: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#333",
+  },
+  valueContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  valueText: {
+    fontSize: 17,
+    fontWeight: "700",
+    color: "#333",
+  },
+  addressSection: {
+    flexDirection: "row",
+    paddingLeft: 10,
+    marginBottom: 15,
+  },
+  timeline: {
+    alignItems: "center",
+    width: 20,
+    marginRight: 10,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  line: {
+    width: 1,
+    flex: 1,
+    backgroundColor: "#DDD",
+    marginVertical: 4,
+  },
+  addresses: {
+    flex: 1,
+  },
+  addressText: {
+    fontSize: 13,
+    color: "#666",
+    lineHeight: 18,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderTopWidth: 1,
+    borderTopColor: "#F0F0F0",
+    paddingTop: 10,
+  },
+  statusText: {
+    fontSize: 13,
+    color: "#4CAF50",
+    fontWeight: "500",
+  },
+});
