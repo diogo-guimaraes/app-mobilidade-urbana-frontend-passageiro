@@ -1,17 +1,11 @@
 // app/home.tsx
-import FolhaInferiorMotorista from "@/components/FolhaInferiorMotorista";
 import FolhaInferiorPassageiro from "@/components/FolhaInferiorPassageiro";
-import GanhoDiario from "@/components/GanhoDiario";
 import Map from "@/components/Map";
-import MenuInferiorMotorista from "@/components/MenuInferiorMotorista";
 import MenuInferiorPassageiro from "@/components/MenuInferiorPassageiro";
-import RecebendoChamada from "@/components/RecebendoChamada";
 import SideMenu from "@/components/SideMenu";
-import SolicitacoesCorrida from "@/components/SolicitacoesCorrida";
 import SolicitarCorrida from "@/components/SolicitarCorrida";
 import TopMenu from "@/components/TopMenu";
 import { useAuth } from "@/context/AuthProvider";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -22,7 +16,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   useColorScheme,
 } from "react-native";
@@ -37,7 +30,6 @@ export default function Home() {
   const [region, setRegion] = useState<Region | null>(null);
   const [destinationModalVisible, setDestinationModalVisible] = useState(false);
   const [solicitacoesCorrida, setSolicitacoesCorrida] = useState(false);
-  const [recebendoChamada, setRecebendoChamada] = useState(false);
 
   // ✨ NOVO ESTADO: Armazena a região inicial do usuário (sem o ajuste de offset)
   const userInitialRegion = useRef<Region | null>(null);
@@ -152,47 +144,8 @@ export default function Home() {
         isGanhoModalVisible={ganhoModalVisivel}
       />
 
-      {/* Simular chamada */}
-      <TouchableOpacity
-        style={{
-          position: "absolute",
-          top: 150,
-          left: 10,
-          backgroundColor: "#000",
-          width: 60, // largura igual à altura para formar um círculo
-          height: 60,
-          borderRadius: 30, // metade da largura = círculo perfeito
-          alignItems: "center", // centraliza horizontalmente
-          justifyContent: "center", // centraliza verticalmente
-          shadowColor: "#000",
-          shadowOpacity: 0.3,
-          shadowRadius: 4,
-          shadowOffset: { width: 0, height: 2 },
-        }}
-        onPress={() => setRecebendoChamada(true)}
-      >
-        <Ionicons
-          name="notifications-circle-outline"
-          size={38}
-          color="#fbc02d"
-        />
-      </TouchableOpacity>
       {/* Exibe o card se estiver recebendo chamada */}
-      {recebendoChamada && (
-        <RecebendoChamada
-          onAceitar={() => {
-            setRecebendoChamada(false);
-          }}
-          onRecusar={() => {
-            setRecebendoChamada(false);
-          }}
-        />
-      )}
 
-      <GanhoDiario
-        visible={ganhoModalVisivel}
-        setVisible={setGanhoModalVisivel}
-      />
       <TopMenu onMenuPress={handleMenuOpen} />
 
       {/* Backdrop para SideMenu */}
@@ -207,48 +160,29 @@ export default function Home() {
       <SideMenu visible={menuVisible} onClose={closeMenu} drawerWidth={280} />
 
       {/* FolhaInferior */}
-      {!recebendoChamada && (
-        <>
-          {menuVisible && (
-            <Pressable
-              style={styles.backdrop}
-              onPress={() => setMenuVisible(false)}
-            />
-          )}
-
-          {usuario?.tipoUsuario === "PASSAGEIRO" ? (
-            <FolhaInferiorPassageiro
-              onPressInput={() => setDestinationModalVisible(true)}
-              onSheetChange={handleSheetStateChange}
-            />
-          ) : (
-            <FolhaInferiorMotorista
-              onSheetChange={onChangeBottomSheetMotorista}
-            />
-          )}
-
-          <SolicitarCorrida
-            visible={destinationModalVisible}
-            onClose={() => setDestinationModalVisible(false)}
+      <>
+        {menuVisible && (
+          <Pressable
+            style={styles.backdrop}
+            onPress={() => setMenuVisible(false)}
           />
+        )}
 
-          <SolicitacoesCorrida
-            visible={solicitacoesCorrida}
-            onClose={() => setSolicitacoesCorrida(false)}
-          />
+        <FolhaInferiorPassageiro
+          onPressInput={() => setDestinationModalVisible(true)}
+          onSheetChange={handleSheetStateChange}
+        />
 
-          {usuario?.tipoUsuario === "PASSAGEIRO" ? (
-            <MenuInferiorPassageiro
-              selectedTab={selectedTab}
-              onTabPress={setSelectedTab}
-            />
-          ) : (
-            <MenuInferiorMotorista
-              setSolicitacoesCorrida={() => setSolicitacoesCorrida(true)}
-            />
-          )}
-        </>
-      )}
+        <SolicitarCorrida
+          visible={destinationModalVisible}
+          onClose={() => setDestinationModalVisible(false)}
+        />
+
+        <MenuInferiorPassageiro
+          selectedTab={selectedTab}
+          onTabPress={setSelectedTab}
+        />
+      </>
     </View>
   );
 }
