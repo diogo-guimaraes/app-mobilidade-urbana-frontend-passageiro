@@ -1,39 +1,26 @@
-// app/home.tsx
-import FolhaInferior from "@/components/FolhaInferior";
-import Map from "@/components/Map";
 import MenuInferior from "@/components/MenuInferior";
-import ParaOndeVamos from "@/components/ParaOndeVamos";
 import SideMenu from "@/components/SideMenu";
 import { useAuth } from "@/context/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Slot, useRouter, useSegments } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Animated,
-  Dimensions,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    Animated,
+    Dimensions,
+    Image,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from "react-native";
-import { Region } from "react-native-maps";
 
-export default function Home() {
-  const { user, loading: authLoading, usuario } = useAuth();
-  const router = useRouter();
+export default function MainLayout() {
+  const { usuario } = useAuth();
   const [showSideMenu, setShowSideMenu] = useState(false);
-  const [abaSelecionanda, setAbaSelecionada] = useState("corrida");
-  const [region, setRegion] = useState<Region | null>(null);
-  const [showParaOndeVamos, setShowParaOndeVamos] = useState(false);
-  const userInitialRegion = useRef<Region | null>(null);
-  const [bottomSheetIndex, setBottomSheetIndex] = useState<number>(0);
   const drawerWidth = Math.round(Dimensions.get("window").width * 0.78);
   const translateX = useRef(new Animated.Value(-drawerWidth)).current;
 
-  useEffect(() => {
+  React.useEffect(() => {
     Animated.timing(translateX, {
       toValue: showSideMenu ? 0 : -drawerWidth,
       duration: 220,
@@ -41,7 +28,7 @@ export default function Home() {
     }).start();
   }, [showSideMenu, drawerWidth, translateX]);
 
-  const closeMenu = useCallback(() => {
+  const closeMenu = React.useCallback(() => {
     setShowSideMenu(false);
   }, []);
 
@@ -49,48 +36,43 @@ export default function Home() {
     setShowSideMenu(true);
   };
 
+  const router = useRouter();
+  const segments = useSegments();
+  const [abaSelecionanda, setAbaSelecionada] = useState("corrida");
+
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login");
+    const currentSegment = segments[segments.length - 1];
+
+    if (currentSegment === "entregas") {
+      setAbaSelecionada("entrega");
+    } else if (currentSegment === "pay") {
+      setAbaSelecionada("pay");
+    } else {
+      setAbaSelecionada("corrida");
     }
-  }, [user, authLoading, router]);
+  }, [segments]);
 
-  const handleUserLocationFound = useCallback((userRegion: Region) => {
-    userInitialRegion.current = {
-      ...userRegion,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    };
+  const handleTabPress = (tabKey: string) => {
+    if (tabKey === "entrega") {
+      router.push("/entregas");
+      return;
+    }
 
-    const offsetLatitude = 0.0064;
-    const adjustedRegion: Region = {
-      ...userRegion,
-      latitude: userRegion.latitude - offsetLatitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    };
-    setRegion(adjustedRegion);
-  }, []);
+    if (tabKey === "corrida") {
+      router.push("/home");
+      return;
+    }
 
-  const handleSheetStateChange = useCallback((index: number) => {
-    setBottomSheetIndex(index);
-  }, []);
+    if (tabKey === "pay") {
+      router.push("/(payment)/pay");
+      return;
+    }
 
-  if (authLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <StatusBar style="dark" />
-        <ActivityIndicator size="large" color="#000" />
-        <Text style={styles.loadingText}>Verificando autenticação...</Text>
-      </View>
-    );
-  }
-
-  if (!user) return null;
+    // Adicione outras rotas aqui no inferior
+  };
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" translucent backgroundColor="#fff" />
       <View style={styles.headerFloating}>
         <View style={styles.headerContent}>
           <View style={styles.userInfo}>
@@ -114,13 +96,6 @@ export default function Home() {
         </View>
       </View>
 
-      <Map
-        region={region}
-        onRegionChange={setRegion}
-        onUserLocationFound={handleUserLocationFound}
-        bottomSheetIndex={bottomSheetIndex}
-      />
-
       {showSideMenu && (
         <Pressable
           style={styles.backdrop}
@@ -130,19 +105,12 @@ export default function Home() {
 
       <SideMenu visible={showSideMenu} onClose={closeMenu} drawerWidth={280} />
 
-      <FolhaInferior
-        onPressInput={() => setShowParaOndeVamos(true)}
-        onSheetChange={handleSheetStateChange}
-      />
-
-      <ParaOndeVamos
-        visible={showParaOndeVamos}
-        onClose={() => setShowParaOndeVamos(false)}
-      />
+      <Slot />
 
       <MenuInferior
         abaSelecionanda={abaSelecionanda}
         setAbaSelecionada={setAbaSelecionada}
+        onPressTab={handleTabPress}
       />
     </View>
   );
@@ -220,17 +188,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(0,0,0,0.28)",
     zIndex: 18,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#666",
   },
   avatarBadge: {
     width: 60,

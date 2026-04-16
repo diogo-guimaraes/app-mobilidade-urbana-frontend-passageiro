@@ -15,6 +15,12 @@ export default function RootLayout() {
         <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
         <Stack>
           <Stack.Screen
+            name="(main)"
+            options={{
+              headerShown: false, 
+            }}
+          />
+          <Stack.Screen
             name="login"
             options={{
               headerShown: false,
@@ -22,13 +28,6 @@ export default function RootLayout() {
           />
           <Stack.Screen
             name="register"
-            options={{
-              headerShown: false,
-            }}
-          />
-
-          <Stack.Screen
-            name="home"
             options={{
               headerShown: false,
             }}

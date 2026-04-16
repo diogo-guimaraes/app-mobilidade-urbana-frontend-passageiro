@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 interface BottomMenuProps {
   abaSelecionanda: string;
   setAbaSelecionada: (tab: string) => void;
+  onPressTab?: (tab: string) => void;
 }
 
 const CIRCLE_SIZE = 32;
@@ -13,6 +14,7 @@ const CIRCLE_SIZE = 32;
 export default function MenuInferiorPassageiro({
   abaSelecionanda,
   setAbaSelecionada,
+  onPressTab,
 }: BottomMenuProps) {
   const tabs = [
     { key: "corrida", icon: "car-outline", label: "Corrida" },
@@ -27,7 +29,10 @@ export default function MenuInferiorPassageiro({
           <TouchableOpacity
             key={tab.key}
             style={styles.tabItem}
-            onPress={() => setAbaSelecionada(tab.key)}
+            onPress={() => {
+              setAbaSelecionada(tab.key);
+              onPressTab?.(tab.key);
+            }}
             activeOpacity={0.8}
           >
             <View
