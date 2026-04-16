@@ -64,7 +64,6 @@ export default function Home() {
       />
 
       <FolhaInferior
-        onPressInput={() => setShowParaOndeVamos(true)}
         onSheetChange={handleSheetStateChange}
       />
 
