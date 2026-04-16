@@ -24,8 +24,8 @@ import { Region } from "react-native-maps";
 export default function Home() {
   const { user, loading: authLoading, usuario } = useAuth();
   const router = useRouter();
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("corrida");
+  const [showSideMenu, setShowSideMenu] = useState(false);
+  const [abaSelecionanda, setAbaSelecionada] = useState("corrida");
   const [region, setRegion] = useState<Region | null>(null);
   const [showParaOndeVamos, setShowParaOndeVamos] = useState(false);
 
@@ -37,18 +37,18 @@ export default function Home() {
 
   useEffect(() => {
     Animated.timing(translateX, {
-      toValue: menuVisible ? 0 : -drawerWidth,
+      toValue: showSideMenu ? 0 : -drawerWidth,
       duration: 220,
       useNativeDriver: true,
     }).start();
-  }, [menuVisible, drawerWidth, translateX]);
+  }, [showSideMenu, drawerWidth, translateX]);
 
   const closeMenu = useCallback(() => {
-    setMenuVisible(false);
+    setShowSideMenu(false);
   }, []);
 
   const handleMenuOpen = () => {
-    setMenuVisible(true);
+    setShowSideMenu(true);
   };
 
   useEffect(() => {
@@ -92,10 +92,7 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      {/* StatusBar configurada para harmonizar com o header amarelo */}
       <StatusBar style="dark" translucent backgroundColor="#fff" />
-
-      {/* HEADER CORRIGIDO COM CORES */}
       <View style={styles.headerFloating}>
         <View style={styles.headerContent}>
           <View style={styles.userInfo}>
@@ -105,9 +102,7 @@ export default function Home() {
                   source={{ uri: "https://i.pravatar.cc/150?img=2" }}
                   style={styles.avatarBadge}
                 />
-                {/* <Ionicons name="person" size={24} color="#757575" /> */}
               </View>
-              {/* Ponto de notificação vermelho clássico */}
               <View style={styles.notificationDot} />
             </Pressable>
             <Text style={styles.greetingText}>
@@ -128,14 +123,14 @@ export default function Home() {
         bottomSheetIndex={bottomSheetIndex}
       />
 
-      {menuVisible && (
+      {showSideMenu && (
         <Pressable
           style={styles.backdrop}
-          onPress={() => setMenuVisible(false)}
+          onPress={() => setShowSideMenu(false)}
         />
       )}
 
-      <SideMenu visible={menuVisible} onClose={closeMenu} drawerWidth={280} />
+      <SideMenu visible={showSideMenu} onClose={closeMenu} drawerWidth={280} />
 
       <FolhaInferior
         onPressInput={() => setShowParaOndeVamos(true)}
@@ -147,7 +142,10 @@ export default function Home() {
         onClose={() => setShowParaOndeVamos(false)}
       />
 
-      <MenuInferior selectedTab={selectedTab} onTabPress={setSelectedTab} />
+      <MenuInferior
+        abaSelecionanda={abaSelecionanda}
+        setAbaSelecionada={setAbaSelecionada}
+      />
     </View>
   );
 }
