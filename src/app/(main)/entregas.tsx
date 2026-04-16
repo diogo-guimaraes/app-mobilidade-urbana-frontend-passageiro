@@ -17,12 +17,7 @@ export default function Entregas() {
   const [activeTab, setActiveTab] = useState<"Enviar" | "Receber">("Enviar");
 
   return (
-    <View
-      style={[
-        styles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
-      ]}
-    >
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header de Navegação */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -39,7 +34,11 @@ export default function Entregas() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Título da Marca */}
         <View style={styles.brandContainer}>
           <Text style={styles.brandSubTitle}>VOCÊ PRECISA,</Text>
@@ -68,9 +67,8 @@ export default function Entregas() {
           />
         </View>
 
-        {/* Card de Agendamento */}
-
-        <View style={styles.card}>
+        {/* Card com Afastamento Lateral */}
+        <View style={[styles.card, { marginBottom: insets.bottom + 20 }]}>
           {/* Tabs */}
           <View style={styles.tabContainer}>
             <TouchableOpacity
@@ -109,7 +107,7 @@ export default function Entregas() {
           </View>
 
           {/* Conteúdo Dinâmico */}
-          <View>
+          <View style={styles.dynamicContent}>
             {activeTab === "Enviar" ? (
               <>
                 <View style={styles.addressRow}>
@@ -171,9 +169,11 @@ const styles = StyleSheet.create({
   headerBtn: {
     padding: 4,
   },
-  content: {
+  scrollView: {
     flex: 1,
-    paddingHorizontal: 24,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   brandContainer: {
     alignItems: "center",
@@ -183,7 +183,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#000",
-    letterSpacing: -0.5,
   },
   brandTitleRow: {
     flexDirection: "row",
@@ -217,35 +216,43 @@ const styles = StyleSheet.create({
     marginVertical: 40,
   },
   imageMoto: {
-    width: 140,
-    height: 100,
+    width: 130,
+    height: 90,
     resizeMode: "contain",
   },
   imageCarro: {
-    width: 150,
-    height: 100,
+    width: 140,
+    height: 90,
     resizeMode: "contain",
   },
   card: {
     backgroundColor: "#F8F8F8",
-    borderRadius: 20,
-    padding: 20,
-    elevation: 2,
+    // Afastamento das laterais
+    marginHorizontal: 16,
+    // Bordas arredondadas em cima
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    // Preenchimento interno
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    flex: 1,
+    // Sombra suave
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowRadius: 8,
+    elevation: 4,
   },
   tabContainer: {
     flexDirection: "row",
-    marginBottom: 32,
+    marginBottom: 30,
   },
   tabItem: {
-    marginRight: 40,
+    marginRight: 35,
     alignItems: "center",
   },
   tabText: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
   },
   tabTextActive: {
@@ -255,23 +262,26 @@ const styles = StyleSheet.create({
     color: "#BBB",
   },
   tabIndicator: {
-    height: 6,
+    height: 4,
     width: "100%",
     backgroundColor: "#FF6600",
-    borderRadius: 3,
+    borderRadius: 2,
     marginTop: 4,
+  },
+  dynamicContent: {
+    gap: 10,
   },
   addressRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 12,
   },
   dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 3,
-    marginRight: 16,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2.5,
+    marginRight: 14,
   },
   dotTeal: {
     borderColor: "#2DD4BF",
@@ -283,9 +293,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   addressTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "600",
-    color: "#000",
+    color: "#333",
   },
   addressSub: {
     fontSize: 14,
@@ -294,21 +304,16 @@ const styles = StyleSheet.create({
   },
   inputButton: {
     backgroundColor: "#FFF",
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 20,
+    padding: 18,
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#F0F0F0",
     marginTop: 8,
-    elevation: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
   },
   inputButtonText: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#000",
   },
