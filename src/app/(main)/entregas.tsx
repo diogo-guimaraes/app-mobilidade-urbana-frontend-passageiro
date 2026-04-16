@@ -55,16 +55,21 @@ export default function Entregas() {
         {/* Ilustrações de Veículos */}
         <View style={styles.illustrationContainer}>
           <Image
-            source={{ uri: "https://i.ibb.co/vYm6m8y/moto-entrega.png" }}
+            source={{
+              uri: "https://cdn-icons-png.flaticon.com/512/744/744465.png",
+            }}
             style={styles.imageMoto}
           />
           <Image
-            source={{ uri: "https://i.ibb.co/ZxbL8Y5/carro-entrega.png" }}
+            source={{
+              uri: "https://cdn-icons-png.flaticon.com/512/1986/1986937.png",
+            }}
             style={styles.imageCarro}
           />
         </View>
 
         {/* Card de Agendamento */}
+
         <View style={styles.card}>
           {/* Tabs */}
           <View style={styles.tabContainer}>
@@ -172,7 +177,7 @@ const styles = StyleSheet.create({
   },
   brandContainer: {
     alignItems: "center",
-    marginTop: 16,
+    marginTop: 86,
   },
   brandSubTitle: {
     fontSize: 18,
@@ -223,8 +228,8 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "#F8F8F8",
-    borderRadius: 40,
-    padding: 32,
+    borderRadius: 20,
+    padding: 20,
     elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
