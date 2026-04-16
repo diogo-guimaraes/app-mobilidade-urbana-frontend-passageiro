@@ -5,12 +5,7 @@ import ParaOndeVamos from "@/components/ParaOndeVamos";
 import { useAuth } from "@/context/AuthProvider";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Region } from "react-native-maps";
 
 export default function Home() {
