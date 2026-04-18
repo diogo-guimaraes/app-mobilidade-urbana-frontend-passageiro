@@ -167,7 +167,8 @@ export default function Entregas() {
             </View>
           </View>
         </ScrollView>
-      </View></>
+      </View>
+    </>
   );
 }
 
