@@ -1,3 +1,4 @@
+import AdicionarCartao from "@/components/AdicionarCartao";
 import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -28,12 +29,16 @@ export default function MetodosPagamento({
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
-  
+  const [showAdicionarCartao, setShowAdicionarCartao] = useState(visible);
   // Estado para controlar o método selecionado
   const [selectedMethod, setSelectedMethod] = useState("card_3048");
 
   useEffect(() => {
     const onBackPress = () => {
+      if (showAdicionarCartao) {
+        setShowAdicionarCartao(false);
+        return true;
+      }
       if (visible) {
         onClose();
         return true;
@@ -84,122 +89,137 @@ export default function MetodosPagamento({
   );
 
   return (
-    <View style={[StyleSheet.absoluteFill, { zIndex: 30 }]}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
-        <Animated.View
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: "rgba(0,0,0,0.25)", opacity: overlayOpacity },
-          ]}
-        />
-      </Pressable>
+    <>
+      <View style={[StyleSheet.absoluteFill, { zIndex: 30 }]}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: "rgba(0,0,0,0.25)", opacity: overlayOpacity },
+            ]}
+          />
+        </Pressable>
 
-      <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
-        {/* HEADER */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="chevron-back" size={26} color="#111" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Métodos de pagamento</Text>
-            <View style={{ width: 26 }} />
-          </View>
-        </View>
-
-        <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-          
-          {/* SEÇÃO 99PAY */}
-          <View style={styles.pay99Card}>
-            <View style={styles.pay99Header}>
-              <Text style={styles.pay99HeaderText}>99Pay</Text>
+        <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
+          {/* HEADER */}
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="chevron-back" size={26} color="#111" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Métodos de pagamento</Text>
+              <View style={{ width: 26 }} />
             </View>
-            <View style={styles.pay99Content}>
-              <View style={styles.pay99Row}>
-                <View style={styles.pay99IconBg}>
+          </View>
+
+          <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
+
+            {/* SEÇÃO 99PAY */}
+            <View style={styles.pay99Card}>
+              <View style={styles.pay99Header}>
+                <Text style={styles.pay99HeaderText}>99Pay</Text>
+              </View>
+              <View style={styles.pay99Content}>
+                <View style={styles.pay99Row}>
+                  <View style={styles.pay99IconBg}>
                     <Text style={styles.pay99IconText}>99Pay</Text>
-                </View>
-                <View style={styles.payTextContainer}>
-                  <Text style={styles.methodTitle}>Saldo na 99</Text>
-                  <Text style={styles.balanceText}>R$ 0,30</Text>
-                  <Text style={styles.subtext}>Saldo insuficiente</Text>
-                </View>
-                <TouchableOpacity style={styles.depositBtn}>
+                  </View>
+                  <View style={styles.payTextContainer}>
+                    <Text style={styles.methodTitle}>Saldo na 99</Text>
+                    <Text style={styles.balanceText}>R$ 0,30</Text>
+                    <Text style={styles.subtext}>Saldo insuficiente</Text>
+                  </View>
+                  <TouchableOpacity style={styles.depositBtn}>
                     <Text style={styles.depositBtnText}>Depositar via Pix</Text>
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
-          </View>
 
-          {/* CARTÕES SALVOS */}
-          <View style={styles.sectionCard}>
-            <TouchableOpacity 
-              style={styles.methodItem} 
-              onPress={() => setSelectedMethod("card_3048")}
-            >
-              <View style={styles.iconContainer}>
-                <FontAwesome name="cc-mastercard" size={20} color="#eb001b" />
-              </View>
-              <Text style={styles.methodMainText}>3048</Text>
-              <RadioButton active={selectedMethod === "card_3048"} />
-            </TouchableOpacity>
+            {/* CARTÕES SALVOS */}
+            <View style={styles.sectionCard}>
+              <TouchableOpacity
+                style={styles.methodItem}
+                onPress={() => setSelectedMethod("card_3048")}
+              >
+                <View style={styles.iconContainer}>
+                  <FontAwesome name="cc-mastercard" size={20} color="#eb001b" />
+                </View>
+                <Text style={styles.methodMainText}>3048</Text>
+                <RadioButton active={selectedMethod === "card_3048"} />
+              </TouchableOpacity>
 
-            <View style={styles.divider} />
+              <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.methodItem}>
-              <View style={styles.iconContainer}>
-                <MaterialCommunityIcons name="credit-card-plus-outline" size={24} color="#666" />
-              </View>
-              <Text style={styles.methodMainText}>Ad. cartão crédito/débito</Text>
-              <Ionicons name="chevron-forward" size={18} color="#CCC" />
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity onPress={() => setShowAdicionarCartao(true)} style={styles.methodItem}>
+                <View style={styles.iconContainer}>
+                  <MaterialCommunityIcons name="credit-card-plus-outline" size={24} color="#666" />
+                </View>
+                <Text style={styles.methodMainText}>Ad. cartão crédito/débito</Text>
+                <Ionicons name="chevron-forward" size={18} color="#CCC" />
+              </TouchableOpacity>
+            </View>
 
-          {/* OUTROS MÉTODOS */}
-          <View style={styles.sectionCard}>
-            <TouchableOpacity 
-              style={styles.methodItem}
-              onPress={() => setSelectedMethod("money")}
-            >
-              <View style={styles.iconContainer}>
-                <MaterialCommunityIcons name="cash" size={24} color="#f5a623" />
-              </View>
-              <Text style={styles.methodMainText}>Dinheiro</Text>
-              <RadioButton active={selectedMethod === "money"} />
-            </TouchableOpacity>
+            {/* OUTROS MÉTODOS */}
+            <View style={styles.sectionCard}>
+              <TouchableOpacity
+                style={styles.methodItem}
+                onPress={() => {
+                  setSelectedMethod("money");
+                  onClose()
+                }}
+              >
+                <View style={styles.iconContainer}>
+                  <MaterialCommunityIcons name="cash" size={24} color="#f5a623" />
+                </View>
+                <Text style={styles.methodMainText}>Dinheiro</Text>
+                <RadioButton active={selectedMethod === "money"} />
+              </TouchableOpacity>
 
-            <View style={styles.divider} />
+              <View style={styles.divider} />
 
-            <TouchableOpacity 
-              style={styles.methodItem}
-              onPress={() => setSelectedMethod("machine")}
-            >
-              <View style={styles.iconContainer}>
-                <MaterialCommunityIcons name="cellphone-nfc" size={24} color="#f5a623" />
-              </View>
-              <Text style={styles.methodMainText}>Maquininha de cartão</Text>
-              <RadioButton active={selectedMethod === "machine"} />
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.methodItem}
+                 onPress={() => {
+                  setSelectedMethod("machine");
+                  onClose()
+                }}
+              >
+                <View style={styles.iconContainer}>
+                  <MaterialCommunityIcons name="cellphone-nfc" size={24} color="#f5a623" />
+                </View>
+                <Text style={styles.methodMainText}>Maquininha de cartão</Text>
+                <RadioButton active={selectedMethod === "machine"} />
+              </TouchableOpacity>
 
-            <View style={styles.divider} />
+              <View style={styles.divider} />
 
-            <TouchableOpacity 
-              style={styles.methodItem}
-              onPress={() => setSelectedMethod("pix")}
-            >
-              <View style={styles.iconContainer}>
-                <MaterialCommunityIcons name="pix" size={24} color="#00bdae" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.methodMainText}>Pix (pré-pago)</Text>
-                <Text style={styles.subtextInfo}>Para esta opção, é necessário pagar antecipadamente</Text>
-              </View>
-              <RadioButton active={selectedMethod === "pix"} />
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={styles.methodItem}
+                onPress={() => {
+                  setSelectedMethod("pix");
+                  onClose()
+                }}
+              >
+                <View style={styles.iconContainer}>
+                  <MaterialCommunityIcons name="cellphone-nfc" size={24} color="#00bdae" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.methodMainText}>Pix (pré-pago)</Text>
+                  <Text style={styles.subtextInfo}>Para esta opção, é necessário pagar antecipadamente</Text>
+                </View>
+                <RadioButton active={selectedMethod === "pix"} />
+              </TouchableOpacity>
+            </View>
 
-        </ScrollView>
-      </Animated.View>
-    </View>
+          </ScrollView>
+        </Animated.View>
+      </View>
+      <AdicionarCartao
+        visible={showAdicionarCartao}
+        onClose={() => setShowAdicionarCartao(false)}
+      />
+    </>
   );
 }
 
