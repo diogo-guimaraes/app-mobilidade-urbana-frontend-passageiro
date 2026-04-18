@@ -143,7 +143,7 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
         snapPoints={snapPoints}
         enableDynamicSizing={false}
         overDragResistanceFactor={13}
-        enablePanDownToClose={false}
+        enablePanDownToClose={true}
         onChange={onSheetChange}
         handleIndicatorStyle={{ backgroundColor: "#DDD", width: 40 }}
       >
