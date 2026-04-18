@@ -146,6 +146,7 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
         enablePanDownToClose={true}
         onChange={onSheetChange}
         handleIndicatorStyle={{ backgroundColor: "#DDD", width: 40 }}
+        enableOverDrag={false}
       >
         <BottomSheetView style={styles.mainContainer}>
           {/* Header de Busca igual image_9c5f50.png */}

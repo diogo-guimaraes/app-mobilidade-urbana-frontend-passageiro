@@ -15,7 +15,7 @@ import {
   View
 } from "react-native";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -30,6 +30,10 @@ export default function InformacoesDestinario({
 }: props) {
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+  
+  // ✅ Controle de opacidade para o fundo escuro da FolhaEndereco
+  const sheetOverlayOpacity = useRef(new Animated.Value(0)).current;
+  
   const [isMounted, setIsMounted] = useState(visible);
 
   const [endereco, setEndereco] = useState("Rua Brasília, 2930");
@@ -37,11 +41,26 @@ export default function InformacoesDestinario({
   const [nome, setNome] = useState("Diogo");
   const [telefone, setTelefone] = useState("69981400661");
 
-  // Alterado para iniciar como false para não sobrepor a tela ao abrir
   const [showEnderecoSheet, setShowEnderecoSheet] = useState(false);
 
+  // ✅ Animação do overlay da folha
+  useEffect(() => {
+    if (showEnderecoSheet) {
+      Animated.timing(sheetOverlayOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(sheetOverlayOpacity, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showEnderecoSheet]);
+
   const handleSheetStateChange = useCallback((index: number) => {
-    // Se o index for -1, significa que o sheet fechou
     if (index === -1) setShowEnderecoSheet(false);
   }, []);
 
@@ -107,7 +126,6 @@ export default function InformacoesDestinario({
 
         <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
           <View style={styles.formSection}>
-            {/* Gatilho para abrir a FolhaEndereco */}
             <TouchableOpacity
               activeOpacity={0.7}
               onPress={() => setShowEnderecoSheet(true)}
@@ -167,6 +185,7 @@ export default function InformacoesDestinario({
               { addr: "Rua Portuguesa, 6244", sub: "casa", detail: "Diana Deise • 69981195656" },
               { addr: "Rua Portuguesa, 6374", sub: "", detail: "Diogo • 69981400661" },
               { addr: "Rua Brasília, 2930", sub: "Pen6 Marketing", detail: "Diogo • 69981400661" },
+              
             ].map((item, index) => (
               <View key={index} style={styles.recentItem}>
                 <Ionicons name="location-sharp" size={22} color="#888" style={styles.locationIcon} />
@@ -185,13 +204,30 @@ export default function InformacoesDestinario({
         </ScrollView>
       </Animated.View>
 
-      {/* 3. FolhaEndereco renderizada POR ÚLTIMO para garantir o Z-INDEX no topo de tudo */}
+      {/* ✅ 3. Overlay Escuro da FolhaEndereco e a própria Folha */}
       {showEnderecoSheet && (
-        <FolhaEndereco
-          visible={showEnderecoSheet}
-          onClose={() => setShowEnderecoSheet(false)}
-          onSheetChange={handleSheetStateChange}
-        />
+        <View style={StyleSheet.absoluteFill}>
+          <Pressable 
+            style={StyleSheet.absoluteFill} 
+            onPress={() => setShowEnderecoSheet(false)}
+          >
+            <Animated.View
+              style={[
+                StyleSheet.absoluteFill,
+                { 
+                  backgroundColor: "rgba(0,0,0,0.6)", // Fundo mais escuro conforme imagem
+                  opacity: sheetOverlayOpacity 
+                },
+              ]}
+            />
+          </Pressable>
+          
+          <FolhaEndereco
+            visible={showEnderecoSheet}
+            onClose={() => setShowEnderecoSheet(false)}
+            onSheetChange={handleSheetStateChange}
+          />
+        </View>
       )}
     </View>
   );
@@ -280,7 +316,7 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   confirmButton: {
-    backgroundColor: "#FFD700", // Amarelo padrão 99
+    backgroundColor: "#FFD700",
     borderRadius: 12,
     height: 55,
     alignItems: "center",
