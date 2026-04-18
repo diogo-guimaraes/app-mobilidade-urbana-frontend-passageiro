@@ -1,3 +1,5 @@
+import InformacoesDestinario from "@/components/InformacoesDestinario";
+import InformacoesRemetente from "@/components/InformacoesRemetente";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -15,142 +17,157 @@ export default function Entregas() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<"Enviar" | "Receber">("Enviar");
+  const [showInformacoesRemetente, setShowInformacoesRemetente] = useState(false);
+  const [showInformacoesDestinario, setShowInformacoesDestinario] = useState(false);
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header de Navegação */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.headerBtn}
-        >
-          <Ionicons name="chevron-back" size={28} color="#000" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.headerBtn}
-        >
-          <Ionicons name="close" size={28} color="#000" />
-        </TouchableOpacity>
-      </View>
+    <>
+      <InformacoesRemetente
+        visible={showInformacoesRemetente}
+        onClose={() => setShowInformacoesRemetente(false)}
+      />
+      <InformacoesDestinario
+        visible={showInformacoesDestinario}
+        onClose={() => setShowInformacoesDestinario(false)}
+      />
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        {/* Header de Navegação */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.headerBtn}
+          >
+            <Ionicons name="chevron-back" size={28} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.headerBtn}
+          >
+            <Ionicons name="close" size={28} color="#000" />
+          </TouchableOpacity>
+        </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Título da Marca */}
-        <View style={styles.brandContainer}>
-          <Text style={styles.brandSubTitle}>VOCÊ PRECISA,</Text>
-          <View style={styles.brandTitleRow}>
-            <View style={styles.arrowBadge}>
-              <Ionicons name="arrow-forward" size={22} color="white" />
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Título da Marca */}
+          <View style={styles.brandContainer}>
+            <Text style={styles.brandSubTitle}>VOCÊ PRECISA,</Text>
+            <View style={styles.brandTitleRow}>
+              <View style={styles.arrowBadge}>
+                <Ionicons name="arrow-forward" size={22} color="white" />
+              </View>
+              <Text style={styles.brandTitleBold}>99</Text>
+              <Text style={styles.brandTitleLight}>Entrega</Text>
             </View>
-            <Text style={styles.brandTitleBold}>99</Text>
-            <Text style={styles.brandTitleLight}>Entrega</Text>
-          </View>
-        </View>
-
-        {/* Ilustrações de Veículos */}
-        <View style={styles.illustrationContainer}>
-          <Image
-            source={{
-              uri: "https://cdn-icons-png.flaticon.com/512/744/744465.png",
-            }}
-            style={styles.imageMoto}
-          />
-          <Image
-            source={{
-              uri: "https://cdn-icons-png.flaticon.com/512/1986/1986937.png",
-            }}
-            style={styles.imageCarro}
-          />
-        </View>
-
-        {/* Card com Afastamento Lateral */}
-        <View style={[styles.card, { marginBottom: insets.bottom + 20 }]}>
-          {/* Tabs */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              onPress={() => setActiveTab("Enviar")}
-              style={styles.tabItem}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "Enviar"
-                    ? styles.tabTextActive
-                    : styles.tabTextInactive,
-                ]}
-              >
-                Enviar
-              </Text>
-              {activeTab === "Enviar" && <View style={styles.tabIndicator} />}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => setActiveTab("Receber")}
-              style={styles.tabItem}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === "Receber"
-                    ? styles.tabTextActive
-                    : styles.tabTextInactive,
-                ]}
-              >
-                Receber
-              </Text>
-              {activeTab === "Receber" && <View style={styles.tabIndicator} />}
-            </TouchableOpacity>
           </View>
 
-          {/* Conteúdo Dinâmico */}
-          <View style={styles.dynamicContent}>
-            {activeTab === "Enviar" ? (
-              <>
-                <View style={styles.addressRow}>
-                  <View style={[styles.dot, styles.dotTeal]} />
-                  <View style={styles.addressInfo}>
-                    <Text style={styles.addressTitle} numberOfLines={1}>
-                      Rua Brasília, 2930 - Pen6 Marketing
-                    </Text>
-                    <Text style={styles.addressSub}>Diogo • 69981400661</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#E0E0E0" />
-                </View>
+          {/* Ilustrações de Veículos */}
+          <View style={styles.illustrationContainer}>
+            <Image
+              source={{
+                uri: "https://cdn-icons-png.flaticon.com/512/744/744465.png",
+              }}
+              style={styles.imageMoto}
+            />
+            <Image
+              source={{
+                uri: "https://cdn-icons-png.flaticon.com/512/1986/1986937.png",
+              }}
+              style={styles.imageCarro}
+            />
+          </View>
 
-                <TouchableOpacity style={styles.inputButton}>
-                  <View style={[styles.dot, styles.dotOrange]} />
-                  <Text style={styles.inputButtonText}>Entregar para</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <TouchableOpacity
-                  style={[styles.inputButton, { marginBottom: 16 }]}
+          {/* Card com Afastamento Lateral */}
+          <View style={[styles.card, { marginBottom: insets.bottom + 20 }]}>
+            {/* Tabs */}
+            <View style={styles.tabContainer}>
+              <TouchableOpacity
+                onPress={() => setActiveTab("Enviar")}
+                style={styles.tabItem}
+              >
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === "Enviar"
+                      ? styles.tabTextActive
+                      : styles.tabTextInactive,
+                  ]}
                 >
-                  <View style={[styles.dot, styles.dotTeal]} />
-                  <Text style={styles.inputButtonText}>Enviar de</Text>
-                </TouchableOpacity>
+                  Enviar
+                </Text>
+                {activeTab === "Enviar" && <View style={styles.tabIndicator} />}
+              </TouchableOpacity>
 
-                <View style={styles.addressRow}>
-                  <View style={[styles.dot, styles.dotOrange]} />
-                  <View style={styles.addressInfo}>
-                    <Text style={styles.addressTitle} numberOfLines={1}>
-                      Rua Brasília, 2930 - Pen6 Marketing
-                    </Text>
-                    <Text style={styles.addressSub}>Diogo • 69981400661</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#E0E0E0" />
-                </View>
-              </>
-            )}
+              <TouchableOpacity
+                onPress={() => setActiveTab("Receber")}
+                style={styles.tabItem}
+              >
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === "Receber"
+                      ? styles.tabTextActive
+                      : styles.tabTextInactive,
+                  ]}
+                >
+                  Receber
+                </Text>
+                {activeTab === "Receber" && <View style={styles.tabIndicator} />}
+              </TouchableOpacity>
+            </View>
+
+            {/* Conteúdo Dinâmico */}
+            <View style={styles.dynamicContent}>
+              {activeTab === "Enviar" ? (
+                <>
+                  <TouchableOpacity onPress={() => setShowInformacoesRemetente(true)}>
+                    <View style={styles.addressRow}>
+                      <View style={[styles.dot, styles.dotTeal]} />
+                      <View style={styles.addressInfo}>
+                        <Text style={styles.addressTitle} numberOfLines={1}>
+                          Rua Brasília, 2930 - Pen6 Marketing
+                        </Text>
+                        <Text style={styles.addressSub}>Diogo • 69981400661</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={20} color="#E0E0E0" />
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={() => setShowInformacoesDestinario(true)} style={styles.inputButton}>
+                    <View style={[styles.dot, styles.dotOrange]} />
+                    <Text style={styles.inputButtonText}>Entregar para</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <TouchableOpacity
+                    onPress={() => setShowInformacoesRemetente(true)}
+                    style={[styles.inputButton, { marginBottom: 16 }]}
+                  >
+                    <View style={[styles.dot, styles.dotTeal]} />
+                    <Text style={styles.inputButtonText}>Enviar de</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => setShowInformacoesDestinario(true)}>
+                    <View style={styles.addressRow}>
+                      <View style={[styles.dot, styles.dotOrange]} />
+                      <View style={styles.addressInfo}>
+                        <Text style={styles.addressTitle} numberOfLines={1}>
+                          Rua Brasília, 2930 - Pen6 Marketing
+                        </Text>
+                        <Text style={styles.addressSub}>Diogo • 69981400661</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={20} color="#E0E0E0" />
+                    </View>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </View>
+        </ScrollView>
+      </View></>
   );
 }
 
