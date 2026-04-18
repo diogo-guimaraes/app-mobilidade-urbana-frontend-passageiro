@@ -1,9 +1,10 @@
+import DetalhesEntrega from "@/components/DetalhesEntrega";
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import BottomSheet, {
   BottomSheetFlatList,
   BottomSheetTextInput
 } from "@gorhom/bottom-sheet";
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const { width } = Dimensions.get("window");
@@ -26,6 +27,11 @@ interface Props {
 export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props) {
   const snapPoints = useMemo(() => ["89%"], []);
   const sheetRef = useRef<BottomSheet>(null);
+  const [showDetalhesEntrega, setShowDetalhesEntrega] = useState(false);
+  const confirmarEndereco = useCallback((item: EnderecoItem) => {
+    console.log("Endereço clicado:", item.local);
+    setShowDetalhesEntrega(true)
+  }, []);
 
   // ✅ Dados baseados na imagem image_9c5f50.png
   const data: EnderecoItem[] = useMemo(
@@ -91,7 +97,10 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
   );
 
   const renderItem = useCallback(({ item }: { item: EnderecoItem }) => (
-    <TouchableOpacity style={styles.itemContainer} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.itemContainer}
+      activeOpacity={0.7}
+      onPress={() => confirmarEndereco(item)}>
       <View style={styles.iconCircle}>
         <MaterialIcons
           name={item.iconType === "history" ? "history" : "location-on"}
@@ -107,7 +116,7 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
         <Text style={styles.subtituloText} numberOfLines={2}>{item.subtitulo}</Text>
       </View>
     </TouchableOpacity>
-  ), []);
+  ), [confirmarEndereco]);
 
   const ListHeader = () => (
     <View style={styles.headerContent}>
@@ -163,46 +172,51 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
   if (!visible) return null;
 
   return (
-    <View style={StyleSheet.absoluteFill}>
-      <BottomSheet
-        ref={sheetRef}
-        index={0}
-        snapPoints={snapPoints}
-        enableDynamicSizing={false}
-        overDragResistanceFactor={13}
-        enablePanDownToClose={true}
-        onChange={onSheetChange}
-        handleIndicatorStyle={{ backgroundColor: "#DDD", width: 40 }}
-        enableOverDrag={false}
-      >
-        {/* Remove BottomSheetView - vai direto para o FlatList */}
-        <>
-          {/* Header de Busca */}
-          <View style={styles.searchHeader}>
-            <View style={styles.inputWrapper}>
-              <MaterialCommunityIcons name="flag-variant" size={20} color="#000" style={styles.flagIcon} />
-              <BottomSheetTextInput
-                style={styles.input}
-                placeholder="Entregar para"
-                placeholderTextColor="#CCC"
-              />
+    <>
+      <DetalhesEntrega
+        visible={showDetalhesEntrega}
+        onClose={() => setShowDetalhesEntrega(false)}
+      />
+      <View style={StyleSheet.absoluteFill}>
+        <BottomSheet
+          ref={sheetRef}
+          index={0}
+          snapPoints={snapPoints}
+          enableDynamicSizing={false}
+          overDragResistanceFactor={13}
+          enablePanDownToClose={true}
+          onChange={onSheetChange}
+          handleIndicatorStyle={{ backgroundColor: "#DDD", width: 40 }}
+          enableOverDrag={false}
+        >
+          {/* Remove BottomSheetView - vai direto para o FlatList */}
+          <>
+            {/* Header de Busca */}
+            <View style={styles.searchHeader}>
+              <View style={styles.inputWrapper}>
+                <MaterialCommunityIcons name="flag-variant" size={20} color="#000" style={styles.flagIcon} />
+                <BottomSheetTextInput
+                  style={styles.input}
+                  placeholder="Entregar para"
+                  placeholderTextColor="#CCC"
+                />
+              </View>
+              <TouchableOpacity onPress={onClose}>
+                <Text style={styles.cancelText}>Cancelar</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={onClose}>
-              <Text style={styles.cancelText}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
 
-          <BottomSheetFlatList
-            data={data}
-            keyExtractor={(item: EnderecoItem) => item.id}
-            renderItem={renderItem}
-            ListHeaderComponent={ListHeader}
-            ListFooterComponent={ListFooter}
-            showsVerticalScrollIndicator={false}
-          />
-        </>
-      </BottomSheet>
-    </View>
+            <BottomSheetFlatList
+              data={data}
+              keyExtractor={(item: EnderecoItem) => item.id}
+              renderItem={renderItem}
+              ListHeaderComponent={ListHeader}
+              ListFooterComponent={ListFooter}
+              showsVerticalScrollIndicator={false}
+            />
+          </>
+        </BottomSheet>
+      </View></>
   );
 }
 

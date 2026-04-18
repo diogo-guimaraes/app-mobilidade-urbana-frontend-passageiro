@@ -1,14 +1,15 @@
-import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useEffect, useRef, useState } from "react";
+import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
   Dimensions,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 const { width } = Dimensions.get("window");
@@ -27,17 +28,9 @@ export default function MetodosPagamento({
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
-
-  const [pagamentos, setPagamentos] = useState({
-    app: true,
-    dinheiro: true,
-    maquininha: false,
-  });
-
-  const togglePagamento = (key: keyof typeof pagamentos) => {
-    if (key === "app") return; // não pode desativar o pagamento no app
-    setPagamentos((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  
+  // Estado para controlar o método selecionado
+  const [selectedMethod, setSelectedMethod] = useState("card_3048");
 
   useEffect(() => {
     const onBackPress = () => {
@@ -47,10 +40,7 @@ export default function MetodosPagamento({
       }
       return false;
     };
-    const subscription = BackHandler.addEventListener(
-      "hardwareBackPress",
-      onBackPress
-    );
+    const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
     return () => subscription.remove();
   }, [visible, onClose]);
 
@@ -87,9 +77,14 @@ export default function MetodosPagamento({
 
   if (!isMounted) return null;
 
+  const RadioButton = ({ active }: { active: boolean }) => (
+    <View style={[styles.radioOuter, active && styles.radioOuterActive]}>
+      {active && <View style={styles.radioInner} />}
+    </View>
+  );
+
   return (
     <View style={[StyleSheet.absoluteFill, { zIndex: 30 }]}>
-      {/* Fundo escurecido */}
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
         <Animated.View
           style={[
@@ -99,117 +94,110 @@ export default function MetodosPagamento({
         />
       </Pressable>
 
-      {/* Drawer deslizante */}
-      <Animated.View
-        style={[
-          styles.drawer,
-          {
-            transform: [{ translateX }],
-          },
-        ]}
-      >
+      <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
         {/* HEADER */}
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="arrow-back-outline" size={26} color="#111" />
+              <Ionicons name="chevron-back" size={26} color="#111" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Opções de pagamento</Text>
+            <Text style={styles.headerTitle}>Métodos de pagamento</Text>
             <View style={{ width: 26 }} />
           </View>
         </View>
 
-        {/* BODY */}
-        <View style={styles.body}>
-          <Text style={styles.subtitle}>
-            Selecione abaixo as opções de pagamento que você aceita. Assim,
-            selecionamos os passageiros certos para você 😊
-          </Text>
-
-          {/* Cartões de pagamento */}
-          <View style={styles.cardContainer}>
-            {/* Pagamento no App */}
-            <View style={[styles.card, { opacity: 0.7 }]}>
-              <View style={styles.cardLeft}>
-                <Ionicons name="phone-portrait-outline" size={22} color="#111" />
-                <View style={{ marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>Pagamento no app</Text>
-                  <Text style={styles.cardSubtitle}>
-                    Não pode ser desabilitado
-                  </Text>
-                </View>
-              </View>
-              <Ionicons
-                name="lock-closed-outline"
-                size={20}
-                color="#bbb"
-                style={{ marginLeft: 4 }}
-              />
+        <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
+          
+          {/* SEÇÃO 99PAY */}
+          <View style={styles.pay99Card}>
+            <View style={styles.pay99Header}>
+              <Text style={styles.pay99HeaderText}>99Pay</Text>
             </View>
-
-            {/* Dinheiro */}
-            <TouchableOpacity
-              style={[
-                styles.card,
-                pagamentos.dinheiro && styles.cardSelected,
-              ]}
-              onPress={() => togglePagamento("dinheiro")}
-            >
-              <View style={styles.cardLeft}>
-                <Ionicons name="cash-outline" size={22} color="#111" />
-                <View style={{ marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>Dinheiro</Text>
+            <View style={styles.pay99Content}>
+              <View style={styles.pay99Row}>
+                <View style={styles.pay99IconBg}>
+                    <Text style={styles.pay99IconText}>99Pay</Text>
                 </View>
+                <View style={styles.payTextContainer}>
+                  <Text style={styles.methodTitle}>Saldo na 99</Text>
+                  <Text style={styles.balanceText}>R$ 0,30</Text>
+                  <Text style={styles.subtext}>Saldo insuficiente</Text>
+                </View>
+                <TouchableOpacity style={styles.depositBtn}>
+                    <Text style={styles.depositBtnText}>Depositar via Pix</Text>
+                </TouchableOpacity>
               </View>
-              <Ionicons
-                name={
-                  pagamentos.dinheiro
-                    ? "checkmark-circle"
-                    : "ellipse-outline"
-                }
-                size={22}
-                color={pagamentos.dinheiro ? "#ffb300" : "#aaa"}
-              />
+            </View>
+          </View>
+
+          {/* CARTÕES SALVOS */}
+          <View style={styles.sectionCard}>
+            <TouchableOpacity 
+              style={styles.methodItem} 
+              onPress={() => setSelectedMethod("card_3048")}
+            >
+              <View style={styles.iconContainer}>
+                <FontAwesome name="cc-mastercard" size={20} color="#eb001b" />
+              </View>
+              <Text style={styles.methodMainText}>3048</Text>
+              <RadioButton active={selectedMethod === "card_3048"} />
             </TouchableOpacity>
 
-            {/* Maquininha de Débito */}
-            <TouchableOpacity
-              style={[
-                styles.card,
-                pagamentos.maquininha && styles.cardSelected,
-              ]}
-              onPress={() => togglePagamento("maquininha")}
-            >
-              <View style={styles.cardLeft}>
-                <MaterialCommunityIcons
-                  name="credit-card-outline"
-                  size={22}
-                  color="#111"
-                />
-                <View style={{ marginLeft: 10 }}>
-                  <Text style={styles.cardTitle}>Maquininha de Débito</Text>
-                  <Text style={styles.cardSubtitle}>Visa/Mastercard</Text>
-                </View>
+            <View style={styles.divider} />
+
+            <TouchableOpacity style={styles.methodItem}>
+              <View style={styles.iconContainer}>
+                <MaterialCommunityIcons name="credit-card-plus-outline" size={24} color="#666" />
               </View>
-              <Ionicons
-                name={
-                  pagamentos.maquininha
-                    ? "checkmark-circle"
-                    : "ellipse-outline"
-                }
-                size={22}
-                color={pagamentos.maquininha ? "#ffb300" : "#aaa"}
-              />
+              <Text style={styles.methodMainText}>Ad. cartão crédito/débito</Text>
+              <Ionicons name="chevron-forward" size={18} color="#CCC" />
             </TouchableOpacity>
           </View>
-        </View>
 
-        {/* BOTÃO CONFIRMAR */}
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.botaoConfirmar} onPress={onClose}>
-            <Text style={styles.textoConfirmar}>Confirmar</Text>
-          </TouchableOpacity>
-        </View>
+          {/* OUTROS MÉTODOS */}
+          <View style={styles.sectionCard}>
+            <TouchableOpacity 
+              style={styles.methodItem}
+              onPress={() => setSelectedMethod("money")}
+            >
+              <View style={styles.iconContainer}>
+                <MaterialCommunityIcons name="cash" size={24} color="#f5a623" />
+              </View>
+              <Text style={styles.methodMainText}>Dinheiro</Text>
+              <RadioButton active={selectedMethod === "money"} />
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            <TouchableOpacity 
+              style={styles.methodItem}
+              onPress={() => setSelectedMethod("machine")}
+            >
+              <View style={styles.iconContainer}>
+                <MaterialCommunityIcons name="cellphone-nfc" size={24} color="#f5a623" />
+              </View>
+              <Text style={styles.methodMainText}>Maquininha de cartão</Text>
+              <RadioButton active={selectedMethod === "machine"} />
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            <TouchableOpacity 
+              style={styles.methodItem}
+              onPress={() => setSelectedMethod("pix")}
+            >
+              <View style={styles.iconContainer}>
+                <MaterialCommunityIcons name="pix" size={24} color="#00bdae" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.methodMainText}>Pix (pré-pago)</Text>
+                <Text style={styles.subtextInfo}>Para esta opção, é necessário pagar antecipadamente</Text>
+              </View>
+              <RadioButton active={selectedMethod === "pix"} />
+            </TouchableOpacity>
+          </View>
+
+        </ScrollView>
       </Animated.View>
     </View>
   );
@@ -222,15 +210,13 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: "100%",
-    backgroundColor: "#f6f6f6",
+    backgroundColor: "#F4F4F4",
   },
   header: {
     backgroundColor: "#fff",
-    paddingTop: 45,
-    paddingBottom: 10,
+    paddingTop: 50,
+    paddingBottom: 15,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
   headerContent: {
     flexDirection: "row",
@@ -239,64 +225,129 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "600",
+    fontWeight: "bold",
     color: "#111",
   },
   body: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 12,
   },
-  subtitle: {
+  // CARD 99PAY
+  pay99Card: {
+    backgroundColor: "#FFD100",
+    borderRadius: 20,
+    marginTop: 15,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#FFD100",
+  },
+  pay99Header: {
+    paddingHorizontal: 15,
+    paddingVertical: 4,
+  },
+  pay99HeaderText: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  pay99Content: {
+    backgroundColor: "#FFF",
+    margin: 2,
+    borderRadius: 18,
+    padding: 15,
+  },
+  pay99Row: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  pay99IconBg: {
+    backgroundColor: "#FFD100",
+    padding: 4,
+    borderRadius: 4,
+  },
+  pay99IconText: {
+    fontSize: 10,
+    fontWeight: "bold",
+  },
+  payTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  methodTitle: {
+    fontSize: 15,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  balanceText: {
     fontSize: 13,
     color: "#666",
-    marginBottom: 20,
-  },
-  cardContainer: {
-    gap: 12,
-  },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderWidth: 1,
-    borderColor: "#eaeaea",
-  },
-  cardLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  cardTitle: {
-    fontSize: 15,
-    color: "#111",
-    fontWeight: "500",
-  },
-  cardSubtitle: {
-    fontSize: 12,
-    color: "#777",
     marginTop: 2,
   },
-  cardSelected: {
-    borderColor: "#ffb300",
+  subtext: {
+    fontSize: 12,
+    color: "#999",
   },
-  footer: {
-    padding: 16,
-    backgroundColor: "#f6f6f6",
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
+  depositBtn: {
+    backgroundColor: "#FFD100",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
-  botaoConfirmar: {
-    backgroundColor: "#ffb300",
-    paddingVertical: 14,
+  depositBtnText: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  // SEÇÕES DE MÉTODOS
+  sectionCard: {
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    marginTop: 15,
+    paddingHorizontal: 15,
+  },
+  methodItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 18,
+  },
+  iconContainer: {
+    width: 35,
+    alignItems: "flex-start",
+  },
+  methodMainText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#000",
+  },
+  subtextInfo: {
+    fontSize: 11,
+    color: "#999",
+    marginTop: 2,
+    paddingRight: 10,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#F0F0F0",
+  },
+  // RADIO BUTTON
+  radioOuter: {
+    width: 20,
+    height: 20,
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#CCC",
+    justifyContent: "center",
     alignItems: "center",
   },
-  textoConfirmar: {
-    color: "#111",
-    fontWeight: "600",
-    fontSize: 16,
+  radioOuterActive: {
+    borderColor: "#000",
+    backgroundColor: "#000",
+  },
+  radioInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FFF",
   },
 });
