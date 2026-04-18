@@ -59,6 +59,34 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
         distancia: "6.3km",
         iconType: "history",
       },
+      {
+        id: "5",
+        local: "Rua Jobu Miró, 3287",
+        subtitulo: "Flodoaldo Pontes Pinto, Porto Velho - RO, 76820-608, Brasil",
+        distancia: "3.2km",
+        iconType: "history",
+      },
+      {
+        id: "6",
+        local: "Rua Brasília, 2930",
+        subtitulo: "São Cristóvão, Porto Velho - RO, 76804-070, Brasil",
+        distancia: "7km",
+        iconType: "history",
+      },
+      {
+        id: "7",
+        local: "Rua Portuguesa, 6244",
+        subtitulo: "Conjunto Jamari, Porto Velho - RO, 76812-612, Brasil",
+        distancia: "5.4km",
+        iconType: "history",
+      },
+      {
+        id: "8",
+        local: "Bob's Drive Thru - Av. Jorge Teixeira",
+        subtitulo: "Avenida Gov. Jorge Teixeira, 1612 - Embratel, Porto Velho - RO, 76820-844, Brasil",
+        distancia: "6.3km",
+        iconType: "history",
+      },
     ],
     []
   );
