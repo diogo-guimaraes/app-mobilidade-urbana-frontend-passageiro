@@ -1,8 +1,7 @@
 import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import BottomSheet, {
   BottomSheetFlatList,
-  BottomSheetTextInput,
-  BottomSheetView,
+  BottomSheetTextInput
 } from "@gorhom/bottom-sheet";
 import React, { useCallback, useMemo, useRef } from "react";
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -175,9 +174,12 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
         onChange={onSheetChange}
         handleIndicatorStyle={{ backgroundColor: "#DDD", width: 40 }}
         enableOverDrag={false}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
       >
-        <BottomSheetView style={styles.mainContainer}>
-          {/* Header de Busca igual image_9c5f50.png */}
+        {/* Remove BottomSheetView - vai direto para o FlatList */}
+        <>
+          {/* Header de Busca */}
           <View style={styles.searchHeader}>
             <View style={styles.inputWrapper}>
               <MaterialCommunityIcons name="flag-variant" size={20} color="#000" style={styles.flagIcon} />
@@ -200,7 +202,7 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
             ListFooterComponent={ListFooter}
             showsVerticalScrollIndicator={false}
           />
-        </BottomSheetView>
+        </>
       </BottomSheet>
     </View>
   );
