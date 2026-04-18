@@ -174,8 +174,6 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
         onChange={onSheetChange}
         handleIndicatorStyle={{ backgroundColor: "#DDD", width: 40 }}
         enableOverDrag={false}
-        keyboardBehavior="interactive"
-        keyboardBlurBehavior="restore"
       >
         {/* Remove BottomSheetView - vai direto para o FlatList */}
         <>
