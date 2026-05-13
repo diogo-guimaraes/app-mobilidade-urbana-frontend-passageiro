@@ -259,11 +259,12 @@ export default function SideMenu({
             </TouchableOpacity>
 
             <View style={styles.nameRow}>
-              <Text style={styles.userName}>{user || "Diogo"}</Text>
+              <Text style={styles.userName}>My Name</Text>
+              {/* <Text style={styles.userName}>{user || "Diogo"}</Text> */}
               <Text style={styles.ratingText}> · 4,82 ★</Text>
             </View>
-            <View style={styles.separator}/>
-     {/* <View style={styles.statDivider} /> */}
+            <View style={styles.separator} />
+            {/* <View style={styles.statDivider} /> */}
           </View>
           <View style={styles.menuList}>
             {menuItems.map((item, index) => (

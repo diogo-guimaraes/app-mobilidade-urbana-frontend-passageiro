@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Pressable,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -26,7 +27,7 @@ export default function Cadastro() {
   const [senha, setSenha] = useState("");
 
   // step 4
-  const [nome, setNome] = useState("");
+  const [name, setName] = useState("");
 
   // step 5
   const [cpf, setCpf] = useState("");
@@ -64,15 +65,22 @@ export default function Cadastro() {
 
   const finalizarCadastro = () => {
     if (concordo) {
+      // remove máscara do CPF
+      const cpfTratado = cpf.replace(/\D/g, "");
+
+      // converte 21/11/1992 => 1992-11-21
+      const [dia, mes, ano] = dataNascimento.split("/");
+      const dataNascimentoTratada = `${ano}-${mes}-${dia}`;
+
       const usuario = {
         id: Date.now().toString(),
         email: email,
-        nome: nome,
-        cpf: cpf,
-        dataNascimento: dataNascimento,
+        name: name,
+        cpf: cpfTratado,
+        dataNascimento: dataNascimentoTratada,
         tipoUsuario: "passageiro",
       };
-
+      console.log(usuario, "usuariousuario");
       register(usuario);
 
       router.replace("/home");
@@ -80,39 +88,34 @@ export default function Cadastro() {
   };
 
   return (
-    <View className="flex-1 justify-center items-center bg-white px-6">
-      {/* Container centralizado com largura limitada */}
-      <View className="w-full max-w-xs">
+    <View style={styles.container}>
+      <View style={styles.content}>
         {/* STEP 1 */}
         {step === 1 && (
           <View>
-            <Text className="text-xl font-semibold mb-4">
+            <Text style={styles.title}>
               Qual é o seu número de telefone ou e-mail?
             </Text>
 
             <TextInput
               placeholder="Informar telefone ou e-mail"
-              className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full"
+              style={styles.input}
               value={email}
               onChangeText={setEmail}
             />
 
             <TouchableOpacity
-              className="bg-black py-3 rounded-md w-full"
+              style={styles.buttonBlack}
               onPress={() => setStep(2)}
             >
-              <Text className="text-white text-center text-base font-semibold">
-                Continuar
-              </Text>
+              <Text style={styles.buttonBlackText}>Continuar</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="pt-4"
+              style={styles.loginButton}
               onPress={() => router.push("/login")}
             >
-              <Text className="text-blue-500 text-lg text-center">
-                Já tem conta? Faça login
-              </Text>
+              <Text style={styles.loginText}>Já tem conta? Faça login</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -120,7 +123,7 @@ export default function Cadastro() {
         {/* STEP 2 */}
         {step === 2 && (
           <View>
-            <Text className="text-xl font-semibold mb-4">
+            <Text style={styles.title}>
               Digite o código de 4 dígitos enviado para: {email}
             </Text>
 
@@ -128,7 +131,7 @@ export default function Cadastro() {
               placeholder="Digite o código"
               keyboardType="numeric"
               maxLength={4}
-              className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full text-center"
+              style={[styles.input, styles.inputCenter]}
               value={codigo}
               onChangeText={(text) => {
                 const somenteNumeros = text.replace(/[^0-9]/g, "");
@@ -136,22 +139,22 @@ export default function Cadastro() {
               }}
             />
 
-            <Text className="text-xs text-gray-600 mb-4">
+            <Text style={styles.smallText}>
               Recomendação: Verifique a caixa de entrada e a pasta de spam
             </Text>
 
             <TouchableOpacity
-              className="bg-gray-100 px-5 py-2 rounded-full mt-10 mb-20 self-start"
+              style={styles.resendButton}
               onPress={() => {
                 console.log("Código reenviado!");
               }}
             >
-              <Text className="text-black font-medium">Reenviar</Text>
+              <Text style={styles.resendButtonText}>Reenviar</Text>
             </TouchableOpacity>
 
-            <View className="flex-row justify-between">
+            <View style={styles.rowBetween}>
               <TouchableOpacity
-                className="bg-gray-100 p-3 rounded-full"
+                style={styles.roundedButtonGray}
                 onPress={() => setStep(1)}
               >
                 <Feather name="arrow-left" size={24} color="black" />
@@ -160,14 +163,20 @@ export default function Cadastro() {
               <TouchableOpacity
                 disabled={!codigoValido}
                 onPress={() => setStep(3)}
-                className={`px-5 py-3 rounded-full flex-row items-center ${
-                  codigoValido ? "bg-black" : "bg-gray-100"
-                }`}
+                style={[
+                  styles.nextButton,
+                  {
+                    backgroundColor: codigoValido ? "black" : "#f3f4f6",
+                  },
+                ]}
               >
                 <Text
-                  className={`mr-2 font-medium ${
-                    codigoValido ? "text-white" : "text-gray-400"
-                  }`}
+                  style={[
+                    styles.nextButtonText,
+                    {
+                      color: codigoValido ? "white" : "#9ca3af",
+                    },
+                  ]}
                 >
                   Avançar
                 </Text>
@@ -185,21 +194,19 @@ export default function Cadastro() {
         {/* STEP 3 */}
         {step === 3 && (
           <View>
-            <Text className="text-xl font-semibold mb-4">
-              Crie uma senha para sua conta
-            </Text>
+            <Text style={styles.title}>Crie uma senha para sua conta</Text>
 
             <TextInput
               placeholder="Senha"
               secureTextEntry
-              className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full"
+              style={styles.input}
               value={senha}
               onChangeText={setSenha}
             />
 
-            <View className="flex-row justify-between">
+            <View style={styles.rowBetween}>
               <TouchableOpacity
-                className="bg-gray-100 p-3 rounded-full"
+                style={styles.roundedButtonGray}
                 onPress={() => setStep(2)}
               >
                 <Feather name="arrow-left" size={24} color="black" />
@@ -208,14 +215,20 @@ export default function Cadastro() {
               <TouchableOpacity
                 disabled={!senha}
                 onPress={() => setStep(4)}
-                className={`px-5 py-3 rounded-full flex-row items-center ${
-                  senha ? "bg-black" : "bg-gray-100"
-                }`}
+                style={[
+                  styles.nextButton,
+                  {
+                    backgroundColor: senha ? "black" : "#f3f4f6",
+                  },
+                ]}
               >
                 <Text
-                  className={`mr-2 font-medium ${
-                    senha ? "text-white" : "text-gray-400"
-                  }`}
+                  style={[
+                    styles.nextButtonText,
+                    {
+                      color: senha ? "white" : "#9ca3af",
+                    },
+                  ]}
                 >
                   Avançar
                 </Text>
@@ -233,40 +246,44 @@ export default function Cadastro() {
         {/* STEP 4 */}
         {step === 4 && (
           <View>
-            <Text className="text-xl font-semibold mb-4">
-              Qual é o seu nome ?
-            </Text>
+            <Text style={styles.title}>Qual é o seu nome ?</Text>
 
-            <Text className="text-xs text-gray-600 mb-8">
+            <Text style={styles.smallTextSpacing}>
               Informe como você quer que te chamem
             </Text>
 
             <TextInput
               placeholder="Informe seu nome completo"
-              className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full"
-              value={nome}
-              onChangeText={setNome}
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
             />
 
-            <View className="flex-row justify-between">
+            <View style={styles.rowBetween}>
               <TouchableOpacity
-                className="bg-gray-100 p-3 rounded-full"
+                style={styles.roundedButtonGray}
                 onPress={() => setStep(3)}
               >
                 <Feather name="arrow-left" size={24} color="black" />
               </TouchableOpacity>
 
               <TouchableOpacity
-                disabled={!nome}
+                disabled={!name}
                 onPress={() => setStep(5)}
-                className={`px-5 py-3 rounded-full flex-row items-center ${
-                  nome ? "bg-black" : "bg-gray-100"
-                }`}
+                style={[
+                  styles.nextButton,
+                  {
+                    backgroundColor: name ? "black" : "#f3f4f6",
+                  },
+                ]}
               >
                 <Text
-                  className={`mr-2 font-medium ${
-                    nome ? "text-white" : "text-gray-400"
-                  }`}
+                  style={[
+                    styles.nextButtonText,
+                    {
+                      color: name ? "white" : "#9ca3af",
+                    },
+                  ]}
                 >
                   Avançar
                 </Text>
@@ -274,7 +291,7 @@ export default function Cadastro() {
                 <Feather
                   name="arrow-right"
                   size={20}
-                  color={nome ? "white" : "gray"}
+                  color={name ? "white" : "gray"}
                 />
               </TouchableOpacity>
             </View>
@@ -284,53 +301,52 @@ export default function Cadastro() {
         {/* STEP 5 */}
         {step === 5 && (
           <View>
-            <Text className="text-xl font-semibold mb-4">
-              Informe seus dados
-            </Text>
-
-            {/* CPF */}
+            <Text style={styles.title}>Qual seu CPF?</Text>
             <TextInput
-              placeholder="Qual é o CPF?"
+              placeholder="Informe seu CPF"
               keyboardType="numeric"
               value={cpf}
               onChangeText={(text) => setCpf(formatarCPF(text))}
               maxLength={14}
-              className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full"
+              style={styles.input}
             />
-
-            {/* Data nascimento */}
+            <Text style={styles.title}></Text>
             <TextInput
-              placeholder="Qual sua data nascimento?"
+              placeholder="Informe sua data de nascimento"
               keyboardType="numeric"
               value={dataNascimento}
               onChangeText={(text) =>
                 setDataNascimento(formatarDataNascimento(text))
               }
               maxLength={10}
-              className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full"
+              style={styles.input}
             />
 
-            <View className="flex-row justify-between">
-              {/* Voltar */}
+            <View style={styles.rowBetween}>
               <TouchableOpacity
-                className="bg-gray-100 p-3 rounded-full"
+                style={styles.roundedButtonGray}
                 onPress={() => setStep(4)}
               >
                 <Feather name="arrow-left" size={24} color="black" />
               </TouchableOpacity>
 
-              {/* Avançar */}
               <TouchableOpacity
                 disabled={!step5Valido}
                 onPress={() => setStep(6)}
-                className={`px-5 py-3 rounded-full flex-row items-center ${
-                  step5Valido ? "bg-black" : "bg-gray-100"
-                }`}
+                style={[
+                  styles.nextButton,
+                  {
+                    backgroundColor: step5Valido ? "black" : "#f3f4f6",
+                  },
+                ]}
               >
                 <Text
-                  className={`mr-2 font-medium ${
-                    step5Valido ? "text-white" : "text-gray-400"
-                  }`}
+                  style={[
+                    styles.nextButtonText,
+                    {
+                      color: step5Valido ? "white" : "#9ca3af",
+                    },
+                  ]}
                 >
                   Avançar
                 </Text>
@@ -348,43 +364,43 @@ export default function Cadastro() {
         {/* STEP 6 */}
         {step === 6 && (
           <View>
-            <View className="items-center mb-6">
+            <View style={styles.iconContainer}>
               <Feather name="file-text" size={64} color="black" />
             </View>
 
-            <Text className="text-2xl font-bold mb-4">
+            <Text style={styles.titleBig}>
               Aceite os Termos e condições e leia o Aviso de Privacidade do App
             </Text>
 
-            <Text className="text-sm text-gray-700 mb-6">
+            <Text style={styles.description}>
               Ao selecionar Concordo abaixo, confirmo que revisei e concordo com
-              os <Text className="text-blue-600 underline">Termos de uso</Text>{" "}
-              e reconheço o{" "}
-              <Text className="text-blue-600 underline">
-                Aviso de Privacidade
-              </Text>
-              . Eu tenho pelo menos 18 anos.
+              os <Text style={styles.link}>Termos de uso</Text> e reconheço o{" "}
+              <Text style={styles.link}>Aviso de Privacidade</Text>. Eu tenho
+              pelo menos 18 anos.
             </Text>
 
-            <View className="border-t border-gray-300 mt-6 mb-4" />
+            <View style={styles.divider} />
 
-            <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-base">Concordo</Text>
+            <View style={styles.rowBetweenCenter}>
+              <Text style={styles.baseText}>Concordo</Text>
 
               <Pressable onPress={() => setConcordo(!concordo)}>
                 <View
-                  className={`w-6 h-6 border rounded items-center justify-center ${
-                    concordo ? "bg-black" : "bg-white border-gray-400"
-                  }`}
+                  style={[
+                    styles.checkbox,
+                    concordo
+                      ? styles.checkboxChecked
+                      : styles.checkboxUnchecked,
+                  ]}
                 >
                   {concordo && <Feather name="check" size={16} color="white" />}
                 </View>
               </Pressable>
             </View>
 
-            <View className="flex-row justify-between items-center">
+            <View style={styles.rowBetweenCenter}>
               <TouchableOpacity
-                className="bg-gray-200 p-3 rounded-full"
+                style={styles.roundedButtonGrayLight}
                 onPress={() => setStep(5)}
               >
                 <Feather name="arrow-left" size={24} color="black" />
@@ -393,14 +409,20 @@ export default function Cadastro() {
               <TouchableOpacity
                 disabled={!concordo}
                 onPress={finalizarCadastro}
-                className={`px-5 py-3 rounded-full flex-row items-center ${
-                  concordo ? "bg-black" : "bg-gray-100"
-                }`}
+                style={[
+                  styles.nextButton,
+                  {
+                    backgroundColor: concordo ? "black" : "#f3f4f6",
+                  },
+                ]}
               >
                 <Text
-                  className={`mr-2 font-medium ${
-                    concordo ? "text-white" : "text-gray-400"
-                  }`}
+                  style={[
+                    styles.nextButtonText,
+                    {
+                      color: concordo ? "white" : "#9ca3af",
+                    },
+                  ]}
                 >
                   Finalizar Cadastro
                 </Text>
@@ -418,3 +440,177 @@ export default function Cadastro() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 24,
+  },
+
+  content: {
+    width: "100%",
+    maxWidth: 320,
+  },
+
+  title: {
+    fontSize: 20,
+    fontWeight: "600",
+    marginBottom: 16,
+  },
+
+  titleBig: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 16,
+  },
+
+  input: {
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 16,
+    fontSize: 16,
+    backgroundColor: "#f3f4f6",
+    width: "100%",
+  },
+
+  inputCenter: {
+    textAlign: "center",
+  },
+
+  buttonBlack: {
+    backgroundColor: "#000000",
+    paddingVertical: 12,
+    borderRadius: 6,
+    width: "100%",
+  },
+
+  buttonBlackText: {
+    color: "#ffffff",
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  loginButton: {
+    paddingTop: 16,
+  },
+
+  loginText: {
+    color: "#3b82f6",
+    fontSize: 18,
+    textAlign: "center",
+  },
+
+  smallText: {
+    fontSize: 12,
+    color: "#4b5563",
+    marginBottom: 16,
+  },
+
+  smallTextSpacing: {
+    fontSize: 12,
+    color: "#4b5563",
+    marginBottom: 32,
+  },
+
+  resendButton: {
+    backgroundColor: "#f3f4f6",
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 9999,
+    marginTop: 40,
+    marginBottom: 80,
+    alignSelf: "flex-start",
+  },
+
+  resendButtonText: {
+    color: "#000000",
+    fontWeight: "500",
+  },
+
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  rowBetweenCenter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+
+  roundedButtonGray: {
+    backgroundColor: "#f3f4f6",
+    padding: 12,
+    borderRadius: 9999,
+  },
+
+  roundedButtonGrayLight: {
+    backgroundColor: "#e5e7eb",
+    padding: 12,
+    borderRadius: 9999,
+  },
+
+  nextButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 9999,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  nextButtonText: {
+    marginRight: 8,
+    fontWeight: "500",
+  },
+
+  iconContainer: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+
+  description: {
+    fontSize: 14,
+    color: "#374151",
+    marginBottom: 24,
+  },
+
+  link: {
+    color: "#2563eb",
+    textDecorationLine: "underline",
+  },
+
+  divider: {
+    borderTopWidth: 1,
+    borderTopColor: "#d1d5db",
+    marginTop: 24,
+    marginBottom: 16,
+  },
+
+  baseText: {
+    fontSize: 16,
+  },
+
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  checkboxChecked: {
+    backgroundColor: "#000000",
+  },
+
+  checkboxUnchecked: {
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#9ca3af",
+  },
+});

@@ -11,8 +11,7 @@ import React, {
 interface Usuario {
   id: string;
   email: string;
-  nome: string;
-  sobrenome: string;
+  name: string;
   tipoUsuario: string;
 }
 
@@ -41,10 +40,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const fetchUser = async () => {
       try {
         // Simula delay de requisição ao banco (2 segundos)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         const storedUser = await SecureStore.getItemAsync("user");
-        
+
         if (storedUser) {
           try {
             // Tenta fazer parse como JSON
@@ -102,9 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, loading, login, logout, register }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );
