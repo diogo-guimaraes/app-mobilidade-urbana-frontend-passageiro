@@ -24,18 +24,14 @@ export default function Cadastro() {
 
   // step 3
   const [senha, setSenha] = useState("");
-  const [confirmarSenha, setConfirmarSenha] = useState("");
-
-  const [nome, setNome] = useState("");
-  const [sobreNome, setsobreNome] = useState("");
-
-  // verificar se senhas coincidem
-  const senhasIguais = senha.length > 0 && senha === confirmarSenha;
-  const nomeSobrenomePreenchidos = nome.length > 0 && sobreNome.length;
 
   // step 4
-  const [tipoUsuario, setTipoUsuario] = useState("");
+  const [nome, setNome] = useState("");
 
+  // step 5
+  // cpf e data de nascimento
+
+  // step 6
   const [concordo, setConcordo] = useState(false);
 
   // verificar se código tem 4 dígitos
@@ -48,8 +44,7 @@ export default function Cadastro() {
         id: Date.now().toString(),
         email: email,
         nome: nome,
-        sobrenome: sobreNome,
-        tipoUsuario: tipoUsuario,
+        tipoUsuario: "passageiro",
         // Adicione outros campos que você queira salvar
       };
 
@@ -171,7 +166,7 @@ export default function Cadastro() {
         {step === 3 && (
           <View>
             <Text className="text-xl font-semibold mb-4">
-              Crie uma senha da sua conta
+              Crie uma senha para sua conta
             </Text>
 
             <TextInput
@@ -180,14 +175,6 @@ export default function Cadastro() {
               className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full"
               value={senha}
               onChangeText={setSenha}
-            />
-
-            <TextInput
-              placeholder="Confirmar senha"
-              secureTextEntry
-              className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full"
-              value={confirmarSenha}
-              onChangeText={setConfirmarSenha}
             />
 
             <View className="flex-row justify-between">
@@ -201,15 +188,15 @@ export default function Cadastro() {
 
               {/* Avançar */}
               <TouchableOpacity
-                disabled={!senhasIguais}
+                disabled={!senha}
                 onPress={() => setStep(4)}
                 className={`px-5 py-3 rounded-full flex-row items-center ${
-                  senhasIguais ? "bg-black" : "bg-gray-100"
+                  senha ? "bg-black" : "bg-gray-100"
                 }`}
               >
                 <Text
                   className={`mr-2 font-medium ${
-                    senhasIguais ? "text-white" : "text-gray-400"
+                    senha ? "text-white" : "text-gray-400"
                   }`}
                 >
                   Avançar
@@ -217,7 +204,7 @@ export default function Cadastro() {
                 <Feather
                   name="arrow-right"
                   size={20}
-                  color={senhasIguais ? "white" : "gray"}
+                  color={senha ? "white" : "gray"}
                 />
               </TouchableOpacity>
             </View>
@@ -235,17 +222,10 @@ export default function Cadastro() {
             </Text>
 
             <TextInput
-              placeholder="Informe o primeiro nome"
+              placeholder="Informe seu nome completo"
               className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full"
               value={nome}
               onChangeText={setNome}
-            />
-
-            <TextInput
-              placeholder="Infome o sobrenome"
-              className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full"
-              value={sobreNome}
-              onChangeText={setsobreNome}
             />
 
             <View className="flex-row justify-between">
@@ -259,15 +239,15 @@ export default function Cadastro() {
 
               {/* Avançar */}
               <TouchableOpacity
-                disabled={!nomeSobrenomePreenchidos}
+                disabled={!nome}
                 onPress={() => setStep(5)}
                 className={`px-5 py-3 rounded-full flex-row items-center ${
-                  nomeSobrenomePreenchidos ? "bg-black" : "bg-gray-100"
+                  nome ? "bg-black" : "bg-gray-100"
                 }`}
               >
                 <Text
                   className={`mr-2 font-medium ${
-                    nomeSobrenomePreenchidos ? "text-white" : "text-gray-400"
+                    nome ? "text-white" : "text-gray-400"
                   }`}
                 >
                   Avançar
@@ -275,7 +255,7 @@ export default function Cadastro() {
                 <Feather
                   name="arrow-right"
                   size={20}
-                  color={nomeSobrenomePreenchidos ? "white" : "gray"}
+                  color={nome ? "white" : "gray"}
                 />
               </TouchableOpacity>
             </View>
@@ -286,35 +266,8 @@ export default function Cadastro() {
         {step === 5 && (
           <View>
             <Text className="text-xl font-semibold mb-4">
-              Escolha uma opção:
+              Crie aqui os inputs:
             </Text>
-            <Text className="text-xs text-gray-600 mb-8">
-              Informe que tipo de usuário é você
-            </Text>
-
-            <TouchableOpacity
-              className="bg-black py-3 rounded-md w-full mb-4"
-              onPress={() => {
-                setTipoUsuario("PASSAGEIRO");
-                setStep(6);
-              }}
-            >
-              <Text className="text-white text-center text-base font-semibold">
-                SOU PASSAGEIRO
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="bg-black py-3 rounded-md w-full mb-20"
-              onPress={() => {
-                setTipoUsuario("MOTORISTA");
-                setStep(6);
-              }}
-            >
-              <Text className="text-white text-center text-base font-semibold">
-                SOU MOTORISTA
-              </Text>
-            </TouchableOpacity>
 
             <View className="flex-row justify-between">
               {/* Voltar */}
@@ -337,8 +290,7 @@ export default function Cadastro() {
             </View>
 
             <Text className="text-2xl font-bold mb-4">
-              Aceite os Termos e condições e leia o Aviso de Privacidade do App{" "}
-              {tipoUsuario}
+              Aceite os Termos e condições e leia o Aviso de Privacidade do App
             </Text>
 
             <Text className="text-sm text-gray-700 mb-6">
