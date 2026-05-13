@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthProvider"; // Importe o hook
+import { useAuth } from "@/context/AuthProvider";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
@@ -29,7 +29,8 @@ export default function Cadastro() {
   const [nome, setNome] = useState("");
 
   // step 5
-  // cpf e data de nascimento
+  const [cpf, setCpf] = useState("");
+  const [dataNascimento, setDataNascimento] = useState("");
 
   // step 6
   const [concordo, setConcordo] = useState(false);
@@ -37,21 +38,43 @@ export default function Cadastro() {
   // verificar se código tem 4 dígitos
   const codigoValido = codigo.length === 4;
 
+  // validação step 5
+  const step5Valido = cpf.length === 14 && dataNascimento.length === 10;
+
+  // máscara CPF
+  const formatarCPF = (value: string) => {
+    const numeros = value.replace(/\D/g, "");
+
+    return numeros
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/\.(\d{3})(\d)/, ".$1-$2")
+      .slice(0, 14);
+  };
+
+  // máscara data nascimento
+  const formatarDataNascimento = (value: string) => {
+    const numeros = value.replace(/\D/g, "");
+
+    return numeros
+      .replace(/^(\d{2})(\d)/, "$1/$2")
+      .replace(/^(\d{2})\/(\d{2})(\d)/, "$1/$2/$3")
+      .slice(0, 10);
+  };
+
   const finalizarCadastro = () => {
     if (concordo) {
-      // Cria o objeto de usuário com os dados do cadastro
       const usuario = {
         id: Date.now().toString(),
         email: email,
         nome: nome,
+        cpf: cpf,
+        dataNascimento: dataNascimento,
         tipoUsuario: "passageiro",
-        // Adicione outros campos que você queira salvar
       };
 
-      // Registra o usuário no contexto de autenticação
       register(usuario);
 
-      // Agora sim pode redirecionar para home
       router.replace("/home");
     }
   };
@@ -82,6 +105,7 @@ export default function Cadastro() {
                 Continuar
               </Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               className="pt-4"
               onPress={() => router.push("/login")}
@@ -107,18 +131,15 @@ export default function Cadastro() {
               className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full text-center"
               value={codigo}
               onChangeText={(text) => {
-                // remove tudo que não seja dígito
                 const somenteNumeros = text.replace(/[^0-9]/g, "");
                 setCodigo(somenteNumeros);
               }}
             />
 
-            {/* Texto de recomendação */}
             <Text className="text-xs text-gray-600 mb-4">
               Recomendação: Verifique a caixa de entrada e a pasta de spam
             </Text>
 
-            {/* Botão Reenviar */}
             <TouchableOpacity
               className="bg-gray-100 px-5 py-2 rounded-full mt-10 mb-20 self-start"
               onPress={() => {
@@ -129,7 +150,6 @@ export default function Cadastro() {
             </TouchableOpacity>
 
             <View className="flex-row justify-between">
-              {/* Voltar */}
               <TouchableOpacity
                 className="bg-gray-100 p-3 rounded-full"
                 onPress={() => setStep(1)}
@@ -137,7 +157,6 @@ export default function Cadastro() {
                 <Feather name="arrow-left" size={24} color="black" />
               </TouchableOpacity>
 
-              {/* Avançar */}
               <TouchableOpacity
                 disabled={!codigoValido}
                 onPress={() => setStep(3)}
@@ -152,6 +171,7 @@ export default function Cadastro() {
                 >
                   Avançar
                 </Text>
+
                 <Feather
                   name="arrow-right"
                   size={20}
@@ -178,7 +198,6 @@ export default function Cadastro() {
             />
 
             <View className="flex-row justify-between">
-              {/* Voltar */}
               <TouchableOpacity
                 className="bg-gray-100 p-3 rounded-full"
                 onPress={() => setStep(2)}
@@ -186,7 +205,6 @@ export default function Cadastro() {
                 <Feather name="arrow-left" size={24} color="black" />
               </TouchableOpacity>
 
-              {/* Avançar */}
               <TouchableOpacity
                 disabled={!senha}
                 onPress={() => setStep(4)}
@@ -201,6 +219,7 @@ export default function Cadastro() {
                 >
                   Avançar
                 </Text>
+
                 <Feather
                   name="arrow-right"
                   size={20}
@@ -217,6 +236,7 @@ export default function Cadastro() {
             <Text className="text-xl font-semibold mb-4">
               Qual é o seu nome ?
             </Text>
+
             <Text className="text-xs text-gray-600 mb-8">
               Informe como você quer que te chamem
             </Text>
@@ -229,7 +249,6 @@ export default function Cadastro() {
             />
 
             <View className="flex-row justify-between">
-              {/* Voltar */}
               <TouchableOpacity
                 className="bg-gray-100 p-3 rounded-full"
                 onPress={() => setStep(3)}
@@ -237,7 +256,6 @@ export default function Cadastro() {
                 <Feather name="arrow-left" size={24} color="black" />
               </TouchableOpacity>
 
-              {/* Avançar */}
               <TouchableOpacity
                 disabled={!nome}
                 onPress={() => setStep(5)}
@@ -252,6 +270,7 @@ export default function Cadastro() {
                 >
                   Avançar
                 </Text>
+
                 <Feather
                   name="arrow-right"
                   size={20}
@@ -266,8 +285,30 @@ export default function Cadastro() {
         {step === 5 && (
           <View>
             <Text className="text-xl font-semibold mb-4">
-              Crie aqui os inputs:
+              Informe seus dados
             </Text>
+
+            {/* CPF */}
+            <TextInput
+              placeholder="Qual é o CPF?"
+              keyboardType="numeric"
+              value={cpf}
+              onChangeText={(text) => setCpf(formatarCPF(text))}
+              maxLength={14}
+              className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full"
+            />
+
+            {/* Data nascimento */}
+            <TextInput
+              placeholder="Qual sua data nascimento?"
+              keyboardType="numeric"
+              value={dataNascimento}
+              onChangeText={(text) =>
+                setDataNascimento(formatarDataNascimento(text))
+              }
+              maxLength={10}
+              className="rounded-md px-4 py-3 mb-4 text-base bg-gray-100 w-full"
+            />
 
             <View className="flex-row justify-between">
               {/* Voltar */}
@@ -277,6 +318,29 @@ export default function Cadastro() {
               >
                 <Feather name="arrow-left" size={24} color="black" />
               </TouchableOpacity>
+
+              {/* Avançar */}
+              <TouchableOpacity
+                disabled={!step5Valido}
+                onPress={() => setStep(6)}
+                className={`px-5 py-3 rounded-full flex-row items-center ${
+                  step5Valido ? "bg-black" : "bg-gray-100"
+                }`}
+              >
+                <Text
+                  className={`mr-2 font-medium ${
+                    step5Valido ? "text-white" : "text-gray-400"
+                  }`}
+                >
+                  Avançar
+                </Text>
+
+                <Feather
+                  name="arrow-right"
+                  size={20}
+                  color={step5Valido ? "white" : "gray"}
+                />
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -284,7 +348,6 @@ export default function Cadastro() {
         {/* STEP 6 */}
         {step === 6 && (
           <View>
-            {/* Ícone ilustrativo */}
             <View className="items-center mb-6">
               <Feather name="file-text" size={64} color="black" />
             </View>
@@ -307,6 +370,7 @@ export default function Cadastro() {
 
             <View className="flex-row justify-between items-center mb-6">
               <Text className="text-base">Concordo</Text>
+
               <Pressable onPress={() => setConcordo(!concordo)}>
                 <View
                   className={`w-6 h-6 border rounded items-center justify-center ${
@@ -319,7 +383,6 @@ export default function Cadastro() {
             </View>
 
             <View className="flex-row justify-between items-center">
-              {/* Voltar */}
               <TouchableOpacity
                 className="bg-gray-200 p-3 rounded-full"
                 onPress={() => setStep(5)}
@@ -327,7 +390,6 @@ export default function Cadastro() {
                 <Feather name="arrow-left" size={24} color="black" />
               </TouchableOpacity>
 
-              {/* Avançar - AGORA CHAMA A FUNÇÃO DE REGISTRO */}
               <TouchableOpacity
                 disabled={!concordo}
                 onPress={finalizarCadastro}
@@ -342,6 +404,7 @@ export default function Cadastro() {
                 >
                   Finalizar Cadastro
                 </Text>
+
                 <Feather
                   name="arrow-right"
                   size={20}
