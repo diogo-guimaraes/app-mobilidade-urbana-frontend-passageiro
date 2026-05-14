@@ -23,6 +23,7 @@ interface Usuario {
   telefone: string;
   cpf: string;
   data_nascimento: string;
+  foto: string;
 }
 
 interface AuthResponse {
