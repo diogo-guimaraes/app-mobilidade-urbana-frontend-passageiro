@@ -50,9 +50,12 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
   const { user } = useAuth();
 
   useEffect(() => {
+    console.log(user, "user");
+
     const onBackPress = () => {
       if (visible) {
         onClose();
+
         return true;
       }
 
@@ -191,6 +194,8 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
     </TouchableOpacity>
   );
 
+  const fotoPerfil = fotoLocal || user?.foto;
+
   return (
     <>
       <View style={[StyleSheet.absoluteFill, { zIndex: 30 }]}>
@@ -232,15 +237,22 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
               {/* PROFILE INFO */}
               <View style={styles.profileCard}>
                 <View style={styles.avatarWrapper}>
-                  <Image
-                    source={{
-                      uri:
-                        fotoLocal ||
-                        user?.foto ||
-                        "https://i.pravatar.cc/150?img=12",
-                    }}
-                    style={styles.avatar}
-                  />
+                  {fotoPerfil ? (
+                    <Image
+                      source={{
+                        uri: fotoPerfil,
+                      }}
+                      style={styles.avatar}
+                    />
+                  ) : (
+                    <View style={styles.avatarPlaceholder}>
+                      <Ionicons
+                        name="person-circle-outline"
+                        size={110}
+                        color="#c4c4c4"
+                      />
+                    </View>
+                  )}
 
                   <TouchableOpacity
                     style={styles.editBadge}
@@ -446,5 +458,13 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
+  },
+  avatarPlaceholder: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f3f3f3",
   },
 });
