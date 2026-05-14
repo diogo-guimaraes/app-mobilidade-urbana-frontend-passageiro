@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -19,7 +20,7 @@ import ModalSelos from "./ModalSelos";
 import NotasAgradecimentos from "./NotasAgradecimentos";
 import VerificacoesUsuario from "./VerificacoesUsuario";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -45,6 +46,7 @@ export default function PerfilUsuario({
   const [showDetalhesComentario, setShowDetalhesComentarioSelecionado] =
     useState(false);
   const [showDicasAvaliacao, setShowDicasAvaliacao] = useState(false);
+  const { user } = useAuth();
 
   // Dados Mockados para as novas seções
   const avaliacoesPositivas = [
@@ -235,7 +237,7 @@ export default function PerfilUsuario({
                 source={{ uri: "https://i.pravatar.cc/150?img=12" }}
                 style={styles.mainAvatar}
               />
-              <Text style={styles.userName}>Diogo</Text>
+              <Text style={styles.userName}>{user?.name.split(" ")[0]}</Text>
               <TouchableOpacity style={styles.publicProfileBtn}>
                 <Text style={styles.publicProfileText}>Ver perfil público</Text>
               </TouchableOpacity>

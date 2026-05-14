@@ -259,8 +259,7 @@ export default function SideMenu({
             </TouchableOpacity>
 
             <View style={styles.nameRow}>
-              <Text style={styles.userName}>My Name</Text>
-              {/* <Text style={styles.userName}>{user || "Diogo"}</Text> */}
+              <Text style={styles.userName}>{user?.name.split(" ")[0]}</Text>
               <Text style={styles.ratingText}> · 4,82 ★</Text>
             </View>
             <View style={styles.separator} />
@@ -333,36 +332,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#111",
   },
-  statusBadge: {
-    backgroundColor: "#313663",
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 25,
-  },
-  badgeContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  statusText: {
-    color: "#FFF",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  notificationDot: {
-    position: "absolute",
-    top: -2,
-    right: 0,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#FF4D4D",
-    borderWidth: 1,
-    borderColor: "#FFF",
-  },
   separator: {
     flexDirection: "row",
     width: "100%",
@@ -370,25 +339,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#F0F0F0",
-  },
-  statBox: {
-    alignItems: "center",
-    flex: 1,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#111",
-  },
-  statLabel: {
-    fontSize: 12,
-    color: "#666",
-    marginTop: 2,
-  },
-  statDivider: {
-    width: 1,
-    height: "100%",
-    backgroundColor: "#EEE",
   },
   // LISTA DE ITENS
   menuList: {

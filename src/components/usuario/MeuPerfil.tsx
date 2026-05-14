@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -10,7 +11,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import AlterarEmail from "./AlterarEmail";
 import AlterarNumero from "./AlterarNumero";
@@ -36,6 +37,7 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
   const [showAlterarSenha, setShowAlterarSenha] = useState(false);
   const [showDocumentosPendentes, setShowDocumentosPendentes] = useState(false);
   const [showGestaoDispositivos, setShowGestaoDispositivos] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const onBackPress = () => {
@@ -89,7 +91,7 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
     icon: any,
     title: string,
     subtitle?: string,
-    onPress?: () => void
+    onPress?: () => void,
   ) => (
     <TouchableOpacity onPress={onPress} style={styles.item}>
       <View style={styles.left}>
@@ -130,71 +132,90 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
             </View>
           </View>
 
-          <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+          >
             {/* BODY */}
             <View style={styles.body}>
               {/* SEÇÃO */}
               <Text style={styles.sectionTitle}>Informações pessoais</Text>
 
-
-
               {/* PROFILE INFO */}
               <View style={styles.profileCard}>
                 <View style={styles.avatarWrapper}>
                   <Image
-                    source={{ uri: 'https://i.pravatar.cc/150?img=12' }}
+                    source={{ uri: "https://i.pravatar.cc/150?img=12" }}
                     style={styles.avatar}
                   />
                   <TouchableOpacity style={styles.editBadge}>
                     <Ionicons name="camera" size={16} color="#fff" />
                   </TouchableOpacity>
                 </View>
-                <Text style={styles.userName}>Diogo</Text>
+                <Text style={styles.userName}>{user?.name.split(" ")[0]}</Text>
                 {/* <Text style={styles.userEmail}>diogo.dev@exemplo.com</Text>
-              <Text style={styles.userPhone}>(69) 99999-9999</Text> */}
+                <Text style={styles.userPhone}>(69) 99999-9999</Text> */}
               </View>
 
               <View>
-                {/* {renderItem("", "Foto de perfil", undefined, true)} */}
-                {renderItem("call-outline", "Número de telefone", "+5569981400661",
-                  () =>
-                    setShowAlterarNumero(true)
+                {renderItem(
+                  "call-outline",
+                  "Número de telefone",
+                  user?.telefone || "",
+                  () => setShowAlterarNumero(true),
                 )}
-                {renderItem("mail-outline", "E-mail", "diogoguimaraes.br@gmail.com",
-                  () =>
-                    setShowAlterarEmail(true)
+                {renderItem("mail-outline", "E-mail", user?.email || "", () =>
+                  setShowAlterarEmail(true),
                 )}
-                {renderItem("location-outline", "Cidade", "Porto Velho",
-                  () =>
-                    setShowAlterarCidade(true)
+                {renderItem("location-outline", "Cidade", "Porto Velho", () =>
+                  setShowAlterarCidade(true),
                 )}
-                {renderItem("key-outline", "Senha", "",
-                  () =>
-                    setShowAlterarSenha(true))}
+                {renderItem("key-outline", "Senha", "", () =>
+                  setShowAlterarSenha(true),
+                )}
 
                 {/* SEÇÃO */}
                 <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
                   Gerenciamento de perfil
                 </Text>
 
-                {renderItem("document-text-outline", "Documentos pendentes", "",
-                  () =>
-                    setShowDocumentosPendentes(true)
+                {renderItem(
+                  "document-text-outline",
+                  "Documentos pendentes",
+                  "",
+                  () => setShowDocumentosPendentes(true),
                 )}
-                {renderItem("phone-portrait-outline", "Gestão de dispositivo", "",
-                  () =>
-                    setShowGestaoDispositivos(true)
+                {renderItem(
+                  "phone-portrait-outline",
+                  "Gestão de dispositivo",
+                  "",
+                  () => setShowGestaoDispositivos(true),
                 )}
               </View>
             </View>
           </ScrollView>
         </Animated.View>
       </View>
-      <AlterarNumero visible={showAlterarNumero} onClose={() => setShowAlterarNumero(false)} />
-      <AlterarEmail visible={showAlterarEmail} onClose={() => setShowAlterarEmail(false)} />
-      <AlterarSenha visible={showAlterarSenha} onClose={() => setShowAlterarSenha(false)} />
-      <DocumentosPendentes visible={showDocumentosPendentes} onClose={() => setShowDocumentosPendentes(false)} />
-      <GestaoDispositivos visible={showGestaoDispositivos} onClose={() => setShowGestaoDispositivos(false)} />
+      <AlterarNumero
+        visible={showAlterarNumero}
+        onClose={() => setShowAlterarNumero(false)}
+      />
+      <AlterarEmail
+        visible={showAlterarEmail}
+        onClose={() => setShowAlterarEmail(false)}
+      />
+      <AlterarSenha
+        visible={showAlterarSenha}
+        onClose={() => setShowAlterarSenha(false)}
+      />
+      <DocumentosPendentes
+        visible={showDocumentosPendentes}
+        onClose={() => setShowDocumentosPendentes(false)}
+      />
+      <GestaoDispositivos
+        visible={showGestaoDispositivos}
+        onClose={() => setShowGestaoDispositivos(false)}
+      />
     </>
   );
 }
@@ -270,12 +291,12 @@ const styles = StyleSheet.create({
   //   borderRadius: 18,
   // },
   profileCard: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 30,
     // backgroundColor: '#fff',
   },
   avatarWrapper: {
-    position: 'relative',
+    position: "relative",
     marginBottom: 15,
   },
   avatar: {
@@ -283,34 +304,34 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 3,
-    borderColor: '#f0f0f0',
+    borderColor: "#f0f0f0",
   },
   editBadge: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: '#FFD600',
+    backgroundColor: "#FFD600",
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 3,
-    borderColor: '#fff',
+    borderColor: "#fff",
   },
   userName: {
     fontSize: 22,
-    fontWeight: '800',
-    color: '#111',
+    fontWeight: "800",
+    color: "#111",
   },
   userEmail: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginTop: 4,
   },
   userPhone: {
     fontSize: 14,
-    color: '#999',
+    color: "#999",
     marginTop: 2,
   },
   scrollContainer: {

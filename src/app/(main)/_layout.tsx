@@ -4,18 +4,19 @@ import { useAuth } from "@/context/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { Slot, useRouter, useSegments } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+
 import {
-    Animated,
-    Dimensions,
-    Image,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Dimensions,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 export default function MainLayout() {
-  const { usuario } = useAuth();
+  const { user } = useAuth();
   const [showSideMenu, setShowSideMenu] = useState(false);
   const drawerWidth = Math.round(Dimensions.get("window").width * 0.78);
   const translateX = useRef(new Animated.Value(-drawerWidth)).current;
@@ -86,7 +87,7 @@ export default function MainLayout() {
               <View style={styles.notificationDot} />
             </Pressable>
             <Text style={styles.greetingText}>
-              Olá, {usuario?.nome?.split(" ")[0] || "Usuário"}!
+              Olá, {user?.name?.split(" ")[0] || "Usuário"}!
             </Text>
           </View>
 
