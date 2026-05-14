@@ -24,6 +24,7 @@ interface Usuario {
   cpf: string;
   data_nascimento: string;
   foto: string;
+  foto_thumbnail: string;
 }
 
 interface AuthResponse {
