@@ -1,7 +1,10 @@
 import { useAuth } from "@/context/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Animated,
   BackHandler,
   Dimensions,
@@ -13,6 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { api } from "../../Services/api";
 import AlterarEmail from "./AlterarEmail";
 import AlterarNumero from "./AlterarNumero";
 import AlterarSenha from "./AlterarSenha";
@@ -30,13 +34,19 @@ interface props {
 export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+
   const [isMounted, setIsMounted] = useState(visible);
+
   const [showAlterarNumero, setShowAlterarNumero] = useState(false);
   const [showAlterarEmail, setShowAlterarEmail] = useState(false);
   const [showAlterarCidade, setShowAlterarCidade] = useState(false);
   const [showAlterarSenha, setShowAlterarSenha] = useState(false);
   const [showDocumentosPendentes, setShowDocumentosPendentes] = useState(false);
   const [showGestaoDispositivos, setShowGestaoDispositivos] = useState(false);
+
+  const [imageLoading, setImageLoading] = useState(false);
+  const [fotoLocal, setFotoLocal] = useState<string | null>(null);
+
   const { user } = useAuth();
 
   useEffect(() => {
@@ -45,24 +55,29 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
         onClose();
         return true;
       }
+
       return false;
     };
+
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
       onBackPress,
     );
+
     return () => subscription.remove();
   }, [visible]);
 
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
+
       Animated.parallel([
         Animated.timing(translateX, {
           toValue: 0,
           duration,
           useNativeDriver: true,
         }),
+
         Animated.timing(overlayOpacity, {
           toValue: 1,
           duration: duration * 0.8,
@@ -76,6 +91,7 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
           duration,
           useNativeDriver: true,
         }),
+
         Animated.timing(overlayOpacity, {
           toValue: 0,
           duration: duration * 0.8,
@@ -87,6 +103,73 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
 
   if (!isMounted) return null;
 
+  async function selecionarImagem() {
+    try {
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          "Permissão necessária",
+          "Precisamos da permissão para acessar suas fotos.",
+        );
+
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled) return;
+
+      const asset = result.assets[0];
+
+      setFotoLocal(asset.uri);
+
+      await uploadImagem(asset);
+    } catch (error: any) {
+      Alert.alert("Erro", "Não foi possível selecionar a imagem.");
+    }
+  }
+
+  async function uploadImagem(asset: ImagePicker.ImagePickerAsset) {
+    if (!user?.id) return;
+
+    try {
+      setImageLoading(true);
+
+      const formData = new FormData();
+
+      formData.append("image", {
+        uri: asset.uri,
+        name: asset.fileName || "foto.jpg",
+        type: asset.mimeType || "image/jpeg",
+      } as any);
+
+      await api.put(`/usuario-alterar-foto-perfil/${user.id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      Alert.alert("Sucesso", "Imagem atualizada com sucesso!");
+    } catch (error: any) {
+      console.log(error);
+
+      Alert.alert(
+        "Erro",
+        error?.response?.data?.message ||
+          "Não foi possível atualizar a imagem.",
+      );
+    } finally {
+      setImageLoading(false);
+    }
+  }
+
   const renderItem = (
     icon: any,
     title: string,
@@ -96,8 +179,10 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
     <TouchableOpacity onPress={onPress} style={styles.item}>
       <View style={styles.left}>
         <Ionicons name={icon} size={22} color="#333" />
+
         <View style={{ marginLeft: 12 }}>
           <Text style={styles.title}>{title}</Text>
+
           {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
         </View>
       </View>
@@ -114,7 +199,10 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
           <Animated.View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: "rgba(0,0,0,0.25)", opacity: overlayOpacity },
+              {
+                backgroundColor: "rgba(0,0,0,0.25)",
+                opacity: overlayOpacity,
+              },
             ]}
           />
         </Pressable>
@@ -145,16 +233,29 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
               <View style={styles.profileCard}>
                 <View style={styles.avatarWrapper}>
                   <Image
-                    source={{ uri: "https://i.pravatar.cc/150?img=12" }}
+                    source={{
+                      uri:
+                        fotoLocal ||
+                        user?.foto ||
+                        "https://i.pravatar.cc/150?img=12",
+                    }}
                     style={styles.avatar}
                   />
-                  <TouchableOpacity style={styles.editBadge}>
-                    <Ionicons name="camera" size={16} color="#fff" />
+
+                  <TouchableOpacity
+                    style={styles.editBadge}
+                    onPress={selecionarImagem}
+                    disabled={imageLoading}
+                  >
+                    {imageLoading ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <Ionicons name="camera" size={16} color="#fff" />
+                    )}
                   </TouchableOpacity>
                 </View>
-                <Text style={styles.userName}>{user?.name.split(" ")[0]}</Text>
-                {/* <Text style={styles.userEmail}>diogo.dev@exemplo.com</Text>
-                <Text style={styles.userPhone}>(69) 99999-9999</Text> */}
+
+                <Text style={styles.userName}>{user?.name?.split(" ")[0]}</Text>
               </View>
 
               <View>
@@ -164,12 +265,15 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
                   user?.telefone || "",
                   () => setShowAlterarNumero(true),
                 )}
+
                 {renderItem("mail-outline", "E-mail", user?.email || "", () =>
                   setShowAlterarEmail(true),
                 )}
+
                 {renderItem("location-outline", "Cidade", "Porto Velho", () =>
                   setShowAlterarCidade(true),
                 )}
+
                 {renderItem("key-outline", "Senha", "", () =>
                   setShowAlterarSenha(true),
                 )}
@@ -185,6 +289,7 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
                   "",
                   () => setShowDocumentosPendentes(true),
                 )}
+
                 {renderItem(
                   "phone-portrait-outline",
                   "Gestão de dispositivo",
@@ -196,22 +301,27 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
           </ScrollView>
         </Animated.View>
       </View>
+
       <AlterarNumero
         visible={showAlterarNumero}
         onClose={() => setShowAlterarNumero(false)}
       />
+
       <AlterarEmail
         visible={showAlterarEmail}
         onClose={() => setShowAlterarEmail(false)}
       />
+
       <AlterarSenha
         visible={showAlterarSenha}
         onClose={() => setShowAlterarSenha(false)}
       />
+
       <DocumentosPendentes
         visible={showDocumentosPendentes}
         onClose={() => setShowDocumentosPendentes(false)}
       />
+
       <GestaoDispositivos
         visible={showGestaoDispositivos}
         onClose={() => setShowGestaoDispositivos(false)}
