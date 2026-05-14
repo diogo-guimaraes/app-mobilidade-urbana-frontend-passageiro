@@ -1,5 +1,5 @@
 // context/AuthProvider.tsx
-import * as SecureStore from "expo-secure-store";
+
 import React, {
   createContext,
   ReactNode,
@@ -8,103 +8,282 @@ import React, {
   useState,
 } from "react";
 
+import * as SecureStore from "expo-secure-store";
+
+import { api } from "../Services/api";
+
+// =========================
+// INTERFACES
+// =========================
+
 interface Usuario {
   id: string;
   email: string;
   name: string;
-  tipoUsuario: string;
+}
+
+interface AuthResponse {
+  user: Usuario;
+  token: string;
+}
+
+interface DadosCadastro {
+  email: string;
+  name: string;
+  cpf: string;
+  data_nascimento: string;
+  password: string;
 }
 
 interface AuthContextType {
   user: Usuario | null;
   loading: boolean;
-  login: (user: Usuario) => void;
-  logout: () => void;
-  register: (usuario: Usuario) => void;
+
+  login: (
+    user: Usuario
+  ) => Promise<void>;
+
+  logout: () => Promise<void>;
+
+  register: (
+    dados: DadosCadastro
+  ) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
-  login: () => {},
-  logout: () => {},
-  register: () => {},
-});
+// =========================
+// CONTEXT
+// =========================
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<Usuario | null>(null);
-  const [loading, setLoading] = useState(true);
+const AuthContext =
+  createContext<AuthContextType>({
+    user: null,
+    loading: true,
 
-  // Busca o usuário do SecureStore na inicialização
+    login: async () => { },
+
+    logout: async () => { },
+
+    register: async () => { },
+  });
+
+// =========================
+// PROVIDER
+// =========================
+
+export const AuthProvider = ({
+  children,
+}: {
+  children: ReactNode;
+}) => {
+
+  const [user, setUser] =
+    useState<Usuario | null>(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  // =========================
+  // RESTAURA SESSÃO
+  // =========================
+
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        // Simula delay de requisição ao banco (2 segundos)
-        await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        const storedUser = await SecureStore.getItemAsync("user");
+    const restoreSession =
+      async () => {
 
-        if (storedUser) {
-          try {
-            // Tenta fazer parse como JSON
-            const parsedUser = JSON.parse(storedUser);
+        try {
+
+          const storedUser =
+            await SecureStore.getItemAsync(
+              "user"
+            );
+
+          if (storedUser) {
+
+            const parsedUser =
+              JSON.parse(storedUser);
+
             setUser(parsedUser);
-          } catch (parseError) {
-            // Se falhar no parse, limpa o dado inválido
-            console.warn("Usuário salvo em formato inválido, limpando...");
-            await SecureStore.deleteItemAsync("user");
-            setUser(null);
           }
-        }
-      } catch (error) {
-        console.error("Erro ao buscar usuário do SecureStore:", error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchUser();
+        } catch (error) {
+
+          console.error(
+            "Erro ao restaurar sessão:",
+            error
+          );
+
+          setUser(null);
+
+        } finally {
+
+          setLoading(false);
+        }
+      };
+
+    restoreSession();
+
   }, []);
 
-  const login = async (userData: Usuario) => {
-    setLoading(true);
+  // =========================
+  // LOGIN
+  // =========================
+
+  const login = async (
+    userData: Usuario
+  ) => {
+
     try {
+
+      setLoading(true);
+
       setUser(userData);
-      await SecureStore.setItemAsync("user", JSON.stringify(userData));
+
+      await SecureStore.setItemAsync(
+        "user",
+        JSON.stringify(userData)
+      );
+
     } catch (error) {
-      console.error("Erro ao fazer login:", error);
+
+      console.error(
+        "Erro ao fazer login:",
+        error
+      );
+
     } finally {
+
       setLoading(false);
     }
   };
+
+  // =========================
+  // LOGOUT
+  // =========================
 
   const logout = async () => {
+
     try {
+
       setUser(null);
-      await SecureStore.deleteItemAsync("user");
+
+      await SecureStore.deleteItemAsync(
+        "user"
+      );
+
+      await SecureStore.deleteItemAsync(
+        "token"
+      );
+
     } catch (error) {
-      console.error("Erro ao fazer logout:", error);
+
+      console.error(
+        "Erro ao fazer logout:",
+        error
+      );
     }
   };
 
-  const register = async (novoUsuario: Usuario) => {
-    setLoading(true);
+  // =========================
+  // REGISTER
+  // =========================
+
+  const register = async (
+    dadosCadastro: DadosCadastro
+  ) => {
+
     try {
-      setUser(novoUsuario);
-      await SecureStore.setItemAsync("user", JSON.stringify(novoUsuario));
-    } catch (error) {
-      console.error("Erro ao registrar:", error);
+
+      setLoading(true);
+
+      console.log(
+        "Enviando cadastro:",
+        dadosCadastro
+      );
+
+      const response =
+        await api.post<AuthResponse>(
+          "/auth/register",
+          dadosCadastro
+        );
+
+      console.log(
+        "Resposta da API:",
+        response.data
+      );
+
+      const { user, token } =
+        response.data;
+
+      setUser(user);
+
+      await SecureStore.setItemAsync(
+        "user",
+        JSON.stringify(user)
+      );
+
+      await SecureStore.setItemAsync(
+        "token",
+        token
+      );
+
+    } catch (error: any) {
+
+      console.error(
+        "Erro ao registrar:",
+        error
+      );
+
+      console.log(
+        "Mensagem:",
+        error?.message
+      );
+
+      console.log(
+        "Código:",
+        error?.code
+      );
+
+      console.log(
+        "Response:",
+        error?.response?.data
+      );
+
+      console.log(
+        "Status:",
+        error?.response?.status
+      );
+
+      throw error;
+
     } finally {
+
       setLoading(false);
     }
   };
 
+  // =========================
+  // PROVIDER
+  // =========================
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        logout,
+        register,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+// =========================
+// HOOK
+// =========================
+
+export const useAuth = () =>
+  useContext(AuthContext);

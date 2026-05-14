@@ -72,17 +72,15 @@ export default function Cadastro() {
       const [dia, mes, ano] = dataNascimento.split("/");
       const dataNascimentoTratada = `${ano}-${mes}-${dia}`;
 
-      const usuario = {
-        id: Date.now().toString(),
+      const usuario = {     
         email: email,
+        password: senha,
         name: name,
         cpf: cpfTratado,
-        dataNascimento: dataNascimentoTratada,
-        tipoUsuario: "passageiro",
+        data_nascimento: dataNascimentoTratada,
       };
       console.log(usuario, "usuariousuario");
       register(usuario);
-
       router.replace("/home");
     }
   };
@@ -310,7 +308,8 @@ export default function Cadastro() {
               maxLength={14}
               style={styles.input}
             />
-            <Text style={styles.title}></Text>
+            <View style={styles.space} />
+            <Text style={styles.title}>Qual sua da de nascimento?</Text>
             <TextInput
               placeholder="Informe sua data de nascimento"
               keyboardType="numeric"
@@ -460,7 +459,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: 16,
   },
-
+  space: {
+    marginTop: 8,
+    marginBottom: 8,
+  },
   titleBig: {
     fontSize: 24,
     fontWeight: "700",
