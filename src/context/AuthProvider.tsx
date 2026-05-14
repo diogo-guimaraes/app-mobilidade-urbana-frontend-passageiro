@@ -41,9 +41,10 @@ interface DadosCadastro {
 
 interface AuthContextType {
   user: Usuario | null;
+
   loading: boolean;
 
-  login: (user: Usuario) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
 
   logout: () => Promise<void>;
 
@@ -56,13 +57,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+
   loading: true,
 
-  login: async () => {},
+  login: async (email: string, password: string) => {},
 
   logout: async () => {},
 
-  register: async () => {},
+  register: async (dados: DadosCadastro) => {},
 });
 
 // =========================
@@ -104,15 +106,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // LOGIN
   // =========================
 
-  const login = async (userData: Usuario) => {
+  const login = async (email: string, password: string) => {
     try {
       setLoading(true);
 
-      setUser(userData);
+      const response = await api.post<AuthResponse>("/auth/login", {
+        email,
+        password,
+      });
 
-      await SecureStore.setItemAsync("user", JSON.stringify(userData));
-    } catch (error) {
+      const { user, token } = response.data;
+
+      setUser(user);
+
+      await SecureStore.setItemAsync("user", JSON.stringify(user));
+
+      await SecureStore.setItemAsync("token", token);
+    } catch (error: any) {
       console.error("Erro ao fazer login:", error);
+
+      console.log("Mensagem:", error?.message);
+
+      console.log("Código:", error?.code);
+
+      console.log("Response:", error?.response?.data);
+
+      console.log("Status:", error?.response?.status);
+
+      throw error;
     } finally {
       setLoading(false);
     }
