@@ -18,18 +18,29 @@ import { useAuth } from "../context/AuthProvider";
 
 export default function Login() {
   const router = useRouter();
-  const { login, loading } = useAuth(); // Supondo que sua AuthProvider tenha esses métodos
+  const { login, loading } = useAuth();
 
   const [phone, setPhone] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  // Máscara para o telefone: (XX) XXXXX-XXXX
+  // Aplica a máscara: 01 23456 7890
   const formatPhone = (text: string) => {
     const cleaned = text.replace(/\D/g, "");
-    setPhone(cleaned);
+    let formatted = cleaned;
+
+    if (cleaned.length > 2) {
+      formatted = `${cleaned.slice(0, 2)} ${cleaned.slice(2)}`;
+    }
+    if (cleaned.length > 7) {
+      formatted = `${cleaned.slice(0, 2)} ${cleaned.slice(2, 7)} ${cleaned.slice(7, 11)}`;
+    }
+
+    setPhone(formatted);
   };
 
-  const isButtonEnabled = phone.length >= 10 && acceptedTerms;
+  // Habilita se tiver os 11 dígitos numéricos (que resultam em 13 caracteres com espaços)
+  const isButtonEnabled =
+    phone.replace(/\D/g, "").length === 11 && acceptedTerms;
 
   return (
     <KeyboardAvoidingView
@@ -47,9 +58,7 @@ export default function Login() {
           </TouchableOpacity>
           <Text style={styles.logoText}>99</Text>
           <View style={styles.badgeContainer}>
-            <Text style={styles.badgeText}>
-              💸 Acelerador de Lucros +40% do CDI
-            </Text>
+            <Text style={styles.badgeText}> 🤑 Receba cupom de desconto</Text>
           </View>
         </View>
 
@@ -72,7 +81,7 @@ export default function Login() {
               placeholder="01 23456 7890"
               placeholderTextColor="#CCC"
               keyboardType="phone-pad"
-              maxLength={15}
+              maxLength={13} // Limite de caracteres considerando a máscara (2+1+5+1+4)
               value={phone}
               onChangeText={formatPhone}
             />
@@ -149,23 +158,23 @@ export default function Login() {
 
           {/* Login Social */}
           <TouchableOpacity style={styles.socialButton}>
-            <Image
-              source={{
-                uri: "https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg",
-              }}
+            <FontAwesome5
+              name="envelope"
+              size={20}
+              color="grey"
               style={styles.socialIcon}
             />
-            <Text style={styles.socialButtonText}>Entrar com Google</Text>
+            <Text style={styles.socialButtonText}>Entrar com email</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.socialButton}>
             <FontAwesome5
-              name="facebook"
-              size={20}
+              name="google"
+              size={19}
               color="#1877F2"
               style={styles.socialIcon}
             />
-            <Text style={styles.socialButtonText}>Entrar com Facebook</Text>
+            <Text style={styles.socialButtonText}>Entrar com Google</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -252,7 +261,7 @@ const styles = StyleSheet.create({
   },
   inputUnderline: {
     height: 1,
-    backgroundColor: "#FF5500", // Cor de destaque ao focar
+    backgroundColor: "#FF5500",
     width: "100%",
     marginBottom: 25,
   },
@@ -302,7 +311,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
   },
   nextButtonActive: {
-    backgroundColor: "#FFD200", // Amarelo 99
+    backgroundColor: "#FFD200",
   },
   nextButtonText: {
     fontSize: 18,
