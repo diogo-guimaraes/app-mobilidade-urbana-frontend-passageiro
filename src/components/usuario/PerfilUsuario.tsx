@@ -233,7 +233,6 @@ export default function PerfilUsuario({
           >
             {/* USER INFO */}
             <View style={styles.profileSection}>
-
               {user?.foto ? (
                 <Image
                   source={{
@@ -242,7 +241,7 @@ export default function PerfilUsuario({
                   style={styles.avatar}
                 />
               ) : (
-                <View style={styles.avatar}>
+                <View style={styles.avatarPlaceholder}>
                   <Ionicons
                     name="person-circle-outline"
                     size={110}
@@ -427,7 +426,7 @@ export default function PerfilUsuario({
           onClose={() => setShowModalSelos(false)}
           headerHeight={headerHeight}
           data={seloSelecionado}
-        />       
+        />
         <MeuPerfil
           visible={showMeuPerfil}
           onClose={() => setShowMeuPerfil(false)}
@@ -654,6 +653,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     fontWeight: "500",
+  },
+  avatarWrapper: {
+    position: "relative",
+    marginBottom: 15,
   },
   avatarPlaceholder: {
     width: 110,

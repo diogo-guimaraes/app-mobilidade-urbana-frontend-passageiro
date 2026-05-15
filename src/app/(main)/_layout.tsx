@@ -78,26 +78,22 @@ export default function MainLayout() {
         <View style={styles.headerContent}>
           <View style={styles.userInfo}>
             <Pressable onPress={handleMenuOpen} style={styles.avatarContainer}>
-              <View style={styles.avatarPlaceholder}>
-                {user?.foto ? (
-                  <Image
-                    source={{
-                      uri: user.foto,
-                    }}
-                    style={styles.avatarBadge}
-                  />
-                ) : (
-                  <View style={styles.avatarBadge}>
-                    <Ionicons
-                      name="person-circle-outline"
-                      size={58}
-                      color="#c4c4c4"
-                    />
-                  </View>
-                )}
-              </View>
+              {user?.foto ? (
+                <Image
+                  source={{
+                    uri: user.foto,
+                  }}
+                  style={styles.avatar}
+                />
+              ) : (
+                <View style={styles.avatar}>
+                  <Ionicons name="person-circle" size={40} color="#c4c4c4" />
+                </View>
+              )}
+
               <View style={styles.notificationDot} />
             </Pressable>
+
             <Text style={styles.greetingText}>
               Olá, {user?.name?.split(" ")[0] || "Usuário"}!
             </Text>
@@ -131,6 +127,7 @@ export default function MainLayout() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+
   headerFloating: {
     position: "absolute",
     top: 0,
@@ -147,52 +144,60 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 3.84,
   },
+
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
+
   userInfo: {
     flexDirection: "row",
     alignItems: "center",
   },
+
   avatarContainer: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    backgroundColor: "#FFF",
-    justifyContent: "center",
-    alignItems: "center",
     marginRight: 12,
-  },
-  avatarPlaceholder: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 24,
-    // backgroundColor: "#BDC3C7",
     justifyContent: "center",
     alignItems: "center",
-    overflow: "hidden",
+    position: "relative",
   },
+
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F2F2F2",
+  },
+
   notificationDot: {
     position: "absolute",
-    top: 2,
-    right: 2,
+    top: 0.5,
+    right: 0.5,
     width: 13,
     height: 13,
     borderRadius: 6.5,
     backgroundColor: "#FF3B30",
     borderWidth: 2,
     borderColor: "#fff",
+    zIndex: 2,
   },
+
   greetingText: {
     fontSize: 22,
     fontWeight: "bold",
     color: "#000",
   },
+
   scanButton: {
     padding: 8,
   },
+
   backdrop: {
     position: "absolute",
     top: 0,
@@ -201,10 +206,5 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(0,0,0,0.28)",
     zIndex: 18,
-  },
-  avatarBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 24,
   },
 });

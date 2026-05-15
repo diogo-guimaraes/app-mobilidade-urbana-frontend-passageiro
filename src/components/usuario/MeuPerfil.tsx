@@ -12,7 +12,7 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import AlterarEmail from "./AlterarEmail";
 import AlterarFoto from "./AlterarFoto";
@@ -144,7 +144,8 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
         {/* Drawer */}
         <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
           {/* HEADER */}
-          <View style={styles.header}
+          <View
+            style={styles.header}
             onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
           >
             <View style={styles.headerRow}>
@@ -275,8 +276,6 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
         onClose={() => setShowAlterarSenha(false)}
       />
 
-
-
       <DocumentosPendentes
         visible={showDocumentosPendentes}
         onClose={() => setShowDocumentosPendentes(false)}
@@ -286,8 +285,6 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
         visible={showGestaoDispositivos}
         onClose={() => setShowGestaoDispositivos(false)}
       />
-
-
     </>
   );
 }
