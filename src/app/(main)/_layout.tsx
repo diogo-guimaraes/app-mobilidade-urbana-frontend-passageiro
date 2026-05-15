@@ -79,26 +79,22 @@ export default function MainLayout() {
           <View style={styles.userInfo}>
             <Pressable onPress={handleMenuOpen} style={styles.avatarContainer}>
               <View style={styles.avatarPlaceholder}>
-                {/* <Image
-                  source={{ uri: "https://i.pravatar.cc/150?img=2" }}
-                  style={styles.avatarBadge}
-                /> */}
-                {user?.foto ? (
-                                    <Image
-                                      source={{
-                                        uri: user.foto,
-                                      }}
-                                      style={styles.avatarBadge}
-                                    />
-                                  ) : (
-                                    <View style={styles.avatarBadge}>
-                                      <Ionicons
-                                        name="person-circle-outline"
-                                        size={58}
-                                        color="#c4c4c4"
-                                      />
-                                    </View>
-                                  )}
+                {user?.foto_thumbnail ? (
+                  <Image
+                    source={{
+                      uri: user.foto_thumbnail,
+                    }}
+                    style={styles.avatarBadge}
+                  />
+                ) : (
+                  <View style={styles.avatarBadge}>
+                    <Ionicons
+                      name="person-circle-outline"
+                      size={58}
+                      color="#c4c4c4"
+                    />
+                  </View>
+                )}
               </View>
               <View style={styles.notificationDot} />
             </Pressable>
