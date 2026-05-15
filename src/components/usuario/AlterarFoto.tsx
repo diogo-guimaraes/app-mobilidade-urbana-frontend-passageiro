@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { api } from "../../Services/api";
+import CameraFotoPerfil from "./CameraFotoPerfil";
 const { height } = Dimensions.get("window");
 
 interface Props {
@@ -29,6 +30,7 @@ export default function AlterarFoto({
   const slideAnim = useRef(new Animated.Value(height)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
+  const [showCameraFotoPerfil, setshowCameraFotoPerfil] = useState(visible);
   const { user, atualizarFotoUsuario } = useAuth();
 
   useEffect(() => {
@@ -173,7 +175,7 @@ export default function AlterarFoto({
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity onPress={onClose} style={styles.button}>
+          <TouchableOpacity onPress={() => setshowCameraFotoPerfil(true)} style={styles.button}>
             <Text style={styles.buttonText}>Tirar foto</Text>
           </TouchableOpacity>
 
@@ -182,6 +184,11 @@ export default function AlterarFoto({
           </TouchableOpacity>
         </View>
       </Animated.View>
+      <CameraFotoPerfil
+        visible={showCameraFotoPerfil}
+        onClose={() => setshowCameraFotoPerfil(false)}
+      />
+
     </>
   );
 }
