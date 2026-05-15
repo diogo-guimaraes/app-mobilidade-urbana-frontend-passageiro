@@ -249,7 +249,9 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
           headerHeight={headerHeight}
           onOpenCamera={() => {
             setShowAlterarFoto(false);
+            setTimeout(() => {
               setshowCameraFotoPerfil(true);
+            }, 250);
           }}
         />
         <CameraFotoPerfil
