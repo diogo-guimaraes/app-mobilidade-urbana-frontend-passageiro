@@ -1,10 +1,8 @@
 import { useAuth } from "@/context/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
-import * as ImagePicker from "expo-image-picker";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   BackHandler,
   Dimensions,
@@ -14,9 +12,8 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
-import { api } from "../../Services/api";
 import AlterarEmail from "./AlterarEmail";
 import AlterarFoto from "./AlterarFoto";
 import AlterarNumero from "./AlterarNumero";
@@ -35,20 +32,17 @@ interface props {
 export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
-
   const [isMounted, setIsMounted] = useState(visible);
-
   const [showAlterarNumero, setShowAlterarNumero] = useState(false);
   const [showAlterarEmail, setShowAlterarEmail] = useState(false);
   const [showAlterarCidade, setShowAlterarCidade] = useState(false);
   const [showAlterarSenha, setShowAlterarSenha] = useState(false);
   const [showDocumentosPendentes, setShowDocumentosPendentes] = useState(false);
   const [showGestaoDispositivos, setShowGestaoDispositivos] = useState(false);
-  const [imageLoading, setImageLoading] = useState(false);
-  const [fotoLocal, setFotoLocal] = useState<string | null>(null);
+  const [imageLoading] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [showAlterarFoto, setShowAlterarFoto] = useState(false);
-  const { user, atualizarFotoUsuario } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     console.log(user, "user");
@@ -106,87 +100,7 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
   }, [visible]);
 
   if (!isMounted) return null;
-
-  async function selecionarImagem() {
-    try {
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (!permission.granted) {
-        Alert.alert(
-          "Permissão necessária",
-          "Precisamos da permissão para acessar suas fotos.",
-        );
-
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (result.canceled) return;
-
-      const asset = result.assets[0];
-
-      setFotoLocal(asset.uri);
-
-      await uploadImagem(asset);
-    } catch (error: any) {
-      Alert.alert("Erro", "Não foi possível selecionar a imagem.");
-    }
-  }
-
-  async function uploadImagem(asset: ImagePicker.ImagePickerAsset) {
-    if (!user?.id) return;
-
-    try {
-      setImageLoading(true);
-
-      const formData = new FormData();
-
-      formData.append("image", {
-        uri: asset.uri,
-        name: asset.fileName || "foto.jpg",
-        type: asset.mimeType || "image/jpeg",
-      } as any);
-
-      const response = await api.put(
-        `/usuario-alterar-foto-perfil/${user.id}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
-      );
-
-      const dadosUsuario = response.data.user;
-
-      await atualizarFotoUsuario({
-        foto: dadosUsuario.foto,
-        foto_thumbnail: dadosUsuario.foto_thumbnail,
-      });
-
-      setFotoLocal(dadosUsuario.foto);
-
-      Alert.alert("Sucesso", "Imagem atualizada com sucesso!");
-    } catch (error: any) {
-      console.log(error);
-
-      Alert.alert(
-        "Erro",
-        error?.response?.data?.message ||
-        "Não foi possível atualizar a imagem.",
-      );
-    } finally {
-      setImageLoading(false);
-    }
-  }
-
+ 
   const renderItem = (
     icon: any,
     title: string,
@@ -207,8 +121,6 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
       <Ionicons name="chevron-forward" size={18} color="black" />
     </TouchableOpacity>
   );
-
-  const fotoPerfil = fotoLocal || user?.foto;
 
   return (
     <>
@@ -253,10 +165,10 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
               {/* PROFILE INFO */}
               <View style={styles.profileCard}>
                 <View style={styles.avatarWrapper}>
-                  {fotoPerfil ? (
+                  {user?.foto ? (
                     <Image
                       source={{
-                        uri: fotoPerfil,
+                        uri: user.foto,
                       }}
                       style={styles.avatar}
                     />
@@ -272,7 +184,7 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
 
                   <TouchableOpacity
                     style={styles.editBadge}
-                    onPress={selecionarImagem}
+                    onPress={() => setShowAlterarFoto(true)}
                     disabled={imageLoading}
                   >
                     {imageLoading ? (
@@ -299,7 +211,7 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
                 )}
 
                 {renderItem("location-outline", "Cidades", "Porto Velho", () =>
-                  setShowAlterarFoto(true),
+                  setShowAlterarCidade(true),
                 )}
 
                 {renderItem("key-outline", "Senha", "", () =>
@@ -334,7 +246,6 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
           headerHeight={headerHeight}
         />
       </View>
-
 
       <AlterarNumero
         visible={showAlterarNumero}
