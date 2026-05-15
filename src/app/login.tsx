@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import CodigoVerificacao from "../components/CodigoVerificacao";
 import { useAuth } from "../context/AuthProvider";
 
 export default function Login() {
@@ -22,6 +23,7 @@ export default function Login() {
 
   const [phone, setPhone] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showCodigoVerificacao, setShowCodigoVerificacao] = useState(false);
 
   // Aplica a máscara: 01 23456 7890
   const formatPhone = (text: string) => {
@@ -43,142 +45,149 @@ export default function Login() {
     phone.replace(/\D/g, "").length === 11 && acceptedTerms;
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header com Logo */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Ionicons name="chevron-back" size={24} color="black" />
-          </TouchableOpacity>
-          <Text style={styles.logoText}>99</Text>
-          <View style={styles.badgeContainer}>
-            <Text style={styles.badgeText}> 🤑 Receba cupom de desconto</Text>
-          </View>
-        </View>
-
-        <View style={styles.content}>
-          <Text style={styles.title}>Insira o número de telefone</Text>
-
-          {/* Input de Telefone */}
-          <View style={styles.inputWrapper}>
-            <View style={styles.countryPicker}>
-              <Image
-                source={{ uri: "https://flagcdn.com/w40/br.png" }}
-                style={styles.flag}
-              />
-              <Text style={styles.countryCode}>+55</Text>
-              <Ionicons name="caret-down" size={12} color="#666" />
-            </View>
-
-            <TextInput
-              style={styles.input}
-              placeholder="01 23456 7890"
-              placeholderTextColor="#CCC"
-              keyboardType="phone-pad"
-              maxLength={13} // Limite de caracteres considerando a máscara (2+1+5+1+4)
-              value={phone}
-              onChangeText={formatPhone}
-            />
-
-            {phone.length > 0 && (
-              <TouchableOpacity
-                onPress={() => setPhone("")}
-                style={styles.clearButton}
-              >
-                <Ionicons name="close-circle" size={20} color="#CCC" />
-              </TouchableOpacity>
-            )}
-
-            <TouchableOpacity style={styles.contactIcon}>
-              <Ionicons name="person-add-outline" size={20} color="black" />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.inputUnderline} />
-
-          {/* Termos e Condições */}
-          <TouchableOpacity
-            style={styles.termsContainer}
-            onPress={() => setAcceptedTerms(!acceptedTerms)}
-            activeOpacity={0.7}
-          >
-            <View
-              style={[
-                styles.radioButton,
-                acceptedTerms && styles.radioButtonActive,
-              ]}
+    <>
+      <CodigoVerificacao
+        visible={showCodigoVerificacao}
+        onClose={() => setShowCodigoVerificacao(false)}
+      />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Header com Logo */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
             >
-              {acceptedTerms && (
-                <Ionicons name="checkmark" size={14} color="white" />
-              )}
+              <Ionicons name="chevron-back" size={24} color="black" />
+            </TouchableOpacity>
+            <Text style={styles.logoText}>99</Text>
+            <View style={styles.badgeContainer}>
+              <Text style={styles.badgeText}> 🤑 Receba cupom de desconto</Text>
             </View>
-            <Text style={styles.termsText}>
-              Li e aceito os{" "}
-              <Text style={styles.linkText}>
-                Termos de Uso e a Política de Privacidade
-              </Text>
-            </Text>
-          </TouchableOpacity>
+          </View>
 
-          {/* Botão Próximo */}
-          <TouchableOpacity
-            style={[
-              styles.nextButton,
-              isButtonEnabled
-                ? styles.nextButtonActive
-                : styles.nextButtonDisabled,
-            ]}
-            disabled={!isButtonEnabled || loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text
+          <View style={styles.content}>
+            <Text style={styles.title}>Insira o número de telefone</Text>
+
+            {/* Input de Telefone */}
+            <View style={styles.inputWrapper}>
+              <View style={styles.countryPicker}>
+                <Image
+                  source={{ uri: "https://flagcdn.com/w40/br.png" }}
+                  style={styles.flag}
+                />
+                <Text style={styles.countryCode}>+55</Text>
+                <Ionicons name="caret-down" size={12} color="#666" />
+              </View>
+
+              <TextInput
+                style={styles.input}
+                placeholder="01 23456 7890"
+                placeholderTextColor="#CCC"
+                keyboardType="phone-pad"
+                maxLength={13} // Limite de caracteres considerando a máscara (2+1+5+1+4)
+                value={phone}
+                onChangeText={formatPhone}
+              />
+
+              {phone.length > 0 && (
+                <TouchableOpacity
+                  onPress={() => setPhone("")}
+                  style={styles.clearButton}
+                >
+                  <Ionicons name="close-circle" size={20} color="#CCC" />
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity style={styles.contactIcon}>
+                <Ionicons name="person-add-outline" size={20} color="black" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.inputUnderline} />
+
+            {/* Termos e Condições */}
+            <TouchableOpacity
+              style={styles.termsContainer}
+              onPress={() => setAcceptedTerms(!acceptedTerms)}
+              activeOpacity={0.7}
+            >
+              <View
                 style={[
-                  styles.nextButtonText,
-                  !isButtonEnabled && styles.nextButtonTextDisabled,
+                  styles.radioButton,
+                  acceptedTerms && styles.radioButtonActive,
                 ]}
               >
-                Próximo
+                {acceptedTerms && (
+                  <Ionicons name="checkmark" size={14} color="white" />
+                )}
+              </View>
+              <Text style={styles.termsText}>
+                Li e aceito os{" "}
+                <Text style={styles.linkText}>
+                  Termos de Uso e a Política de Privacidade
+                </Text>
               </Text>
-            )}
-          </TouchableOpacity>
+            </TouchableOpacity>
 
-          {/* Divisor */}
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>ou</Text>
-            <View style={styles.dividerLine} />
+            {/* Botão Próximo */}
+            <TouchableOpacity
+              onPress={() => setShowCodigoVerificacao(true)}
+              style={[
+                styles.nextButton,
+                isButtonEnabled
+                  ? styles.nextButtonActive
+                  : styles.nextButtonDisabled,
+              ]}
+              disabled={!isButtonEnabled || loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text
+                  style={[
+                    styles.nextButtonText,
+                    !isButtonEnabled && styles.nextButtonTextDisabled,
+                  ]}
+                >
+                  Próximo
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            {/* Divisor */}
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>ou</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Login Social */}
+            <TouchableOpacity style={styles.socialButton}>
+              <FontAwesome5
+                name="envelope"
+                size={20}
+                color="grey"
+                style={styles.socialIcon}
+              />
+              <Text style={styles.socialButtonText}>Entrar com email</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.socialButton}>
+              <FontAwesome5
+                name="google"
+                size={19}
+                color="#1877F2"
+                style={styles.socialIcon}
+              />
+              <Text style={styles.socialButtonText}>Entrar com Google</Text>
+            </TouchableOpacity>
           </View>
-
-          {/* Login Social */}
-          <TouchableOpacity style={styles.socialButton}>
-            <FontAwesome5
-              name="envelope"
-              size={20}
-              color="grey"
-              style={styles.socialIcon}
-            />
-            <Text style={styles.socialButtonText}>Entrar com email</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.socialButton}>
-            <FontAwesome5
-              name="google"
-              size={19}
-              color="#1877F2"
-              style={styles.socialIcon}
-            />
-            <Text style={styles.socialButtonText}>Entrar com Google</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </>
   );
 }
 
