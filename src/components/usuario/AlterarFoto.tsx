@@ -29,9 +29,7 @@ export default function AlterarFoto({
   const slideAnim = useRef(new Animated.Value(height)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
- const [fotoLocal, setFotoLocal] = useState<string | null>(null);
-
-   const { user, atualizarFotoUsuario } = useAuth();
+  const { user, atualizarFotoUsuario } = useAuth();
 
   useEffect(() => {
     if (visible) {
@@ -69,84 +67,80 @@ export default function AlterarFoto({
   if (!isMounted) return null;
 
   async function selecionarImagem() {
-      try {
-        const permission =
-          await ImagePicker.requestMediaLibraryPermissionsAsync();
-  
-        if (!permission.granted) {
-          Alert.alert(
-            "Permissão necessária",
-            "Precisamos da permissão para acessar suas fotos.",
-          );
-  
-          return;
-        }
-  
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ["images"],
-          allowsEditing: true,
-          aspect: [1, 1],
-          quality: 0.8,
-        });
-  
-        if (result.canceled) return;
-  
-        const asset = result.assets[0];
-  
-        setFotoLocal(asset.uri);
-  
-        await uploadImagem(asset);
-      } catch (error: any) {
-        Alert.alert("Erro", "Não foi possível selecionar a imagem.");
-      }
-    }
+    try {
+      const permission =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-     async function uploadImagem(asset: ImagePicker.ImagePickerAsset) {
-        if (!user?.id) return;
-    
-        try {
-          // setImageLoading(true);
-    
-          const formData = new FormData();
-    
-          formData.append("image", {
-            uri: asset.uri,
-            name: asset.fileName || "foto.jpg",
-            type: asset.mimeType || "image/jpeg",
-          } as any);
-    
-          const response = await api.put(
-            `/usuario-alterar-foto-perfil/${user.id}`,
-            formData,
-            {
-              headers: {
-                "Content-Type": "multipart/form-data",
-              },
-            },
-          );
-    
-          const dadosUsuario = response.data.user;
-    
-          await atualizarFotoUsuario({
-            foto: dadosUsuario.foto,
-            foto_thumbnail: dadosUsuario.foto_thumbnail,
-          });
-    
-          setFotoLocal(dadosUsuario.foto);
-    
-          Alert.alert("Sucesso", "Imagem atualizada com sucesso!");
-        } catch (error: any) {
-          console.log(error);
-    
-          Alert.alert(
-            "Erro",
-            error?.response?.data?.message ||
-            "Não foi possível atualizar a imagem.",
-          );
-        } finally {
-          // setImageLoading(false);
-        }
+      if (!permission.granted) {
+        Alert.alert(
+          "Permissão necessária",
+          "Precisamos da permissão para acessar suas fotos.",
+        );
+
+        return;
       }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (result.canceled) return;
+
+      const asset = result.assets[0];
+
+      await uploadImagem(asset);
+    } catch (error: any) {
+      Alert.alert("Erro", "Não foi possível selecionar a imagem.");
+    }
+  }
+
+  async function uploadImagem(asset: ImagePicker.ImagePickerAsset) {
+    if (!user?.id) return;
+
+    try {
+      // setImageLoading(true);
+
+      const formData = new FormData();
+
+      formData.append("image", {
+        uri: asset.uri,
+        name: asset.fileName || "foto.jpg",
+        type: asset.mimeType || "image/jpeg",
+      } as any);
+
+      const response = await api.put(
+        `/usuario-alterar-foto-perfil/${user.id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      const dadosUsuario = response.data.user;
+
+      await atualizarFotoUsuario({
+        foto: dadosUsuario.foto,
+        foto_thumbnail: dadosUsuario.foto_thumbnail,
+      });
+
+      Alert.alert("Sucesso", "Imagem atualizada com sucesso!");
+    } catch (error: any) {
+      console.log(error);
+
+      Alert.alert(
+        "Erro",
+        error?.response?.data?.message ||
+        "Não foi possível atualizar a imagem.",
+      );
+    } finally {
+      // setImageLoading(false);
+    }
+  }
 
   return (
     <>
@@ -185,7 +179,7 @@ export default function AlterarFoto({
           <TouchableOpacity onPress={onClose} style={styles.button}>
             <Text style={styles.buttonText}>Tirar foto</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity onPress={selecionarImagem} style={[styles.button, { marginTop: 12 }]}>
             <Text style={styles.buttonText}>Selecionar da galeria</Text>
           </TouchableOpacity>
