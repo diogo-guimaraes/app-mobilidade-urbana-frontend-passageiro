@@ -427,7 +427,7 @@ export default function PerfilUsuario({
           onClose={() => setShowModalSelos(false)}
           headerHeight={headerHeight}
           data={seloSelecionado}
-        />
+        />       
         <MeuPerfil
           visible={showMeuPerfil}
           onClose={() => setShowMeuPerfil(false)}

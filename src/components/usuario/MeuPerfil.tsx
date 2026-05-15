@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import { api } from "../../Services/api";
 import AlterarEmail from "./AlterarEmail";
+import AlterarFoto from "./AlterarFoto";
 import AlterarNumero from "./AlterarNumero";
 import AlterarSenha from "./AlterarSenha";
 import DocumentosPendentes from "./DocumentosPendentes";
@@ -43,10 +44,10 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
   const [showAlterarSenha, setShowAlterarSenha] = useState(false);
   const [showDocumentosPendentes, setShowDocumentosPendentes] = useState(false);
   const [showGestaoDispositivos, setShowGestaoDispositivos] = useState(false);
-
   const [imageLoading, setImageLoading] = useState(false);
   const [fotoLocal, setFotoLocal] = useState<string | null>(null);
-
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [showAlterarFoto, setShowAlterarFoto] = useState(false);
   const { user, atualizarFotoUsuario } = useAuth();
 
   useEffect(() => {
@@ -179,7 +180,7 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
       Alert.alert(
         "Erro",
         error?.response?.data?.message ||
-          "Não foi possível atualizar a imagem.",
+        "Não foi possível atualizar a imagem.",
       );
     } finally {
       setImageLoading(false);
@@ -228,7 +229,9 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
         {/* Drawer */}
         <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
           {/* HEADER */}
-          <View style={styles.header}>
+          <View style={styles.header}
+            onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
+          >
             <View style={styles.headerRow}>
               <TouchableOpacity onPress={onClose}>
                 <Ionicons name="close-outline" size={26} color="#111" />
@@ -295,8 +298,8 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
                   setShowAlterarEmail(true),
                 )}
 
-                {renderItem("location-outline", "Cidade", "Porto Velho", () =>
-                  setShowAlterarCidade(true),
+                {renderItem("location-outline", "Cidades", "Porto Velho", () =>
+                  setShowAlterarFoto(true),
                 )}
 
                 {renderItem("key-outline", "Senha", "", () =>
@@ -325,7 +328,13 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
             </View>
           </ScrollView>
         </Animated.View>
+        <AlterarFoto
+          visible={showAlterarFoto}
+          onClose={() => setShowAlterarFoto(false)}
+          headerHeight={headerHeight}
+        />
       </View>
+
 
       <AlterarNumero
         visible={showAlterarNumero}
@@ -351,6 +360,8 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
         visible={showGestaoDispositivos}
         onClose={() => setShowGestaoDispositivos(false)}
       />
+
+
     </>
   );
 }
