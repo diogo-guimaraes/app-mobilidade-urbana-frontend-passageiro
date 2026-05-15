@@ -76,7 +76,6 @@ export default function AlterarFoto({
           "Permissão necessária",
           "Precisamos da permissão para acessar suas fotos.",
         );
-
         return;
       }
 
@@ -102,9 +101,7 @@ export default function AlterarFoto({
 
     try {
       // setImageLoading(true);
-
       const formData = new FormData();
-
       formData.append("image", {
         uri: asset.uri,
         name: asset.fileName || "foto.jpg",
@@ -127,7 +124,7 @@ export default function AlterarFoto({
         foto: dadosUsuario.foto,
         foto_thumbnail: dadosUsuario.foto_thumbnail,
       });
-
+      onClose()
       Alert.alert("Sucesso", "Imagem atualizada com sucesso!");
     } catch (error: any) {
       console.log(error);
