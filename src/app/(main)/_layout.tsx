@@ -79,10 +79,10 @@ export default function MainLayout() {
           <View style={styles.userInfo}>
             <Pressable onPress={handleMenuOpen} style={styles.avatarContainer}>
               <View style={styles.avatarPlaceholder}>
-                {user?.foto_thumbnail ? (
+                {user?.foto ? (
                   <Image
                     source={{
-                      uri: user.foto_thumbnail,
+                      uri: user.foto,
                     }}
                     style={styles.avatarBadge}
                   />

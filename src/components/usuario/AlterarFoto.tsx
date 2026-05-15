@@ -12,36 +12,43 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import { api } from "../../Services/api";
-import CameraFotoPerfil from "./CameraFotoPerfil";
+
 const { height } = Dimensions.get("window");
 
 interface Props {
   visible: boolean;
   onClose: () => void;
   headerHeight: number;
+  onOpenCamera: () => void;
 }
 
 export default function AlterarFoto({
   visible,
   onClose,
   headerHeight,
+  onOpenCamera,
 }: Props) {
   const slideAnim = useRef(new Animated.Value(height)).current;
+
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+
   const [isMounted, setIsMounted] = useState(visible);
-  const [showCameraFotoPerfil, setshowCameraFotoPerfil] = useState(visible);
+
   const { user, atualizarFotoUsuario } = useAuth();
 
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
+
       Animated.parallel([
         Animated.timing(slideAnim, {
           toValue: 0,
           duration: 300,
           useNativeDriver: true,
         }),
+
         Animated.timing(overlayOpacity, {
           toValue: 1,
           duration: 200,
@@ -55,6 +62,7 @@ export default function AlterarFoto({
           duration: 250,
           useNativeDriver: true,
         }),
+
         Animated.timing(overlayOpacity, {
           toValue: 0,
           duration: 200,
@@ -78,6 +86,7 @@ export default function AlterarFoto({
           "Permissão necessária",
           "Precisamos da permissão para acessar suas fotos.",
         );
+
         return;
       }
 
@@ -94,16 +103,21 @@ export default function AlterarFoto({
 
       await uploadImagem(asset);
     } catch (error: any) {
-      Alert.alert("Erro", "Não foi possível selecionar a imagem.");
+      Alert.alert(
+        "Erro",
+        "Não foi possível selecionar a imagem.",
+      );
     }
   }
 
-  async function uploadImagem(asset: ImagePicker.ImagePickerAsset) {
+  async function uploadImagem(
+    asset: ImagePicker.ImagePickerAsset,
+  ) {
     if (!user?.id) return;
 
     try {
-      // setImageLoading(true);
       const formData = new FormData();
+
       formData.append("image", {
         uri: asset.uri,
         name: asset.fileName || "foto.jpg",
@@ -126,18 +140,21 @@ export default function AlterarFoto({
         foto: dadosUsuario.foto,
         foto_thumbnail: dadosUsuario.foto_thumbnail,
       });
-      onClose()
-      Alert.alert("Sucesso", "Imagem atualizada com sucesso!");
+
+      onClose();
+
+      Alert.alert(
+        "Sucesso",
+        "Imagem atualizada com sucesso!",
+      );
     } catch (error: any) {
       console.log(error);
 
       Alert.alert(
         "Erro",
         error?.response?.data?.message ||
-        "Não foi possível atualizar a imagem.",
+          "Não foi possível atualizar a imagem.",
       );
-    } finally {
-      // setImageLoading(false);
     }
   }
 
@@ -159,40 +176,65 @@ export default function AlterarFoto({
       </Pressable>
 
       <Animated.View
-        style={[styles.modal, { transform: [{ translateY: slideAnim }] }]}
+        style={[
+          styles.modal,
+          {
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
       >
         <View style={styles.headerRow}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#999" />
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeButton}
+          >
+            <Ionicons
+              name="close"
+              size={24}
+              color="#999"
+            />
           </TouchableOpacity>
         </View>
 
         <View style={styles.body}>
-          <Text style={styles.title}>Foto de perfil</Text>
+          <Text style={styles.title}>
+            Foto de perfil
+          </Text>
+
           <Text style={styles.subtitle}>
-            Carregar uma foto verdadeira sua pode ajudar você a conseguir uma corrida mais rápido. Agradecemos por ajudar a construir uma comunidade mais segura conosco!
+            Carregar uma foto verdadeira sua pode
+            ajudar você a conseguir uma corrida mais
+            rápido. Agradecemos por ajudar a construir
+            uma comunidade mais segura conosco!
           </Text>
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity onPress={() => setshowCameraFotoPerfil(true)} style={styles.button}>
-            <Text style={styles.buttonText}>Tirar foto</Text>
+          <TouchableOpacity
+            onPress={onOpenCamera}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>
+              Tirar foto
+            </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={selecionarImagem} style={[styles.button, { marginTop: 12 }]}>
-            <Text style={styles.buttonText}>Selecionar da galeria</Text>
+          <TouchableOpacity
+            onPress={selecionarImagem}
+            style={[
+              styles.button,
+              { marginTop: 12 },
+            ]}
+          >
+            <Text style={styles.buttonText}>
+              Selecionar da galeria
+            </Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
-      <CameraFotoPerfil
-        visible={showCameraFotoPerfil}
-        onClose={() => setshowCameraFotoPerfil(false)}
-      />
-
     </>
   );
 }
-
 const styles = StyleSheet.create({
   modal: {
     position: "absolute",

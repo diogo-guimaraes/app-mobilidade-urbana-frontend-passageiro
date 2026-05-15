@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   Dimensions,
   Image,
   StyleSheet,
@@ -39,6 +40,21 @@ export default function CameraFotoPerfil({
   const [loading, setLoading] = useState(false);
 
   const { user, atualizarFotoUsuario } = useAuth();
+
+  useEffect(() => {
+    const onBackPress = () => {
+      if (visible) {
+        onClose();
+        return true;
+      }
+      return false;
+    };
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onBackPress,
+    );
+    return () => subscription.remove();
+  }, [visible, onClose]);
 
   // RESETA FOTO AO FECHAR
   useEffect(() => {
@@ -133,7 +149,7 @@ export default function CameraFotoPerfil({
       Alert.alert(
         "Erro",
         error?.response?.data?.message ||
-          "Não foi possível enviar a foto.",
+        "Não foi possível enviar a foto.",
       );
     } finally {
       setLoading(false);

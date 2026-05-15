@@ -18,6 +18,7 @@ import AlterarEmail from "./AlterarEmail";
 import AlterarFoto from "./AlterarFoto";
 import AlterarNumero from "./AlterarNumero";
 import AlterarSenha from "./AlterarSenha";
+import CameraFotoPerfil from "./CameraFotoPerfil";
 import DocumentosPendentes from "./DocumentosPendentes";
 import GestaoDispositivos from "./GestaoDispositivos";
 
@@ -42,6 +43,8 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
   const [imageLoading] = useState(false);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [showAlterarFoto, setShowAlterarFoto] = useState(false);
+  const [showCameraFotoPerfil, setshowCameraFotoPerfil] = useState(visible);
+
   const { user } = useAuth();
 
   useEffect(() => {
@@ -100,7 +103,7 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
   }, [visible]);
 
   if (!isMounted) return null;
- 
+
   const renderItem = (
     icon: any,
     title: string,
@@ -244,6 +247,14 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
           visible={showAlterarFoto}
           onClose={() => setShowAlterarFoto(false)}
           headerHeight={headerHeight}
+          onOpenCamera={() => {
+            setShowAlterarFoto(false);
+              setshowCameraFotoPerfil(true);
+          }}
+        />
+        <CameraFotoPerfil
+          visible={showCameraFotoPerfil}
+          onClose={() => setshowCameraFotoPerfil(false)}
         />
       </View>
 
@@ -261,6 +272,8 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
         visible={showAlterarSenha}
         onClose={() => setShowAlterarSenha(false)}
       />
+
+
 
       <DocumentosPendentes
         visible={showDocumentosPendentes}
