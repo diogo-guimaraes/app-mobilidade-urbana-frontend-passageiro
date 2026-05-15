@@ -79,10 +79,26 @@ export default function MainLayout() {
           <View style={styles.userInfo}>
             <Pressable onPress={handleMenuOpen} style={styles.avatarContainer}>
               <View style={styles.avatarPlaceholder}>
-                <Image
+                {/* <Image
                   source={{ uri: "https://i.pravatar.cc/150?img=2" }}
                   style={styles.avatarBadge}
-                />
+                /> */}
+                {user?.foto ? (
+                                    <Image
+                                      source={{
+                                        uri: user.foto,
+                                      }}
+                                      style={styles.avatarBadge}
+                                    />
+                                  ) : (
+                                    <View style={styles.avatarBadge}>
+                                      <Ionicons
+                                        name="person-circle-outline"
+                                        size={58}
+                                        color="#c4c4c4"
+                                      />
+                                    </View>
+                                  )}
               </View>
               <View style={styles.notificationDot} />
             </Pressable>
@@ -157,7 +173,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 24,
-    backgroundColor: "#BDC3C7",
+    // backgroundColor: "#BDC3C7",
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
@@ -171,7 +187,7 @@ const styles = StyleSheet.create({
     borderRadius: 6.5,
     backgroundColor: "#FF3B30",
     borderWidth: 2,
-    borderColor: "#FFD700",
+    borderColor: "#fff",
   },
   greetingText: {
     fontSize: 22,
@@ -191,11 +207,8 @@ const styles = StyleSheet.create({
     zIndex: 18,
   },
   avatarBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#f8f8f8",
-    borderWidth: 1,
-    borderColor: "#eee",
+    width: 40,
+    height: 40,
+    borderRadius: 24,
   },
 });

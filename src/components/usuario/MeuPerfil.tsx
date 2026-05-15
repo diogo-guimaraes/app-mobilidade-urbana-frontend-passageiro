@@ -47,7 +47,7 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
   const [imageLoading, setImageLoading] = useState(false);
   const [fotoLocal, setFotoLocal] = useState<string | null>(null);
 
-  const { user } = useAuth();
+  const { user, atualizarFotoUsuario } = useAuth();
 
   useEffect(() => {
     console.log(user, "user");
@@ -153,11 +153,24 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
         type: asset.mimeType || "image/jpeg",
       } as any);
 
-      await api.put(`/usuario-alterar-foto-perfil/${user.id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const response = await api.put(
+        `/usuario-alterar-foto-perfil/${user.id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         },
+      );
+
+      const dadosUsuario = response.data.user;
+
+      await atualizarFotoUsuario({
+        foto: dadosUsuario.foto,
+        foto_thumbnail: dadosUsuario.foto_thumbnail,
       });
+
+      setFotoLocal(dadosUsuario.foto);
 
       Alert.alert("Sucesso", "Imagem atualizada com sucesso!");
     } catch (error: any) {

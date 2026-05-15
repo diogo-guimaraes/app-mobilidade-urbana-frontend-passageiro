@@ -40,6 +40,11 @@ interface DadosCadastro {
   password: string;
 }
 
+interface AtualizarFotoPayload {
+  foto: string;
+  foto_thumbnail: string;
+}
+
 interface AuthContextType {
   user: Usuario | null;
 
@@ -50,6 +55,10 @@ interface AuthContextType {
   logout: () => Promise<void>;
 
   register: (dados: DadosCadastro) => Promise<void>;
+
+  atualizarFotoUsuario: (
+    dados: AtualizarFotoPayload,
+  ) => Promise<void>;
 }
 
 // =========================
@@ -66,6 +75,10 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
 
   register: async (dados: DadosCadastro) => {},
+
+  atualizarFotoUsuario: async (
+    dados: AtualizarFotoPayload,
+  ) => {},
 });
 
 // =========================
@@ -198,6 +211,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // =========================
+  // ATUALIZAR FOTO USUÁRIO
+  // =========================
+
+  const atualizarFotoUsuario = async ({
+    foto,
+    foto_thumbnail,
+  }: AtualizarFotoPayload) => {
+    if (!user) return;
+
+    const usuarioAtualizado = {
+      ...user,
+      foto,
+      foto_thumbnail,
+    };
+
+    setUser(usuarioAtualizado);
+
+    await SecureStore.setItemAsync(
+      "user",
+      JSON.stringify(usuarioAtualizado),
+    );
+  };
+
+  // =========================
   // PROVIDER
   // =========================
 
@@ -209,6 +246,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         logout,
         register,
+        atualizarFotoUsuario,
       }}
     >
       {children}

@@ -1,5 +1,6 @@
 import { useAuth } from "@/context/AuthProvider";
 import { AnimationConfig, useSlideAnimation } from "@/hooks/useSlideAnimation";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -252,10 +253,30 @@ export default function SideMenu({
           {/* HEADER DE PERFIL */}
           <View style={styles.profileSection}>
             <TouchableOpacity onPress={() => setShowPerfilUsuario(true)}>
-              <Image
+              {/* <Image
                 source={{ uri: "https://i.pravatar.cc/150?img=2" }}
                 style={styles.avatar}
-              />
+              /> */}
+              <View style={styles.avatarWrapper}>
+                  {user?.foto ? (
+                    <Image
+                      source={{
+                        uri: user.foto,
+                      }}
+                      style={styles.avatar}
+                    />
+                  ) : (
+                    <View style={styles.avatarPlaceholder}>
+                      <Ionicons
+                        name="person-circle-outline"
+                        size={110}
+                        color="#c4c4c4"
+                      />
+                    </View>
+                  )}
+
+                  
+                </View>
             </TouchableOpacity>
 
             <View style={styles.nameRow}>
@@ -311,11 +332,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     marginBottom: 20,
   },
-  avatar: {
-    width: 85,
-    height: 85,
-    borderRadius: 42.5,
-    marginBottom: 15,
+  // avatar: {
+  //   width: 85,
+  //   height: 85,
+  //   borderRadius: 42.5,
+  //   marginBottom: 15,
+  // },
+    avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: "#f0f0f0",
   },
   nameRow: {
     flexDirection: "row",
@@ -355,5 +383,17 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: "#FF4D4D",
+  },
+  avatarPlaceholder: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f3f3f3",
+  },
+  avatarWrapper: {
+    position: "relative",
+    marginBottom: 15,
   },
 });
