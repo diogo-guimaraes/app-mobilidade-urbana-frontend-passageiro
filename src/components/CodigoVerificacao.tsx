@@ -1,5 +1,6 @@
 // app/components/CodigoVerificacao.tsx
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -43,9 +44,19 @@ export default function CodigoVerificacao({
   // Estados de requisição e validação de erro
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const { user, loading, login } = useAuth();
+  const router = useRouter();
 
   // INPUT INVISÍVEL
   const hiddenInputRef = useRef<TextInput>(null);
+  
+   useEffect(() => {
+    if (user && !loading) {
+      router.replace("/home");
+    }
+  }, [user, loading]);
+
+
 
   // Função que busca código no backend e alimenta os inputs
   const receberCodigo = async () => {
