@@ -124,11 +124,10 @@ export default function CodigoVerificacao({
     }
   }, [visible]);
 
-  // Atualiza TODOS os inputs automaticamente e dispara validação
+  // textInput handler
   const handleChangeText = (text: string) => {
     const cleaned = text.replace(/\D/g, "").slice(0, 4);
 
-    // Se o usuário começar a digitar novamente, remove o aviso de erro anterior
     if (hasError) {
       setHasError(false);
     }
@@ -140,21 +139,17 @@ export default function CodigoVerificacao({
 
     setCode(newCode);
 
-    // Quando preencher exatamente os 4 campos, dispara a simulação da requisição imediatamente
     if (cleaned.length === 4) {
       setIsLoading(true);
       setHasError(false);
       
-      // Desfoca o input nativo para congelar a UI durante o envio simulado
       hiddenInputRef.current?.blur();
 
       setTimeout(() => {
         setIsLoading(false);
         setHasError(true);
-        // Limpa os quadradinhos visuais para nova tentativa
         setCode(["", "", "", ""]);
         
-        // Garante que o input invisível e o teclado voltem a focar de forma limpa após a thread renderizar o erro
         setTimeout(() => {
           hiddenInputRef.current?.focus();
         }, 100);
@@ -162,7 +157,6 @@ export default function CodigoVerificacao({
     }
   };
 
-  // Inputs ativos visualmente
   const isInputActive = (index: number) => {
     if (index === 0) return true;
 
@@ -216,7 +210,7 @@ export default function CodigoVerificacao({
               caretHidden
               blurOnSubmit={false}
               contextMenuHidden
-              editable={!isLoading} // Bloqueia digitação durante a requisição
+              editable={!isLoading}
               style={styles.hiddenInput}
             />
 
@@ -272,7 +266,7 @@ export default function CodigoVerificacao({
                         styles.inputLine,
                         {
                           backgroundColor: hasError 
-                            ? "#D32F2F" // Linha fica vermelha se der erro
+                            ? "#D32F2F"
                             : active
                             ? "#F2A199"
                             : "#E5E5E5",
@@ -310,14 +304,7 @@ export default function CodigoVerificacao({
               }}
             >
               {isLoading ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#000" style={{ marginRight: 8 }} />
-                  {countdown > 0 && (
-                    <Text style={styles.resendButtonTextDisabled}>
-                      {`Reenviar em ${countdown} s`}
-                    </Text>
-                  )}
-                </View>
+                <ActivityIndicator size="small" color="#000" />
               ) : (
                 <Text
                   style={[
@@ -474,13 +461,7 @@ const styles = StyleSheet.create({
   },
 
   resendButtonLoading: {
-    backgroundColor: "#F5F5F5", // Alterado para a cor cinza desabilitada para combinar com o estado de envio bloqueado
-  },
-
-  loadingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#F5F5F5",
   },
 
   resendButtonText: {
