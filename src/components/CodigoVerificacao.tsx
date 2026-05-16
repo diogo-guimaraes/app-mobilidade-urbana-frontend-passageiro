@@ -43,7 +43,10 @@ export default function CodigoVerificacao({
 
   // INPUT INVISÍVEL
   const hiddenInputRef = useRef<TextInput>(null);
-
+// Função de teste para simular recebimento do código do backend
+  const receberCodigo = () => {
+    console.log("Solicitando/simulando recebimento de código do backend...");
+  };
   // Timer
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -231,6 +234,15 @@ export default function CodigoVerificacao({
               Código de verificação enviado para SMS
             </Text>
 
+            {/* Texto clicável de Teste abaixo do SMS */}
+            <TouchableOpacity 
+              onPress={receberCodigo} 
+              style={styles.testClickableContainer}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.testClickableText}>Receber código</Text>
+            </TouchableOpacity>
+
             {/* Inputs visuais */}
             <Pressable
               style={styles.codeContainer}
@@ -394,7 +406,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#333",
     textAlign: "center",
-    marginBottom: 40,
+    marginBottom: 3,
   },
 
   codeContainer: {
@@ -474,5 +486,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: "#A0A0A0",
+  },
+
+   testClickableContainer: {
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    marginBottom: 10,
+  },
+
+  testClickableText: {
+    fontSize: 16,
+    color: "#007AFF", // Azul estilo link nativo iOS/Android
+    fontWeight: "600",
+    textDecorationLine: "underline",
   },
 });
