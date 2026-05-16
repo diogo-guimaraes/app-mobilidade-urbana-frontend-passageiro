@@ -2,6 +2,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   BackHandler,
   Dimensions,
@@ -35,6 +36,10 @@ export default function CodigoVerificacao({
 
   // Estado do contador
   const [countdown, setCountdown] = useState(57);
+
+  // Estados de requisição e validação de erro
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   // INPUT INVISÍVEL
   const hiddenInputRef = useRef<TextInput>(null);
@@ -110,17 +115,48 @@ export default function CodigoVerificacao({
     }
   }, [visible, translateX, overlayOpacity, duration]);
 
-  // Atualiza TODOS os inputs automaticamente
+  // Limpa os estados de erro e código quando o drawer fechar ou abrir
+  useEffect(() => {
+    if (!visible) {
+      setCode(["", "", "", ""]);
+      setHasError(false);
+      setIsLoading(false);
+    }
+  }, [visible]);
+
+  // Atualiza TODOS os inputs automaticamente e dispara validação
   const handleChangeText = (text: string) => {
     const cleaned = text.replace(/\D/g, "").slice(0, 4);
 
-    const newCode = ["", "", "", ""];
+    // Se o usuário começar a digitar novamente, remove o aviso de erro anterior
+    if (hasError) {
+      setHasError(false);
+    }
 
+    const newCode = ["", "", "", ""];
     cleaned.split("").forEach((digit, index) => {
       newCode[index] = digit;
     });
 
     setCode(newCode);
+
+    // Quando preencher todos os 4 campos, dispara a simulação da requisição
+    if (cleaned.length === 4) {
+      setIsLoading(true);
+      setHasError(false);
+      
+      // Desfoca o input temporariamente para melhorar a UX visual de envio
+      hiddenInputRef.current?.blur();
+
+      setTimeout(() => {
+        setIsLoading(false);
+        setHasError(true);
+        // Limpa o código digitado para permitir nova tentativa se desejar
+        setCode(["", "", "", ""]);
+        // Devolve o foco para o primeiro input invisível
+        hiddenInputRef.current?.focus();
+      }, 2000);
+    }
   };
 
   // Inputs ativos visualmente
@@ -177,6 +213,7 @@ export default function CodigoVerificacao({
               caretHidden
               blurOnSubmit={false}
               contextMenuHidden
+              editable={!isLoading} // Bloqueia digitação durante a requisição
               style={styles.hiddenInput}
             />
 
@@ -200,8 +237,8 @@ export default function CodigoVerificacao({
             {/* Inputs visuais */}
             <Pressable
               style={styles.codeContainer}
+              disabled={isLoading}
               onPress={() => {
-                // força reabertura do teclado
                 hiddenInputRef.current?.blur();
 
                 setTimeout(() => {
@@ -231,7 +268,9 @@ export default function CodigoVerificacao({
                       style={[
                         styles.inputLine,
                         {
-                          backgroundColor: active
+                          backgroundColor: hasError 
+                            ? "#D32F2F" // Linha fica vermelha se der erro
+                            : active
                             ? "#F2A199"
                             : "#E5E5E5",
                         },
@@ -242,27 +281,45 @@ export default function CodigoVerificacao({
               })}
             </Pressable>
 
-            {/* Reenvio */}
+            {/* Texto de Erro de Código Inválido */}
+            {hasError && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>
+                  Código incorreto. Verifique o SMS e tente novamente.
+                </Text>
+              </View>
+            )}
+
+            {/* Reenvio / Botão Dinâmico de Ação */}
             <TouchableOpacity
               style={[
                 styles.resendButton,
-                countdown > 0
+                isLoading 
+                  ? styles.resendButtonLoading
+                  : countdown > 0
                   ? styles.resendButtonDisabled
                   : styles.resendButtonActive,
               ]}
-              disabled={countdown > 0}
-              onPress={() => setCountdown(60)}
+              disabled={countdown > 0 || isLoading}
+              onPress={() => {
+                setCountdown(60);
+                setHasError(false);
+              }}
             >
-              <Text
-                style={[
-                  styles.resendButtonText,
-                  countdown > 0 && styles.resendButtonTextDisabled,
-                ]}
-              >
-                {countdown > 0
-                  ? `Reenviar em ${countdown} s`
-                  : "Reenviar código"}
-              </Text>
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#000" />
+              ) : (
+                <Text
+                  style={[
+                    styles.resendButtonText,
+                    countdown > 0 && styles.resendButtonTextDisabled,
+                  ]}
+                >
+                  {countdown > 0
+                    ? `Reenviar em ${countdown} s`
+                    : "Reenviar código"}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </Animated.View>
@@ -348,7 +405,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
     paddingHorizontal: 10,
-    marginBottom: 50,
+    marginBottom: 20, // Reduzido um pouco para dar respiro ao texto de erro
   },
 
   inputWrapper: {
@@ -374,6 +431,20 @@ const styles = StyleSheet.create({
     width: "100%",
   },
 
+  errorContainer: {
+    width: "100%",
+    paddingHorizontal: 10,
+    alignItems: "flex-start",
+    marginBottom: 20,
+  },
+
+  errorText: {
+    color: "#D32F2F",
+    fontSize: 13,
+    fontWeight: "500",
+    textAlign: "left",
+  },
+
   resendButton: {
     width: "100%",
     height: 55,
@@ -390,6 +461,10 @@ const styles = StyleSheet.create({
 
   resendButtonActive: {
     backgroundColor: "#FFD200",
+  },
+
+  resendButtonLoading: {
+    backgroundColor: "#FFD200", // Mantém a cor amarela ativa ou cinza clara caso prefira destacar o progresso
   },
 
   resendButtonText: {
