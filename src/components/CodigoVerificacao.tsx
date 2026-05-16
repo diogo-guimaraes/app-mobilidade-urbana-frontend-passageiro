@@ -30,16 +30,16 @@ export default function CodigoVerificacao({
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
 
-  // Estados para os 4 dígitos do código de verificação
+  // Estados para os 4 dígitos do código
   const [code, setCode] = useState(["", "", "", ""]);
 
-  // Estado para o contador do reenvio de SMS
+  // Estado do contador
   const [countdown, setCountdown] = useState(57);
 
-  // Input invisível responsável por receber toda a digitação
+  // INPUT INVISÍVEL
   const hiddenInputRef = useRef<TextInput>(null);
 
-  // Regressão do contador corrigida para evitar conflito de tipos
+  // Timer
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
 
@@ -48,15 +48,18 @@ export default function CodigoVerificacao({
         setCountdown((prev) => prev - 1);
       }, 1000);
     }
+
     return () => clearInterval(interval);
   }, [visible, countdown]);
 
+  // Voltar Android
   useEffect(() => {
     const onBackPress = () => {
       if (visible) {
         onClose();
         return true;
       }
+
       return false;
     };
 
@@ -68,6 +71,7 @@ export default function CodigoVerificacao({
     return () => subscription.remove();
   }, [visible, onClose]);
 
+  // Animação
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
@@ -78,14 +82,16 @@ export default function CodigoVerificacao({
           duration,
           useNativeDriver: true,
         }),
+
         Animated.timing(overlayOpacity, {
           toValue: 1,
           duration: duration * 0.8,
           useNativeDriver: true,
         }),
       ]).start(() => {
-        // Mantém teclado aberto focando no input invisível
-        setTimeout(() => hiddenInputRef.current?.focus(), 100);
+        setTimeout(() => {
+          hiddenInputRef.current?.focus();
+        }, 100);
       });
     } else {
       Animated.parallel([
@@ -94,6 +100,7 @@ export default function CodigoVerificacao({
           duration,
           useNativeDriver: true,
         }),
+
         Animated.timing(overlayOpacity, {
           toValue: 0,
           duration: duration * 0.8,
@@ -103,6 +110,7 @@ export default function CodigoVerificacao({
     }
   }, [visible, translateX, overlayOpacity, duration]);
 
+  // Atualiza TODOS os inputs automaticamente
   const handleChangeText = (text: string) => {
     const cleaned = text.replace(/\D/g, "").slice(0, 4);
 
@@ -115,12 +123,19 @@ export default function CodigoVerificacao({
     setCode(newCode);
   };
 
+  // Inputs ativos visualmente
+  const isInputActive = (index: number) => {
+    if (index === 0) return true;
+
+    return code[index - 1] !== "";
+  };
+
   if (!isMounted) return null;
 
   return (
     <>
       <View style={[StyleSheet.absoluteFill, { zIndex: 30 }]}>
-        {/* Fundo escurecido */}
+        {/* Fundo */}
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
           <Animated.View
             style={[
@@ -133,7 +148,7 @@ export default function CodigoVerificacao({
           />
         </Pressable>
 
-        {/* Drawer deslizante */}
+        {/* Drawer */}
         <Animated.View
           style={[
             styles.drawer,
@@ -151,55 +166,83 @@ export default function CodigoVerificacao({
 
           {/* BODY */}
           <View style={styles.body}>
-            {/* Input invisível */}
+            {/* INPUT INVISÍVEL */}
             <TextInput
               ref={hiddenInputRef}
               value={code.join("")}
               onChangeText={handleChangeText}
-              keyboardType="numeric"
+              keyboardType="number-pad"
               maxLength={4}
               autoFocus
               caretHidden
+              blurOnSubmit={false}
+              contextMenuHidden
               style={styles.hiddenInput}
             />
 
-            {/* Logo 99 */}
+            {/* Logo */}
             <Text style={styles.logoText}>99</Text>
 
-            {/* Badge de Lucros */}
+            {/* Badge */}
             <View style={styles.badgeContainer}>
               <Text style={styles.badgeText}>
                 💸 Acelerador de Lucros +40% do CDI
               </Text>
             </View>
 
-            {/* Títulos centrais */}
+            {/* Títulos */}
             <Text style={styles.title}>Insira o código</Text>
 
             <Text style={styles.subtitle}>
               Código de verificação enviado para SMS
             </Text>
 
-            {/* Grid visual dos 4 dígitos */}
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => hiddenInputRef.current?.focus()}
+            {/* Inputs visuais */}
+            <Pressable
               style={styles.codeContainer}
+              onPress={() => {
+                // força reabertura do teclado
+                hiddenInputRef.current?.blur();
+
+                setTimeout(() => {
+                  hiddenInputRef.current?.focus();
+                }, 50);
+              }}
             >
-              {code.map((digit, index) => (
-                <View key={index} style={styles.inputWrapper}>
-                  <View style={styles.codeInput}>
-                    <Text style={styles.codeText}>
-                      {digit || "0"}
-                    </Text>
+              {code.map((digit, index) => {
+                const active = isInputActive(index);
+
+                return (
+                  <View key={index} style={styles.inputWrapper}>
+                    <View style={styles.codeInput}>
+                      <Text
+                        style={[
+                          styles.codeText,
+                          {
+                            color: active ? "#000" : "#D9D9D9",
+                          },
+                        ]}
+                      >
+                        {digit || "0"}
+                      </Text>
+                    </View>
+
+                    <View
+                      style={[
+                        styles.inputLine,
+                        {
+                          backgroundColor: active
+                            ? "#F2A199"
+                            : "#E5E5E5",
+                        },
+                      ]}
+                    />
                   </View>
+                );
+              })}
+            </Pressable>
 
-                  <View style={styles.inputLine} />
-                </View>
-              ))}
-            </TouchableOpacity>
-
-            {/* Botão de Reenvio */}
+            {/* Reenvio */}
             <TouchableOpacity
               style={[
                 styles.resendButton,
@@ -259,8 +302,8 @@ const styles = StyleSheet.create({
   hiddenInput: {
     position: "absolute",
     opacity: 0,
-    width: 1,
-    height: 1,
+    width: 20,
+    height: 20,
   },
 
   logoText: {
@@ -323,13 +366,11 @@ const styles = StyleSheet.create({
   codeText: {
     fontSize: 36,
     fontWeight: "400",
-    color: "#000",
     textAlign: "center",
   },
 
   inputLine: {
     height: 1.5,
-    backgroundColor: "#F2A199",
     width: "100%",
   },
 
