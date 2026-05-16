@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { api } from "../Services/api";
 
 const { width } = Dimensions.get("window");
 
@@ -43,10 +44,53 @@ export default function CodigoVerificacao({
 
   // INPUT INVISÍVEL
   const hiddenInputRef = useRef<TextInput>(null);
-// Função de teste para simular recebimento do código do backend
-  const receberCodigo = () => {
-    console.log("Solicitando/simulando recebimento de código do backend...");
+
+  // Função que busca código no backend e alimenta os inputs
+  const receberCodigo = async () => {
+    try {
+      const response = await api.post("auth/enviar-codigo", {
+        telefone: "69981400661"
+      });
+      console.log(response, 'response');
+      /*
+        retorno esperado:
+        {
+          "message": "Código enviado",
+          "codigo": 2344
+        }
+      */
+
+      const codigo = String(response.data.codigo || "")
+        .replace(/\D/g, "")
+        .slice(0, 4);
+
+      if (codigo.length !== 4) {
+        return;
+      }
+
+      setHasError(false);
+
+      const newCode = ["", "", "", ""];
+
+      codigo.split("").forEach((digit, index) => {
+        newCode[index] = digit;
+      });
+
+      // anima preenchendo os inputs sequencialmente
+      newCode.forEach((digit, index) => {
+        setTimeout(() => {
+          setCode((prev) => {
+            const updated = [...prev];
+            updated[index] = digit;
+            return updated;
+          });
+        }, index * 180);
+      });
+    } catch (error) {
+      console.log("Erro ao receber código:", error);
+    }
   };
+
   // Timer
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
@@ -118,7 +162,7 @@ export default function CodigoVerificacao({
     }
   }, [visible, translateX, overlayOpacity, duration]);
 
-  // Limpa os estados de erro e código quando o drawer fechar ou abrir
+  // Limpa estados
   useEffect(() => {
     if (!visible) {
       setCode(["", "", "", ""]);
@@ -127,7 +171,7 @@ export default function CodigoVerificacao({
     }
   }, [visible]);
 
-  // textInput handler
+  // Handler digitação
   const handleChangeText = (text: string) => {
     const cleaned = text.replace(/\D/g, "").slice(0, 4);
 
@@ -136,6 +180,7 @@ export default function CodigoVerificacao({
     }
 
     const newCode = ["", "", "", ""];
+
     cleaned.split("").forEach((digit, index) => {
       newCode[index] = digit;
     });
@@ -145,14 +190,14 @@ export default function CodigoVerificacao({
     if (cleaned.length === 4) {
       setIsLoading(true);
       setHasError(false);
-      
+
       hiddenInputRef.current?.blur();
 
       setTimeout(() => {
         setIsLoading(false);
         setHasError(true);
         setCode(["", "", "", ""]);
-        
+
         setTimeout(() => {
           hiddenInputRef.current?.focus();
         }, 100);
@@ -234,16 +279,18 @@ export default function CodigoVerificacao({
               Código de verificação enviado para SMS
             </Text>
 
-            {/* Texto clicável de Teste abaixo do SMS */}
-            <TouchableOpacity 
-              onPress={receberCodigo} 
+            {/* Receber código */}
+            <TouchableOpacity
+              onPress={receberCodigo}
               style={styles.testClickableContainer}
               activeOpacity={0.7}
             >
-              <Text style={styles.testClickableText}>Receber código</Text>
+              <Text style={styles.testClickableText}>
+                Receber código
+              </Text>
             </TouchableOpacity>
 
-            {/* Inputs visuais */}
+            {/* Inputs */}
             <Pressable
               style={styles.codeContainer}
               disabled={isLoading}
@@ -277,11 +324,11 @@ export default function CodigoVerificacao({
                       style={[
                         styles.inputLine,
                         {
-                          backgroundColor: hasError 
+                          backgroundColor: hasError
                             ? "#D32F2F"
                             : active
-                            ? "#F2A199"
-                            : "#E5E5E5",
+                              ? "#F2A199"
+                              : "#E5E5E5",
                         },
                       ]}
                     />
@@ -290,7 +337,7 @@ export default function CodigoVerificacao({
               })}
             </Pressable>
 
-            {/* Texto de Erro de Código Inválido */}
+            {/* erro */}
             {hasError && (
               <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>
@@ -299,15 +346,15 @@ export default function CodigoVerificacao({
               </View>
             )}
 
-            {/* Reenvio / Botão Dinâmico de Ação */}
+            {/* botão */}
             <TouchableOpacity
               style={[
                 styles.resendButton,
-                isLoading 
+                isLoading
                   ? styles.resendButtonLoading
                   : countdown > 0
-                  ? styles.resendButtonDisabled
-                  : styles.resendButtonActive,
+                    ? styles.resendButtonDisabled
+                    : styles.resendButtonActive,
               ]}
               disabled={countdown > 0 || isLoading}
               onPress={() => {
@@ -321,7 +368,8 @@ export default function CodigoVerificacao({
                 <Text
                   style={[
                     styles.resendButtonText,
-                    countdown > 0 && styles.resendButtonTextDisabled,
+                    countdown > 0 &&
+                      styles.resendButtonTextDisabled,
                   ]}
                 >
                   {countdown > 0
@@ -473,7 +521,7 @@ const styles = StyleSheet.create({
   },
 
   resendButtonLoading: {
-    backgroundColor: "#FFD200", // Cor ativa (amarela) definida para o estado de loading
+    backgroundColor: "#FFD200",
   },
 
   resendButtonText: {
@@ -488,7 +536,7 @@ const styles = StyleSheet.create({
     color: "#A0A0A0",
   },
 
-   testClickableContainer: {
+  testClickableContainer: {
     paddingVertical: 6,
     paddingHorizontal: 16,
     marginBottom: 10,
@@ -496,7 +544,7 @@ const styles = StyleSheet.create({
 
   testClickableText: {
     fontSize: 16,
-    color: "#007AFF", // Azul estilo link nativo iOS/Android
+    color: "#007AFF",
     fontWeight: "600",
     textDecorationLine: "underline",
   },
