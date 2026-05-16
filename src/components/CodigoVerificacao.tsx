@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   },
 
   resendButtonLoading: {
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#FFD200", // Cor ativa (amarela) definida para o estado de loading
   },
 
   resendButtonText: {
