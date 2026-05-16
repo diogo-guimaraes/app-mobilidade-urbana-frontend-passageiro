@@ -36,17 +36,13 @@ export default function CodigoVerificacao({
   // Estado para o contador do reenvio de SMS
   const [countdown, setCountdown] = useState(57);
 
-  // Referências para pular automaticamente de um input para o outro
-  const inputRef1 = useRef<TextInput>(null);
-  const inputRef2 = useRef<TextInput>(null);
-  const inputRef3 = useRef<TextInput>(null);
-  const inputRef4 = useRef<TextInput>(null);
+  // Input invisível responsável por receber toda a digitação
+  const hiddenInputRef = useRef<TextInput>(null);
 
-  const inputRefs = [inputRef1, inputRef2, inputRef3, inputRef4];
-
-  // Regressão do contador
+  // Regressão do contador corrigida para evitar conflito de tipos
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
+
     if (visible && countdown > 0) {
       interval = setInterval(() => {
         setCountdown((prev) => prev - 1);
@@ -63,16 +59,19 @@ export default function CodigoVerificacao({
       }
       return false;
     };
+
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
       onBackPress,
     );
+
     return () => subscription.remove();
   }, [visible, onClose]);
 
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
+
       Animated.parallel([
         Animated.timing(translateX, {
           toValue: 0,
@@ -85,8 +84,8 @@ export default function CodigoVerificacao({
           useNativeDriver: true,
         }),
       ]).start(() => {
-        // Foca automaticamente no primeiro campo ao abrir a tela
-        setTimeout(() => inputRef1.current?.focus(), 100);
+        // Mantém teclado aberto focando no input invisível
+        setTimeout(() => hiddenInputRef.current?.focus(), 100);
       });
     } else {
       Animated.parallel([
@@ -104,23 +103,16 @@ export default function CodigoVerificacao({
     }
   }, [visible, translateX, overlayOpacity, duration]);
 
-  const handleChangeText = (text: string, index: number) => {
-    const cleaned = text.replace(/\D/g, "");
-    const newCode = [...code];
-    newCode[index] = cleaned;
+  const handleChangeText = (text: string) => {
+    const cleaned = text.replace(/\D/g, "").slice(0, 4);
+
+    const newCode = ["", "", "", ""];
+
+    cleaned.split("").forEach((digit, index) => {
+      newCode[index] = digit;
+    });
+
     setCode(newCode);
-
-    // Se digitou e não for o último campo, move para o próximo
-    if (cleaned.length > 0 && index < 3) {
-      inputRefs[index + 1].current?.focus();
-    }
-  };
-
-  const handleKeyPress = (e: any, index: number) => {
-    // Se pressionar backspace com o campo vazio, retorna ao anterior
-    if (e.nativeEvent.key === "Backspace" && code[index] === "" && index > 0) {
-      inputRefs[index - 1].current?.focus();
-    }
   };
 
   if (!isMounted) return null;
@@ -133,12 +125,15 @@ export default function CodigoVerificacao({
           <Animated.View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: "rgba(0,0,0,0.25)", opacity: overlayOpacity },
+              {
+                backgroundColor: "rgba(0,0,0,0.25)",
+                opacity: overlayOpacity,
+              },
             ]}
           />
         </Pressable>
 
-        {/* Drawer deslizante (Tela Claro) */}
+        {/* Drawer deslizante */}
         <Animated.View
           style={[
             styles.drawer,
@@ -147,7 +142,7 @@ export default function CodigoVerificacao({
             },
           ]}
         >
-          {/* HEADER (Botão Voltar estruturado de forma limpa) */}
+          {/* HEADER */}
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose} style={styles.backButton}>
               <Ionicons name="chevron-back" size={26} color="#000" />
@@ -156,6 +151,18 @@ export default function CodigoVerificacao({
 
           {/* BODY */}
           <View style={styles.body}>
+            {/* Input invisível */}
+            <TextInput
+              ref={hiddenInputRef}
+              value={code.join("")}
+              onChangeText={handleChangeText}
+              keyboardType="numeric"
+              maxLength={4}
+              autoFocus
+              caretHidden
+              style={styles.hiddenInput}
+            />
+
             {/* Logo 99 */}
             <Text style={styles.logoText}>99</Text>
 
@@ -168,31 +175,31 @@ export default function CodigoVerificacao({
 
             {/* Títulos centrais */}
             <Text style={styles.title}>Insira o código</Text>
+
             <Text style={styles.subtitle}>
               Código de verificação enviado para SMS
             </Text>
 
-            {/* Grid de Inputs para os 4 dígitos */}
-            <View style={styles.codeContainer}>
+            {/* Grid visual dos 4 dígitos */}
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={() => hiddenInputRef.current?.focus()}
+              style={styles.codeContainer}
+            >
               {code.map((digit, index) => (
                 <View key={index} style={styles.inputWrapper}>
-                  <TextInput
-                    ref={inputRefs[index]}
-                    style={styles.codeInput}
-                    keyboardType="numeric"
-                    maxLength={1}
-                    value={digit}
-                    placeholder="0"
-                    placeholderTextColor="#E0E0E0"
-                    onChangeText={(text) => handleChangeText(text, index)}
-                    onKeyPress={(e) => handleKeyPress(e, index)}
-                  />
+                  <View style={styles.codeInput}>
+                    <Text style={styles.codeText}>
+                      {digit || "0"}
+                    </Text>
+                  </View>
+
                   <View style={styles.inputLine} />
                 </View>
               ))}
-            </View>
+            </TouchableOpacity>
 
-            {/* Botão de Reenvio Condicional */}
+            {/* Botão de Reenvio */}
             <TouchableOpacity
               style={[
                 styles.resendButton,
@@ -228,29 +235,41 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: "100%",
-    backgroundColor: "#FFF", // Forçando fundo completamente claro
+    backgroundColor: "#FFF",
   },
+
   header: {
     paddingTop: 50,
     paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
   },
+
   backButton: {
     padding: 4,
   },
+
   body: {
     flex: 1,
     alignItems: "center",
     paddingHorizontal: 30,
     marginTop: 20,
   },
+
+  hiddenInput: {
+    position: "absolute",
+    opacity: 0,
+    width: 1,
+    height: 1,
+  },
+
   logoText: {
     fontSize: 48,
     fontWeight: "900",
     color: "#000",
     textAlign: "center",
   },
+
   badgeContainer: {
     backgroundColor: "#E8F5E9",
     paddingHorizontal: 14,
@@ -259,11 +278,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 40,
   },
+
   badgeText: {
     color: "#2E7D32",
     fontSize: 12,
     fontWeight: "600",
   },
+
   title: {
     fontSize: 24,
     fontWeight: "700",
@@ -271,12 +292,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 8,
   },
+
   subtitle: {
     fontSize: 15,
     color: "#333",
     textAlign: "center",
     marginBottom: 40,
   },
+
   codeContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -284,23 +307,32 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 50,
   },
+
   inputWrapper: {
     alignItems: "center",
     width: "20%",
   },
+
   codeInput: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 10,
+    width: "100%",
+  },
+
+  codeText: {
     fontSize: 36,
     fontWeight: "400",
     color: "#000",
     textAlign: "center",
-    paddingVertical: 10,
-    width: "100%",
   },
+
   inputLine: {
     height: 1.5,
-    backgroundColor: "#F2A199", // Cor rosada sutil da linha inferior da imagem original
+    backgroundColor: "#F2A199",
     width: "100%",
   },
+
   resendButton: {
     width: "100%",
     height: 55,
@@ -310,17 +342,21 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 40,
   },
+
   resendButtonDisabled: {
     backgroundColor: "#F5F5F5",
   },
+
   resendButtonActive: {
-    backgroundColor: "#FFD200", // Amarelo ativo da marca
+    backgroundColor: "#FFD200",
   },
+
   resendButtonText: {
     fontSize: 16,
     fontWeight: "600",
     color: "#000",
   },
+
   resendButtonTextDisabled: {
     color: "#A0A0A0",
   },
