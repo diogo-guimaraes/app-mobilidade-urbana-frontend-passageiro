@@ -310,7 +310,14 @@ export default function CodigoVerificacao({
               }}
             >
               {isLoading ? (
-                <ActivityIndicator size="small" color="#000" />
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color="#000" style={{ marginRight: 8 }} />
+                  {countdown > 0 && (
+                    <Text style={styles.resendButtonTextDisabled}>
+                      {`Reenviar em ${countdown} s`}
+                    </Text>
+                  )}
+                </View>
               ) : (
                 <Text
                   style={[
@@ -467,7 +474,13 @@ const styles = StyleSheet.create({
   },
 
   resendButtonLoading: {
-    backgroundColor: "#FFD200",
+    backgroundColor: "#F5F5F5", // Alterado para a cor cinza desabilitada para combinar com o estado de envio bloqueado
+  },
+
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   resendButtonText: {
@@ -477,6 +490,8 @@ const styles = StyleSheet.create({
   },
 
   resendButtonTextDisabled: {
+    fontSize: 16,
+    fontWeight: "600",
     color: "#A0A0A0",
   },
 });
