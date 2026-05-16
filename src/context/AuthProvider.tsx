@@ -16,6 +16,8 @@ import { api } from "../Services/api";
 // INTERFACES
 // =========================
 
+
+
 interface Usuario {
   id: string;
   email: string;
@@ -52,6 +54,12 @@ interface AuthContextType {
 
   login: (email: string, password: string) => Promise<void>;
 
+  loginComToken: (
+    user: Usuario,
+    token: string,
+  ) => Promise<void>;
+
+
   logout: () => Promise<void>;
 
   register: (dados: DadosCadastro) => Promise<void>;
@@ -70,15 +78,20 @@ const AuthContext = createContext<AuthContextType>({
 
   loading: true,
 
-  login: async (email: string, password: string) => {},
+  login: async (email: string, password: string) => { },
 
-  logout: async () => {},
+  loginComToken: async (
+    user: Usuario,
+    token: string,
+  ) => { },
 
-  register: async (dados: DadosCadastro) => {},
+  logout: async () => { },
+
+  register: async (dados: DadosCadastro) => { },
 
   atualizarFotoUsuario: async (
     dados: AtualizarFotoPayload,
-  ) => {},
+  ) => { },
 });
 
 // =========================
@@ -146,6 +159,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log("Response:", error?.response?.data);
 
       console.log("Status:", error?.response?.status);
+
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginComToken = async (
+    userData: Usuario,
+    token: string,
+  ) => {
+    try {
+      setLoading(true);
+      console.log(userData , 'userData')
+      setUser(userData);
+
+      await SecureStore.setItemAsync(
+        "user",
+        JSON.stringify(userData),
+      );
+
+      await SecureStore.setItemAsync(
+        "token",
+        token,
+      );
+    } catch (error) {
+      console.error(
+        "Erro ao autenticar com token:",
+        error,
+      );
 
       throw error;
     } finally {
@@ -244,6 +287,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         loading,
         login,
+        loginComToken,
         logout,
         register,
         atualizarFotoUsuario,

@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { api } from "../Services/api";
+import { useAuth } from "../context/AuthProvider";
 
 const { width } = Dimensions.get("window");
 
@@ -31,6 +32,7 @@ export default function CodigoVerificacao({
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
+  const { loginComToken } = useAuth();
 
   // Estados para os 4 dígitos do código
   const [code, setCode] = useState(["", "", "", ""]);
@@ -48,17 +50,14 @@ export default function CodigoVerificacao({
   // Função que busca código no backend e alimenta os inputs
   const receberCodigo = async () => {
     try {
+      const telefone = "69981400661";
+
+      // envia código
       const response = await api.post("auth/enviar-codigo", {
-        telefone: "69981400661"
+        telefone,
       });
-      console.log(response, 'response');
-      /*
-        retorno esperado:
-        {
-          "message": "Código enviado",
-          "codigo": 2344
-        }
-      */
+
+      console.log(response.data, "response enviar-codigo");
 
       const codigo = String(response.data.codigo || "")
         .replace(/\D/g, "")
@@ -76,7 +75,7 @@ export default function CodigoVerificacao({
         newCode[index] = digit;
       });
 
-      // anima preenchendo os inputs sequencialmente
+      // anima preenchendo os inputs
       newCode.forEach((digit, index) => {
         setTimeout(() => {
           setCode((prev) => {
@@ -86,6 +85,55 @@ export default function CodigoVerificacao({
           });
         }, index * 180);
       });
+
+      // aguarda animação terminar
+      // aguarda animação terminar
+      setTimeout(async () => {
+        try {
+          // verifica código
+          const responseVerificar = await api.post(
+            "auth/verificar-codigo",
+            {
+              telefone,
+              codigo,
+            },
+          );
+
+          // console.log(
+          //   responseVerificar.data,
+          //   "response verificar-codigo",
+          // );
+
+          /*
+            resposta:
+            {
+              user: {},
+              token: ""
+            }
+          */
+
+          const { user, token } =
+            responseVerificar.data;
+
+          // autentica usuário no app
+          await loginComToken(user, token);
+
+          console.log(
+            "Usuário autenticado com sucesso",
+          );
+        } catch (error: any) {
+          console.log(
+            "Erro ao verificar código:",
+            error,
+          );
+
+          setHasError(true);
+
+          setCode(["", "", "", ""]);
+
+          hiddenInputRef.current?.focus();
+        }
+      }, 1000);
     } catch (error) {
       console.log("Erro ao receber código:", error);
     }
@@ -369,7 +417,7 @@ export default function CodigoVerificacao({
                   style={[
                     styles.resendButtonText,
                     countdown > 0 &&
-                      styles.resendButtonTextDisabled,
+                    styles.resendButtonTextDisabled,
                   ]}
                 >
                   {countdown > 0
