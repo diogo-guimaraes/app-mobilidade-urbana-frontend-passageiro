@@ -44,7 +44,7 @@ export default function CodigoVerificacao({
   // Estados de requisição e validação de erro
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const { user, loading, login } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   // INPUT INVISÍVEL
