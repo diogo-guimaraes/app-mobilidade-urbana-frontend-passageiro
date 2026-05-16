@@ -140,21 +140,24 @@ export default function CodigoVerificacao({
 
     setCode(newCode);
 
-    // Quando preencher todos os 4 campos, dispara a simulação da requisição
+    // Quando preencher exatamente os 4 campos, dispara a simulação da requisição imediatamente
     if (cleaned.length === 4) {
       setIsLoading(true);
       setHasError(false);
       
-      // Desfoca o input temporariamente para melhorar a UX visual de envio
+      // Desfoca o input nativo para congelar a UI durante o envio simulado
       hiddenInputRef.current?.blur();
 
       setTimeout(() => {
         setIsLoading(false);
         setHasError(true);
-        // Limpa o código digitado para permitir nova tentativa se desejar
+        // Limpa os quadradinhos visuais para nova tentativa
         setCode(["", "", "", ""]);
-        // Devolve o foco para o primeiro input invisível
-        hiddenInputRef.current?.focus();
+        
+        // Garante que o input invisível e o teclado voltem a focar de forma limpa após a thread renderizar o erro
+        setTimeout(() => {
+          hiddenInputRef.current?.focus();
+        }, 100);
       }, 2000);
     }
   };
@@ -405,7 +408,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
     paddingHorizontal: 10,
-    marginBottom: 20, // Reduzido um pouco para dar respiro ao texto de erro
+    marginBottom: 20,
   },
 
   inputWrapper: {
@@ -464,7 +467,7 @@ const styles = StyleSheet.create({
   },
 
   resendButtonLoading: {
-    backgroundColor: "#FFD200", // Mantém a cor amarela ativa ou cinza clara caso prefira destacar o progresso
+    backgroundColor: "#FFD200",
   },
 
   resendButtonText: {
