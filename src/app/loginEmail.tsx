@@ -26,12 +26,29 @@ export default function LoginEmail() {
   const [senha, setSenha] = useState("");
 
   const [erroLogin, setErroLogin] = useState("");
+  const [erroEmail, setErroEmail] = useState("");
 
   useEffect(() => {
     if (user && !loading) {
       router.replace("/home");
     }
   }, [user, loading]);
+
+  const validarEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    return regex.test(email.trim());
+  };
+
+  const handleAvancar = () => {
+    if (!validarEmail(email)) {
+      setErroEmail("Digite um e-mail válido");
+      return;
+    }
+
+    setErroEmail("");
+    setStep(2);
+  };
 
   const handleLogin = async () => {
     try {
@@ -94,7 +111,13 @@ export default function LoginEmail() {
                         placeholderTextColor="#CCC"
                         style={styles.input}
                         value={email}
-                        onChangeText={setEmail}
+                        onChangeText={(text) => {
+                          setEmail(text);
+
+                          if (erroEmail) {
+                            setErroEmail("");
+                          }
+                        }}
                         keyboardType="email-address"
                         autoCapitalize="none"
                         autoCorrect={false}
@@ -102,7 +125,16 @@ export default function LoginEmail() {
                       />
                     </View>
 
-                    <View style={styles.inputUnderline} />
+                    <View
+                      style={[
+                        styles.inputUnderline,
+                        erroEmail && styles.inputUnderlineError,
+                      ]}
+                    />
+
+                    {!!erroEmail && (
+                      <Text style={styles.errorText}>{erroEmail}</Text>
+                    )}
                   </View>
 
                   <View style={styles.footerButtons}>
@@ -121,7 +153,7 @@ export default function LoginEmail() {
                           ? styles.nextButtonActive
                           : styles.nextButtonDisabled,
                       ]}
-                      onPress={() => setStep(2)}
+                      onPress={handleAvancar}
                     >
                       <Text
                         style={[
