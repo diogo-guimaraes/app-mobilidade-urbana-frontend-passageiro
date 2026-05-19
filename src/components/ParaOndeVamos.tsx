@@ -13,6 +13,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { api } from "../Services/api";
+
 
 const { width } = Dimensions.get("window");
 const CACHE_KEY = "@last_user_location";
@@ -23,7 +25,8 @@ interface props {
   duration?: number;
 }
 
-const enderecos = [
+// Lista base estática padrão
+const enderecosEstaticos = [
   {
     endereco_formatado:
       "Rua Portuguesa, 6244 - Conjunto Jamari, Porto Velho - RO, 76812-612, Brasil",
@@ -60,12 +63,17 @@ export default function ParaOndevamos({
 }: props) {
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+  
+  // 🔹 Referência para controlar o foco do input
+  const destinoInputRef = useRef<TextInput>(null);
 
   const [isMounted, setIsMounted] = useState(visible);
   
-  // 🔹 Estados para controlar os textos dos Inputs
   const [partidaTexto, setPartidaTexto] = useState("");
   const [destinoTexto, setDestinoTexto] = useState("");
+  
+  // 🔹 Estado que junta a lista estática com os resultados buscados do Backend
+  const [listaEnderecos, setListaEnderecos] = useState(enderecosEstaticos);
 
   // 🔹 Recupera a localização do cache e alimenta o input de partida
   const carregarLocalizacaoSalva = async () => {
@@ -73,8 +81,6 @@ export default function ParaOndevamos({
       const cached = await AsyncStorage.getItem(CACHE_KEY);
       if (cached) {
         const locationData = JSON.parse(cached);
-        console.log(locationData, 'locationData')
-        // Se houver o endereço formatado injetado pelo mapa, alimenta o estado
         if (locationData && locationData.formattedAddress) {
           setPartidaTexto(locationData.formattedAddress);
         } else {
@@ -87,6 +93,69 @@ export default function ParaOndevamos({
       console.log("Erro ao recuperar endereço para o input:", error);
       setPartidaTexto("");
     }
+  };
+
+  // 🔹 Função que bate no seu Backend buscando o endereço digitado
+  const buscarEnderecoApi = async (texto: string) => {
+    if (!texto || texto.trim().length < 0) {
+      setListaEnderecos(enderecosEstaticos);
+      return;
+    }
+
+    try {
+      // Altere a rota abaixo para corresponder exatamente à rota da sua API Laravel
+      const response = await api.get("/buscar-endereco", {
+        params: { endereco: texto },
+      });
+
+      console.log(response.data, 'response')
+
+      if (response.data) {
+        const { formattedAddress, latitude, longitude } = response.data;
+
+        // Trata os textos para quebrar em Título e Subtítulo visualmente na lista
+        const partes = formattedAddress.split(" - ");
+        const tituloDigitado = partes[0] || formattedAddress;
+        const subtituloDigitado = partes[1] || "";
+
+        const novoEnderecoObjeto = {
+          endereco_formatado: formattedAddress,
+          latitude: latitude,
+          longitude: longitude,
+          titulo: tituloDigitado,
+          subtitulo: subtituloDigitado,
+          distancia: "--", // Distância opcional vinda da API ou fixa
+        };
+
+        // Injeta o resultado dinâmico no topo combinado com os estáticos
+        setListaEnderecos([novoEnderecoObjeto, ...enderecosEstaticos]);
+      }
+    } catch (error) {
+      console.log("Erro ao buscar endereço no backend:", error);
+    }
+  };
+
+  // 🔹 Efeito para rodar o Debounce a cada caractere digitado (espera 600ms antes de chamar o back)
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (visible) {
+        buscarEnderecoApi(destinoTexto);
+      }
+    }, 600);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [destinoTexto]);
+
+  // 🔹 Método acionado ao clicar em qualquer item da lista
+  const handleSelecionarEndereco = (item: typeof enderecosEstaticos[0]) => {
+    setDestinoTexto(item.endereco_formatado);
+    
+    console.log("📍 Endereço Selecionado com Sucesso!");
+    console.log("📦 Dados do Destino:", {
+      endereco: item.endereco_formatado,
+      lat: item.latitude,
+      lng: item.longitude,
+    });
   };
 
   // Android back
@@ -111,8 +180,6 @@ export default function ParaOndevamos({
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
-      
-      // 🔹 Busca o endereço do cache sempre que a tela abrir
       carregarLocalizacaoSalva();
 
       Animated.parallel([
@@ -126,7 +193,12 @@ export default function ParaOndevamos({
           duration: duration * 0.8,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]).start(() => {
+        // 🔹 Garante o foco e abre o teclado imediatamente após a gaveta completar a abertura
+        setTimeout(() => {
+          destinoInputRef.current?.focus();
+        }, 100);
+      });
     } else {
       Animated.parallel([
         Animated.timing(translateX, {
@@ -142,6 +214,8 @@ export default function ParaOndevamos({
       ]).start(({ finished }) => {
         if (finished) {
           setIsMounted(false);
+          setDestinoTexto(""); // Limpa o campo ao fechar
+          setListaEnderecos(enderecosEstaticos); // Reseta a lista
         }
       });
     }
@@ -217,7 +291,7 @@ export default function ParaOndevamos({
                 placeholder="Local de partida"
                 placeholderTextColor="#999"
                 value={partidaTexto}
-                onChangeText={setPartidaTexto} // Permite o usuário mudar manualmente se quiser
+                onChangeText={setPartidaTexto}
               />
             </View>
 
@@ -225,11 +299,12 @@ export default function ParaOndevamos({
             <View style={[styles.searchInput, styles.searchInputDestination]}>
               <Ionicons name="flag-outline" size={18} color="#FF5500" />
               <TextInput
+                ref={destinoInputRef} // 🔹 Referência adicionada para autofoco
                 style={styles.input}
                 placeholder="Para onde você vai?"
                 placeholderTextColor="#999"
                 value={destinoTexto}
-                onChangeText={setDestinoTexto}
+                onChangeText={setDestinoTexto} // 🔹 Atualiza e dispara a busca com debounce
               />
             </View>
           </View>
@@ -263,8 +338,12 @@ export default function ParaOndevamos({
 
         {/* LISTA */}
         <View style={styles.list}>
-          {enderecos.map((endereco, index) => (
-            <TouchableOpacity key={index} style={styles.listItem}>
+          {listaEnderecos.map((endereco, index) => (
+            <TouchableOpacity 
+              key={index} 
+              style={styles.listItem}
+              onPress={() => handleSelecionarEndereco(endereco)} // 🔹 Evento de clique adicionado
+            >
               <View style={styles.listIconContainer}>
                 <Ionicons name="time" size={14} color="#111" />
               </View>
@@ -282,7 +361,6 @@ export default function ParaOndevamos({
     </View>
   );
 }
-
 const styles = StyleSheet.create({
   drawer: {
     position: "absolute",
