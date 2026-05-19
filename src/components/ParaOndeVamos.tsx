@@ -1,6 +1,8 @@
 // components/ParaOndeVamos.tsx
 
-import EnderecosRecentes from "@/components/corrida/EnderecosRecentes";
+import EnderecosRecentes, {
+  EnderecosRecentesRef,
+} from "@/components/corrida/EnderecosRecentes";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useRef, useState } from "react";
@@ -54,34 +56,6 @@ const InputsIntinearioInicial: EnderecoItem[] = [
   },
 ];
 
-// Lista base estática padrão
-const enderecosRecentes = [
-  {
-    name: "Rua Portuguesa, 6244",
-    formattedAddress:
-      "Rua Portuguesa, 6244 - Conjunto Jamari, Porto Velho - RO, 76812-612, Brasil",
-    latitude: -8.7601,
-    longitude: -63.9002,
-    distancia: "5.4km",
-  },
-  {
-    name: "Rua Jobu Miró, 3287",
-    formattedAddress:
-      "Rua Jobu Miró, 3287 - Flodoaldo Pontes Pinto, Porto Velho - RO, 76820-608, Brasil",
-    latitude: -8.7523,
-    longitude: -63.8891,
-    distancia: "3.2km",
-  },
-  {
-    name: "Rua Brasília, 2930",
-    formattedAddress:
-      "Rua Brasília, 2930 - São Cristóvão, Porto Velho - RO, 76804-070, Brasil",
-    latitude: -8.7488,
-    longitude: -63.8734,
-    distancia: "7km",
-  },
-];
-
 export default function ParaOndevamos({
   visible,
   onClose,
@@ -93,7 +67,8 @@ export default function ParaOndevamos({
 
   const [isMounted, setIsMounted] = useState(visible);
 
-  const [listaEnderecos, setListaEnderecos] = useState(enderecosRecentes);
+  // Agora começa vazia porque as sugestões iniciais vêm do cache interno do componente filho
+  const [listaEnderecos, setListaEnderecos] = useState<any[]>([]);
 
   const [loading, setLoading] = useState(false);
 
@@ -107,6 +82,9 @@ export default function ParaOndevamos({
 
   // 🔹 refs dinâmicos
   const inputRefs = useRef<TextInput[]>([]);
+
+  // 🔹 ref para acessar funções internas do componente EnderecosRecentes
+  const enderecosRecentesRef = useRef<EnderecosRecentesRef>(null);
 
   // 🔹 Reorganiza os orders
   const reorganizarOrders = (lista: EnderecoItem[]) => {
@@ -250,7 +228,7 @@ export default function ParaOndevamos({
   // 🔹 Buscar endereço
   const buscarEnderecoApi = async (texto: string) => {
     if (!texto || texto.trim().length === 0) {
-      setListaEnderecos(enderecosRecentes);
+      setListaEnderecos([]);
       setLoading(false);
       return;
     }
@@ -273,7 +251,7 @@ export default function ParaOndevamos({
           distancia: "--",
         };
 
-        setListaEnderecos([novoEnderecoObjeto, ...enderecosRecentes]);
+        setListaEnderecos([novoEnderecoObjeto]);
       }
     } catch (error) {
       console.log("Erro ao buscar endereço no backend:", error);
@@ -296,7 +274,7 @@ export default function ParaOndevamos({
   }, [inputsIntinerario, inputSelecionado]);
 
   // 🔹 Selecionar endereço
-  const handleSelecionarEndereco = (item: (typeof enderecosRecentes)[0]) => {
+  const handleSelecionarEndereco = async (item: any) => {
     setInputsIntinerario((prev) =>
       prev.map((input, index) =>
         index === inputSelecionado
@@ -310,6 +288,17 @@ export default function ParaOndevamos({
           : input,
       ),
     );
+
+    // 🔹 SALVA O NOVO ENDEREÇO SELECIONADO NO CACHE DO COMPONENTE FILHO
+    if (enderecosRecentesRef.current) {
+      await enderecosRecentesRef.current.salvarEnderecoNoCache({
+        name: item.name,
+        formattedAddress: item.formattedAddress,
+        latitude: item.latitude,
+        longitude: item.longitude,
+        distancia: item.distancia || "--",
+      });
+    }
 
     console.log("📍 Endereço Selecionado com Sucesso!");
 
@@ -378,7 +367,7 @@ export default function ParaOndevamos({
 
           setInputsIntinerario(InputsIntinearioInicial);
 
-          setListaEnderecos(enderecosRecentes);
+          setListaEnderecos([]);
 
           setLoading(false);
         }
@@ -564,6 +553,7 @@ export default function ParaOndevamos({
 
         {/* LISTA / SKELETON LOAD COMPONENTIZADO */}
         <EnderecosRecentes
+          ref={enderecosRecentesRef}
           loading={loading}
           skeletonOpacity={skeletonOpacity}
           listaEnderecos={listaEnderecos}
@@ -585,28 +575,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
   },
-
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginTop: 30,
   },
-
   backButton: {
     marginTop: 10,
   },
-
   headerCenter: {
     alignItems: "center",
   },
-
   userContainer: {
     alignItems: "center",
     marginTop: 24,
     marginBottom: 30,
   },
-
   userPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -615,57 +600,48 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
   },
-
   userName: {
     fontSize: 15,
     color: "#111",
     fontWeight: "600",
     marginHorizontal: 8,
   },
-
   title: {
     fontSize: 28,
     fontWeight: "700",
     color: "#000",
     marginBottom: 28,
   },
-
   searchContainer: {
     flexDirection: "row",
     marginBottom: 24,
   },
-
   lineContainer: {
     alignItems: "center",
     marginRight: 14,
     paddingTop: 10,
   },
-
   circleTop: {
     width: 10,
     height: 10,
     borderRadius: 5,
     backgroundColor: "#666",
   },
-
   verticalLine: {
     width: 2,
     flex: 1,
     backgroundColor: "#DDD",
     marginVertical: 4,
   },
-
   circleBottom: {
     width: 10,
     height: 10,
     borderRadius: 5,
     backgroundColor: "#FF5500",
   },
-
   inputsContainer: {
     flex: 1,
   },
-
   searchInput: {
     flexDirection: "row",
     alignItems: "center",
@@ -673,11 +649,9 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#ECECEC",
   },
-
   searchInputDestination: {
     borderBottomColor: "#FFD7BF",
   },
-
   input: {
     flex: 1,
     marginLeft: 10,
