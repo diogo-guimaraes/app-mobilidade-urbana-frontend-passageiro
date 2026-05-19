@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import {
   Animated,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -147,7 +148,7 @@ const EnderecosRecentes = forwardRef<
     listaEnderecos.length > 0 ? listaEnderecos : historicoCache;
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* AÇÕES RÁPIDAS */}
       <View style={styles.quickActions}>
         <TouchableOpacity style={styles.quickButton}>
@@ -252,7 +253,24 @@ const EnderecosRecentes = forwardRef<
               </TouchableOpacity>
             ))}
       </View>
-    </View>
+
+      {/* BOTÕES DO FINAL DA LISTA */}
+      <View style={styles.footerButtonsContainer}>
+        <TouchableOpacity style={styles.footerButton}>
+          <View style={[styles.listIconContainer, styles.footerIconContainer]}>
+            <Ionicons name="map" size={16} color="#111" />
+          </View>
+          <Text style={styles.footerButtonText}>Definir local no mapa</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.footerButton}>
+          <View style={[styles.listIconContainer, styles.footerIconContainer]}>
+            <Ionicons name="add" size={18} color="#111" />
+          </View>
+          <Text style={styles.footerButtonText}>Inserir mais tarde</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 });
 
@@ -261,12 +279,14 @@ export default EnderecosRecentes;
 const styles = StyleSheet.create({
   container: {
     width: "100%",
+    maxHeight: 600, // Altura máxima que ativa o scroll cobrindo tudo de forma contínua
   },
   quickActions: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 18,
+    paddingTop: 4,
   },
   quickButton: {
     flexDirection: "row",
@@ -326,5 +346,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#9B9B9B",
     marginTop: 2,
+  },
+  footerButtonsContainer: {
+    marginTop: 8,
+    paddingBottom: 24, // Garante um espaçamento confortável ao rolar até o fim
+  },
+  footerButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  footerIconContainer: {
+    marginTop: 0, // Alinha verticalmente com o texto do botão de ação
+  },
+  footerButtonText: {
+    fontSize: 16,
+    color: "#2B2B2B",
+    fontWeight: "700",
   },
 });
