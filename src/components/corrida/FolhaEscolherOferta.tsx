@@ -3,8 +3,19 @@ import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+interface EnderecoObjeto {
+  name: string;
+  formattedAddress: string;
+  latitude: number;
+  longitude: number;
+  distancia: string;
+}
+
 interface Props {
   onSheetChange: (index: number) => void;
+  partida: EnderecoObjeto | null;
+  destino: EnderecoObjeto | null;
+  onClose: () => void;
 }
 
 interface CategoriaItem {
@@ -19,7 +30,12 @@ interface CategoriaItem {
   iconeDireita?: "check" | "circle" | "arrow";
 }
 
-export default function FolhaEscolherOferta({ onSheetChange }: Props) {
+export default function FolhaEscolherOferta({
+  onSheetChange,
+  partida,
+  destino,
+  onClose,
+}: Props) {
   const sheetRef = useRef<BottomSheet | null>(null);
 
   const snapPoints = useMemo(() => ["35%", "82%"], []);
@@ -95,6 +111,17 @@ export default function FolhaEscolherOferta({ onSheetChange }: Props) {
     ],
     [],
   );
+
+  const valorSelecionadoExibicao = useMemo(() => {
+    const itemAtivo = categorias.find((cat) => cat.id === categoriaSelecionada);
+    return itemAtivo ? `R$${itemAtivo.preco}` : "R$0,00";
+  }, [categoriaSelecionada, categorias]);
+
+  // 🔹 Removido o "Size =" que estava quebrando o código aqui
+  const nomeSelecionadoExibicao = useMemo(() => {
+    const itemAtivo = categorias.find((cat) => cat.id === categoriaSelecionada);
+    return itemAtivo ? itemAtivo.titulo : "Solicitar";
+  }, [categoriaSelecionada, categorias]);
 
   const handleSheetChange = useCallback(
     (index: number) => {
@@ -241,6 +268,26 @@ export default function FolhaEscolherOferta({ onSheetChange }: Props) {
           backgroundColor: "#fff",
         }}
       >
+        <View
+          style={{
+            paddingHorizontal: 24,
+            paddingVertical: 10,
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <TouchableOpacity
+            onPress={onClose}
+            style={{ marginRight: 14, padding: 4 }}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={24} color="#1f1f1f" />
+          </TouchableOpacity>
+          <Text style={{ fontSize: 16, fontWeight: "600", color: "#1f1f1f" }}>
+            Confirmar Rota
+          </Text>
+        </View>
+
         <BottomSheetFlatList
           data={categorias}
           keyExtractor={(item: CategoriaItem) => item.id}
@@ -263,12 +310,25 @@ export default function FolhaEscolherOferta({ onSheetChange }: Props) {
               </TouchableOpacity>
 
               <View style={styles.footer}>
-                <Text style={styles.valorFooter}>R$15,40</Text>
+                <Text style={styles.valorFooter}>
+                  {valorSelecionadoExibicao}
+                </Text>
 
-                <TouchableOpacity style={styles.botaoSolicitar}>
+                <TouchableOpacity
+                  style={styles.botaoSolicitar}
+                  onPress={() => {
+                    console.log("Chamando motorista para:", {
+                      de: partida?.name,
+                      para: destino?.name,
+                      categoria: nomeSelecionadoExibicao,
+                      valor: valorSelecionadoExibicao,
+                    });
+                  }}
+                >
                   <Text style={styles.botaoSolicitarTexto}>Solicitar</Text>
-
-                  <Text style={styles.botaoSolicitarSubTexto}>Pop</Text>
+                  <Text style={styles.botaoSolicitarSubTexto}>
+                    {nomeSelecionadoExibicao}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </>
