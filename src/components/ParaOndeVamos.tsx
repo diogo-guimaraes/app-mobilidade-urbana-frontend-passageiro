@@ -37,11 +37,10 @@ export default function ParaOndevamos({
     new Animated.Value(0),
   ).current;
 
-  // ✅ Estado interno para controlar a presença na tela
   const [isMounted, setIsMounted] =
     useState(visible);
 
-  // ✅ Detecta botão "voltar" do Android
+  // Android back
   useEffect(() => {
     const onBackPress = () => {
       if (visible) {
@@ -62,7 +61,7 @@ export default function ParaOndevamos({
     return () => subscription.remove();
   }, [visible, onClose]);
 
-  // ✅ Animações de abertura e fechamento
+  // animations
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
@@ -156,32 +155,36 @@ export default function ParaOndevamos({
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
-           {/* Usuário */}
-        <View style={styles.userContainer}>
-          <View style={styles.userPill}>
-            <Ionicons
-              name="person-circle"
-              size={28}
-              color="#666"
-            />
+            {/* Usuário */}
+            <View
+              style={styles.userContainer}
+            >
+              <View style={styles.userPill}>
+                <Ionicons
+                  name="person-circle"
+                  size={28}
+                  color="#666"
+                />
 
-            <Text style={styles.userName}>
-              Diogo
-            </Text>
+                <Text
+                  style={styles.userName}
+                >
+                  Diogo
+                </Text>
 
-            <Ionicons
-              name="chevron-down"
-              size={16}
-              color="#666"
-            />
-          </View>
-        </View>
+                <Ionicons
+                  name="chevron-down"
+                  size={16}
+                  color="#666"
+                />
+              </View>
+            </View>
           </View>
 
           <View style={{ width: 24 }} />
         </View>
 
-        <View style={{padding: 10}}/>
+        <View style={{ padding: 10 }} />
 
         {/* Título */}
         <Text style={styles.title}>
@@ -194,7 +197,9 @@ export default function ParaOndevamos({
           <View style={styles.lineContainer}>
             <View style={styles.circleTop} />
 
-            <View style={styles.verticalLine} />
+            <View
+              style={styles.verticalLine}
+            />
 
             <View
               style={styles.circleBottom}
@@ -241,52 +246,80 @@ export default function ParaOndevamos({
           </View>
         </View>
 
-        {/* Ações rápidas */}
+        {/* AÇÕES RÁPIDAS */}
         <View style={styles.quickActions}>
           <TouchableOpacity
             style={styles.quickButton}
           >
             <Ionicons
-              name="home-outline"
-              size={18}
-              color="#111"
+              name="home"
+              size={16}
+              color="#5F6368"
             />
 
-            <Text style={styles.quickText}>
-              Casa
+            <Text
+              numberOfLines={1}
+              style={styles.quickText}
+            >
+              Avenida Bo...
             </Text>
+
+            <Ionicons
+              name="chevron-forward"
+              size={14}
+              color="#B0B0B0"
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.quickButton}
           >
             <Ionicons
-              name="briefcase-outline"
-              size={18}
-              color="#111"
+              name="briefcase"
+              size={16}
+              color="#5F6368"
             />
 
-            <Text style={styles.quickText}>
+            <Text
+              style={styles.quickText}
+            >
               Trabalho
             </Text>
+
+            <Ionicons
+              name="chevron-forward"
+              size={14}
+              color="#B0B0B0"
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.quickButton}
           >
             <Ionicons
-              name="star-outline"
-              size={18}
-              color="#111"
+              name="star"
+              size={16}
+              color="#5F6368"
             />
 
-            <Text style={styles.quickText}>
+            <Text
+              style={styles.quickText}
+            >
               Favoritos
             </Text>
+
+            <Ionicons
+              name="chevron-forward"
+              size={14}
+              color="#B0B0B0"
+            />
           </TouchableOpacity>
         </View>
 
-        {/* Lista */}
+        {/* DIVIDER */}
+        <View style={styles.divider} />
+
+        {/* LISTA */}
         <View style={styles.list}>
           <TouchableOpacity
             style={styles.listItem}
@@ -295,23 +328,30 @@ export default function ParaOndevamos({
               style={styles.listIconContainer}
             >
               <Ionicons
-                name="time-outline"
-                size={18}
-                color="#666"
+                name="time"
+                size={14}
+                color="#111"
               />
             </View>
 
-            <View>
+            <View style={styles.listContent}>
               <Text style={styles.listText}>
-                Destino recente 1
+                Rua Portuguesa, 6244
               </Text>
 
               <Text
                 style={styles.listSubText}
               >
-                Rua exemplo, 123
+                Conjunto Jamari, Porto Velho -
+                RO, 76812-612, Brasil
               </Text>
             </View>
+
+            <Text
+              style={styles.distanceText}
+            >
+              5.4km
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -321,23 +361,63 @@ export default function ParaOndevamos({
               style={styles.listIconContainer}
             >
               <Ionicons
-                name="time-outline"
-                size={18}
-                color="#666"
+                name="time"
+                size={14}
+                color="#111"
               />
             </View>
 
-            <View>
+            <View style={styles.listContent}>
               <Text style={styles.listText}>
-                Destino recente 2
+                Rua Jobu Miró, 3287
               </Text>
 
               <Text
                 style={styles.listSubText}
               >
-                Avenida exemplo, 456
+                Flodoaldo Pontes Pinto, Porto
+                Velho - RO, 76820-608, Brasil
               </Text>
             </View>
+
+            <Text
+              style={styles.distanceText}
+            >
+              3.2km
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.listItem}
+          >
+            <View
+              style={styles.listIconContainer}
+            >
+              <Ionicons
+                name="time"
+                size={14}
+                color="#111"
+              />
+            </View>
+
+            <View style={styles.listContent}>
+              <Text style={styles.listText}>
+                Rua Brasília, 2930
+              </Text>
+
+              <Text
+                style={styles.listSubText}
+              >
+                São Cristóvão, Porto Velho -
+                RO, 76804-070, Brasil
+              </Text>
+            </View>
+
+            <Text
+              style={styles.distanceText}
+            >
+              7km
+            </Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -372,26 +452,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  logoText: {
-    fontSize: 42,
-    fontWeight: "900",
-    color: "#000",
-  },
-
-  badgeContainer: {
-    backgroundColor: "#E8F5E9",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginTop: 8,
-  },
-
-  badgeText: {
-    color: "#2E7D32",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
   userContainer: {
     alignItems: "center",
     marginTop: 24,
@@ -424,7 +484,7 @@ const styles = StyleSheet.create({
   /* INPUTS */
   searchContainer: {
     flexDirection: "row",
-    marginBottom: 28,
+    marginBottom: 24,
   },
 
   lineContainer: {
@@ -478,59 +538,81 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
+  /* QUICK ACTIONS */
   quickActions: {
     flexDirection: "row",
+    alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 30,
+    marginBottom: 18,
   },
 
   quickButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    paddingHorizontal: 16,
-    height: 46,
-    borderRadius: 14,
+    flex: 1,
+    marginHorizontal: 4,
   },
 
   quickText: {
-    marginLeft: 8,
+    flex: 1,
     fontSize: 14,
-    color: "#111",
+    color: "#5F6368",
     fontWeight: "600",
+    marginLeft: 8,
+    marginRight: 4,
   },
 
+  divider: {
+    height: 1,
+    backgroundColor: "#F1F1F1",
+    marginHorizontal: -24,
+    marginBottom: 8,
+  },
+
+  /* LIST */
   list: {
-    marginTop: 10,
+    marginTop: 4,
   },
 
   listItem: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F1F1F1",
   },
 
   listIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F5F5F5",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#F3F3F3",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 14,
+    marginTop: 2,
+  },
+
+  listContent: {
+    flex: 1,
+    paddingRight: 10,
   },
 
   listText: {
-    fontSize: 15,
-    color: "#111",
-    fontWeight: "600",
-    marginBottom: 2,
+    fontSize: 16,
+    color: "#2B2B2B",
+    fontWeight: "700",
+    marginBottom: 3,
   },
 
   listSubText: {
     fontSize: 13,
-    color: "#777",
+    lineHeight: 18,
+    color: "#909090",
+    fontWeight: "400",
+  },
+
+  distanceText: {
+    fontSize: 14,
+    color: "#9B9B9B",
+    marginTop: 2,
   },
 });
