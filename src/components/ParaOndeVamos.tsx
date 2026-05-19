@@ -24,6 +24,41 @@ interface props {
   duration?: number;
 }
 
+const enderecos = [
+  {
+    endereco_formatado:
+      "Rua Portuguesa, 6244 - Conjunto Jamari, Porto Velho - RO, 76812-612, Brasil",
+    latitude: -8.7601,
+    longitude: -63.9002,
+    titulo: "Rua Portuguesa, 6244",
+    subtitulo:
+      "Conjunto Jamari, Porto Velho - RO, 76812-612, Brasil",
+    distancia: "5.4km",
+  },
+
+  {
+    endereco_formatado:
+      "Rua Jobu Miró, 3287 - Flodoaldo Pontes Pinto, Porto Velho - RO, 76820-608, Brasil",
+    latitude: -8.7523,
+    longitude: -63.8891,
+    titulo: "Rua Jobu Miró, 3287",
+    subtitulo:
+      "Flodoaldo Pontes Pinto, Porto Velho - RO, 76820-608, Brasil",
+    distancia: "3.2km",
+  },
+
+  {
+    endereco_formatado:
+      "Rua Brasília, 2930 - São Cristóvão, Porto Velho - RO, 76804-070, Brasil",
+    latitude: -8.7488,
+    longitude: -63.8734,
+    titulo: "Rua Brasília, 2930",
+    subtitulo:
+      "São Cristóvão, Porto Velho - RO, 76804-070, Brasil",
+    distancia: "7km",
+  },
+];
+
 export default function ParaOndevamos({
   visible,
   onClose,
@@ -321,104 +356,52 @@ export default function ParaOndevamos({
 
         {/* LISTA */}
         <View style={styles.list}>
-          <TouchableOpacity
-            style={styles.listItem}
-          >
-            <View
-              style={styles.listIconContainer}
-            >
-              <Ionicons
-                name="time"
-                size={14}
-                color="#111"
-              />
-            </View>
-
-            <View style={styles.listContent}>
-              <Text style={styles.listText}>
-                Rua Portuguesa, 6244
-              </Text>
-
-              <Text
-                style={styles.listSubText}
+          {enderecos.map(
+            (endereco, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.listItem}
               >
-                Conjunto Jamari, Porto Velho -
-                RO, 76812-612, Brasil
-              </Text>
-            </View>
+                <View
+                  style={
+                    styles.listIconContainer
+                  }
+                >
+                  <Ionicons
+                    name="time"
+                    size={14}
+                    color="#111"
+                  />
+                </View>
 
-            <Text
-              style={styles.distanceText}
-            >
-              5.4km
-            </Text>
-          </TouchableOpacity>
+                <View
+                  style={styles.listContent}
+                >
+                  <Text
+                    style={styles.listText}
+                  >
+                    {endereco.titulo}
+                  </Text>
 
-          <TouchableOpacity
-            style={styles.listItem}
-          >
-            <View
-              style={styles.listIconContainer}
-            >
-              <Ionicons
-                name="time"
-                size={14}
-                color="#111"
-              />
-            </View>
+                  <Text
+                    style={
+                      styles.listSubText
+                    }
+                  >
+                    {endereco.subtitulo}
+                  </Text>
+                </View>
 
-            <View style={styles.listContent}>
-              <Text style={styles.listText}>
-                Rua Jobu Miró, 3287
-              </Text>
-
-              <Text
-                style={styles.listSubText}
-              >
-                Flodoaldo Pontes Pinto, Porto
-                Velho - RO, 76820-608, Brasil
-              </Text>
-            </View>
-
-            <Text
-              style={styles.distanceText}
-            >
-              3.2km
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.listItem}
-          >
-            <View
-              style={styles.listIconContainer}
-            >
-              <Ionicons
-                name="time"
-                size={14}
-                color="#111"
-              />
-            </View>
-
-            <View style={styles.listContent}>
-              <Text style={styles.listText}>
-                Rua Brasília, 2930
-              </Text>
-
-              <Text
-                style={styles.listSubText}
-              >
-                São Cristóvão, Porto Velho -
-                RO, 76804-070, Brasil
-              </Text>
-            </View>
-
-            <Text
-              style={styles.distanceText}
-            >
-              7km
-            </Text>
-          </TouchableOpacity>
+                <Text
+                  style={
+                    styles.distanceText
+                  }
+                >
+                  {endereco.distancia}
+                </Text>
+              </TouchableOpacity>
+            ),
+          )}
         </View>
       </Animated.View>
     </View>
@@ -481,7 +464,6 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
 
-  /* INPUTS */
   searchContainer: {
     flexDirection: "row",
     marginBottom: 24,
@@ -538,7 +520,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  /* QUICK ACTIONS */
   quickActions: {
     flexDirection: "row",
     alignItems: "center",
@@ -569,7 +550,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 
-  /* LIST */
   list: {
     marginTop: 4,
   },
