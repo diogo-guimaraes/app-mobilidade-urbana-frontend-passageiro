@@ -57,10 +57,18 @@ export default function Map({
         const formattedAddress = rua ? `${rua}${numero}` : (address.district || "Minha Localização");
 
         console.log("⚡ Endereço resolvido em background:", formattedAddress);
+
+        // Injeta o formattedAddress dentro do objeto de região atualizado
+        const updatedRegionWithAddress = {
+          ...currentRegion,
+          formattedAddress: formattedAddress,
+        };
+
+        console.log("📦 Location atualizado com formattedAddress:", updatedRegionWithAddress);
         
         // Dispara o callback atualizando apenas o texto sem interferir na física do mapa
         if (onUserLocationFound) {
-          onUserLocationFound(currentRegion, formattedAddress);
+          onUserLocationFound(updatedRegionWithAddress, formattedAddress);
         }
       }
     } catch (error) {
@@ -88,7 +96,7 @@ export default function Map({
         setHasInitialLocation(true);
         
         if (onUserLocationFound) {
-          onUserLocationFound(location, "Localização Atual");
+          onUserLocationFound(location, location.formattedAddress || "Localização Atual");
         }
 
         // Tenta obter o texto do endereço associado ao cache de fundo
@@ -159,7 +167,7 @@ export default function Map({
                 userInitialRegion.current = originalRegion;
                 setHasInitialLocation(true);
                 
-                // Salva no cache
+                // Salva no cache inicialmente sem o endereço de texto (será atualizado depois no fetch)
                 AsyncStorage.setItem(CACHE_KEY, JSON.stringify(originalRegion));
                 
                 if (onUserLocationFound) {
