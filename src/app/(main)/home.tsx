@@ -1,7 +1,7 @@
 // app/home.tsx
 import FolhaInferior from "@/components/FolhaInferior";
 import Map from "@/components/Map";
-import ParaOndeVamos from "@/components/ParaOndeVamos";
+import ViagemComParada from "@/components/corrida/ViagemComParada";
 import { useAuth } from "@/context/AuthProvider";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -12,7 +12,7 @@ export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [region, setRegion] = useState<Region | null>(null);
-  const [showParaOndeVamos, setShowParaOndeVamos] = useState(false);
+  const [showViagemComParada, setShowViagemComParada] = useState(false);
   const userInitialRegion = useRef<Region | null>(null);
   const [bottomSheetIndex, setBottomSheetIndex] = useState<number>(0);
 
@@ -63,13 +63,11 @@ export default function Home() {
         bottomSheetIndex={bottomSheetIndex}
       />
 
-      <FolhaInferior
-        onSheetChange={handleSheetStateChange}
-      />
+      <FolhaInferior onSheetChange={handleSheetStateChange} />
 
-      <ParaOndeVamos
-        visible={showParaOndeVamos}
-        onClose={() => setShowParaOndeVamos(false)}
+      <ViagemComParada
+        visible={showViagemComParada}
+        onClose={() => setShowViagemComParada(false)}
       />
     </View>
   );
