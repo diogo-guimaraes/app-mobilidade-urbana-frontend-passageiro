@@ -65,15 +65,24 @@ export default function InputsItinerario({
                 ) : isDestino && !temParadas ? (
                   // Destino Final Direto (Quando NÃO há paradas intermediárias)
                   <View style={styles.startOuterSquare}>
-                  
                     <View style={styles.startInnerSquare} />
-             
-                    {/* <Ionicons name="flag" size={12} color="#FFF" /> */}
                   </View>
                 ) : (
-                  // Caixas Numeradas (Para paradas intermediárias OU destino final quando há paradas)
-                  <View style={styles.numberBox}>
-                    <Text style={styles.numberText}>{index}</Text>
+                  // Caixas Numeradas (Para paradas intermediárias OU destino final quando HÁ paradas)
+                  <View 
+                    style={[
+                      styles.numberBox, 
+                      isDestino && temParadas ? styles.lastNumberBoxHighlight : null
+                    ]}
+                  >
+                    <Text 
+                      style={[
+                        styles.numberText, 
+                        isDestino && temParadas ? styles.lastNumberTextHighlight : null
+                      ]}
+                    >
+                      {index}
+                    </Text>
                   </View>
                 )}
               </View>
@@ -100,7 +109,7 @@ export default function InputsItinerario({
                   isOrigem
                     ? "Local de partida"
                     : isDestino
-                    ? "Para onde você vai?"
+                    ? temParadas ? "Destino" : "Para onde você vai?"
                     : "Parada"
                 }
                 placeholderTextColor="#999"
@@ -187,8 +196,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#111",
   },
-    startOuterSquare: {
-    width: 20,
+  // Destino Direto Sem Paradas (Quadrado)
+  startOuterSquare: {
+   width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
@@ -198,13 +208,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   startInnerSquare: {
-   width: 8,
+    width: 8,
     height: 8,
     borderRadius: 1,
     backgroundColor: "#FF5500",
   },
-  
-  // Caixa das Paradas/Destinos com sequencial numérico
+  // Caixa das Paradas com sequencial numérico padrão
   numberBox: {
     width: 20,
     height: 20,
@@ -218,14 +227,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#333",
   },
-  // Caixa de destino final laranja estilizada (Usada quando não há paradas intermediárias)
-  destinationBox: {
-    width: 20,
-    height: 20,
-    backgroundColor: "#000",
-    borderRadius: 3,
-    justifyContent: "center",
-    alignItems: "center",
+  // Modificadores para destacar o último número caso haja paradas
+  lastNumberBoxHighlight: {
+    backgroundColor: "#FF5500",
+  },
+  lastNumberTextHighlight: {
+    color: "#FFF",
   },
   verticalLine: {
     position: "absolute",
