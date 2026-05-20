@@ -148,7 +148,11 @@ const EnderecosRecentes = forwardRef<
     listaEnderecos.length > 0 ? listaEnderecos : historicoCache;
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+    >
       {/* AÇÕES RÁPIDAS */}
       <View style={styles.quickActions}>
         <TouchableOpacity style={styles.quickButton}>
