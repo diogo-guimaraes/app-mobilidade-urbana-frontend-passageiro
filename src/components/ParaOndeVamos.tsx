@@ -3,6 +3,7 @@
 import EnderecosRecentes, {
   EnderecosRecentesRef,
 } from "@/components/corrida/EnderecosRecentes";
+import InputsItinerario, { EnderecoItem } from "@/components/corrida/InputsIntinerario";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useRef, useState } from "react";
@@ -26,15 +27,6 @@ interface props {
   visible: boolean;
   onClose: () => void;
   duration?: number;
-}
-
-interface EnderecoItem {
-  name: string;
-  formattedAddress: string;
-  latitude: number;
-  longitude: number;
-  distancia: string | number;
-  order: number;
 }
 
 const InputsIntinearioInicial: EnderecoItem[] = [
@@ -66,27 +58,16 @@ export default function ParaOndevamos({
   const skeletonOpacity = useRef(new Animated.Value(0.4)).current;
 
   const [isMounted, setIsMounted] = useState(visible);
-
-  // Agora começa vazia porque as sugestões iniciais vêm do cache interno do componente filho
   const [listaEnderecos, setListaEnderecos] = useState<any[]>([]);
-
   const [loading, setLoading] = useState(false);
 
-  // 🔹 NOVO ESTADO DINÂMICO DOS INPUTS
   const [inputsIntinerario, setInputsIntinerario] = useState<EnderecoItem[]>(
     InputsIntinearioInicial,
   );
-
-  // 🔹 INPUT ATUAL SELECIONADO
   const [inputSelecionado, setInputSelecionado] = useState<number>(1);
-
-  // 🔹 refs dinâmicos
   const inputRefs = useRef<TextInput[]>([]);
-
-  // 🔹 ref para acessar funções internas do componente EnderecosRecentes
   const enderecosRecentesRef = useRef<EnderecosRecentesRef>(null);
 
-  // 🔹 Reorganiza os orders
   const reorganizarOrders = (lista: EnderecoItem[]) => {
     return lista.map((item, index) => ({
       ...item,
@@ -94,11 +75,10 @@ export default function ParaOndevamos({
     }));
   };
 
-  // 🔹 Adicionar parada
   const adicionarParada = () => {
     setInputsIntinerario((prev) => {
       const novaLista = [...prev];
-
+      // Adiciona uma parada antes da última posição (que sempre será o destino)
       novaLista.splice(novaLista.length - 1, 0, {
         name: "",
         formattedAddress: "",
@@ -107,56 +87,46 @@ export default function ParaOndevamos({
         distancia: 0,
         order: 0,
       });
-
       return reorganizarOrders(novaLista);
     });
   };
 
-  // 🔹 Remover parada
   const removerParada = (index: number) => {
     if (index === 0) return;
     if (index === inputsIntinerario.length - 1) return;
 
     setInputsIntinerario((prev) => {
       const novaLista = prev.filter((_, i) => i !== index);
-
       return reorganizarOrders(novaLista);
     });
   };
 
-  // 🔹 Mover parada para cima
   const moverParaCima = (index: number) => {
     if (index <= 1) return;
 
     setInputsIntinerario((prev) => {
       const novaLista = [...prev];
-
       [novaLista[index - 1], novaLista[index]] = [
         novaLista[index],
         novaLista[index - 1],
       ];
-
       return reorganizarOrders(novaLista);
     });
   };
 
-  // 🔹 Mover parada para baixo
   const moverParaBaixo = (index: number) => {
     if (index >= inputsIntinerario.length - 2) return;
 
     setInputsIntinerario((prev) => {
       const novaLista = [...prev];
-
       [novaLista[index], novaLista[index + 1]] = [
         novaLista[index + 1],
         novaLista[index],
       ];
-
       return reorganizarOrders(novaLista);
     });
   };
 
-  // 🔹 Atualizar texto do input
   const atualizarInput = (texto: string, index: number) => {
     setInputsIntinerario((prev) =>
       prev.map((item, i) =>
@@ -170,7 +140,6 @@ export default function ParaOndevamos({
     );
   };
 
-  // 🔹 Skeleton animation
   useEffect(() => {
     let animationLoop: Animated.CompositeAnimation | null = null;
 
@@ -189,7 +158,6 @@ export default function ParaOndevamos({
           }),
         ]),
       );
-
       animationLoop.start();
     } else {
       skeletonOpacity.setValue(0.4);
@@ -200,14 +168,11 @@ export default function ParaOndevamos({
     };
   }, [loading]);
 
-  // 🔹 Carregar origem salva
   const carregarLocalizacaoSalva = async () => {
     try {
       const cached = await AsyncStorage.getItem(CACHE_KEY);
-
       if (cached) {
         const locationData = JSON.parse(cached);
-
         setInputsIntinerario((prev) =>
           prev.map((item, index) =>
             index === 0
@@ -225,7 +190,6 @@ export default function ParaOndevamos({
     }
   };
 
-  // 🔹 Buscar endereço
   const buscarEnderecoApi = async (texto: string) => {
     if (!texto || texto.trim().length === 0) {
       setListaEnderecos([]);
@@ -234,7 +198,6 @@ export default function ParaOndevamos({
     }
 
     setLoading(true);
-
     try {
       const response = await api.get("/buscar-endereco", {
         params: { endereco: texto },
@@ -242,7 +205,6 @@ export default function ParaOndevamos({
 
       if (response.data) {
         const { name, formattedAddress, latitude, longitude } = response.data;
-
         const novoEnderecoObjeto = {
           name,
           formattedAddress,
@@ -250,7 +212,6 @@ export default function ParaOndevamos({
           longitude,
           distancia: "--",
         };
-
         setListaEnderecos([novoEnderecoObjeto]);
       }
     } catch (error) {
@@ -260,10 +221,8 @@ export default function ParaOndevamos({
     }
   };
 
-  // 🔹 debounce baseado no input selecionado
   useEffect(() => {
     const textoAtual = inputsIntinerario[inputSelecionado]?.name || "";
-
     const delayDebounceFn = setTimeout(() => {
       if (visible) {
         buscarEnderecoApi(textoAtual);
@@ -273,7 +232,7 @@ export default function ParaOndevamos({
     return () => clearTimeout(delayDebounceFn);
   }, [inputsIntinerario, inputSelecionado]);
 
-  // 🔹 Selecionar endereço
+  // Ajustado parâmetro para aceitar any, corrigindo o erro estrutural apontado pelo TS no print 1
   const handleSelecionarEndereco = async (item: any) => {
     setInputsIntinerario((prev) =>
       prev.map((input, index) =>
@@ -289,7 +248,6 @@ export default function ParaOndevamos({
       ),
     );
 
-    // 🔹 SALVA O NOVO ENDEREÇO SELECIONADO NO CACHE DO COMPONENTE FILHO
     if (enderecosRecentesRef.current) {
       await enderecosRecentesRef.current.salvarEnderecoNoCache({
         name: item.name,
@@ -301,10 +259,6 @@ export default function ParaOndevamos({
     }
 
     console.log("📍 Endereço Selecionado com Sucesso!");
-
-    console.log("📦 Itinerário Atualizado:", {
-      inputsIntinerario,
-    });
   };
 
   useEffect(() => {
@@ -313,7 +267,6 @@ export default function ParaOndevamos({
         onClose();
         return true;
       }
-
       return false;
     };
 
@@ -321,14 +274,12 @@ export default function ParaOndevamos({
       "hardwareBackPress",
       onBackPress,
     );
-
     return () => subscription.remove();
   }, [visible, onClose]);
 
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
-
       carregarLocalizacaoSalva();
 
       Animated.parallel([
@@ -337,7 +288,6 @@ export default function ParaOndevamos({
           duration,
           useNativeDriver: true,
         }),
-
         Animated.timing(overlayOpacity, {
           toValue: 1,
           duration: duration * 0.8,
@@ -355,7 +305,6 @@ export default function ParaOndevamos({
           duration,
           useNativeDriver: true,
         }),
-
         Animated.timing(overlayOpacity, {
           toValue: 0,
           duration: duration * 0.8,
@@ -364,11 +313,8 @@ export default function ParaOndevamos({
       ]).start(({ finished }) => {
         if (finished) {
           setIsMounted(false);
-
           setInputsIntinerario(InputsIntinearioInicial);
-
           setListaEnderecos([]);
-
           setLoading(false);
         }
       });
@@ -412,9 +358,7 @@ export default function ParaOndevamos({
             <View style={styles.userContainer}>
               <View style={styles.userPill}>
                 <Ionicons name="person-circle" size={28} color="#666" />
-
                 <Text style={styles.userName}>Diogo</Text>
-
                 <Ionicons name="chevron-down" size={16} color="#666" />
               </View>
             </View>
@@ -428,130 +372,19 @@ export default function ParaOndevamos({
         {/* Título */}
         <Text style={styles.title}>Para onde vamos?</Text>
 
-        {/* INPUTS DINÂMICOS */}
-        <View style={styles.searchContainer}>
-          <View style={styles.lineContainer}>
-            {inputsIntinerario.map((_, index) => (
-              <React.Fragment key={index}>
-                <View
-                  style={[
-                    styles.circleTop,
-                    index === inputsIntinerario.length - 1
-                      ? styles.circleBottom
-                      : null,
-                  ]}
-                />
+        {/* COMPONENTE DE INPUTS */}
+        <InputsItinerario
+          inputsIntinerario={inputsIntinerario}
+          inputRefs={inputRefs}
+          setInputSelecionado={setInputSelecionado}
+          atualizarInput={atualizarInput}
+          moverParaCima={moverParaCima}
+          moverParaBaixo={moverParaBaixo}
+          removerParada={removerParada}
+          adicionarParada={adicionarParada}
+        />
 
-                {index !== inputsIntinerario.length - 1 && (
-                  <View style={styles.verticalLine} />
-                )}
-              </React.Fragment>
-            ))}
-          </View>
-
-          <View style={styles.inputsContainer}>
-            {inputsIntinerario.map((item, index) => {
-              const isOrigem = index === 0;
-
-              const isDestino = index === inputsIntinerario.length - 1;
-
-              const isParada = !isOrigem && !isDestino;
-
-              return (
-                <View
-                  key={index}
-                  style={[
-                    styles.searchInput,
-                    isDestino && styles.searchInputDestination,
-                  ]}
-                >
-                  <Ionicons
-                    name={
-                      isOrigem
-                        ? "navigate-outline"
-                        : isDestino
-                          ? "flag-outline"
-                          : "pause-outline"
-                    }
-                    size={18}
-                    color={isDestino ? "#FF5500" : "#666"}
-                  />
-
-                  <TextInput
-                    ref={(ref) => {
-                      if (ref) {
-                        inputRefs.current[index] = ref;
-                      }
-                    }}
-                    style={styles.input}
-                    placeholder={
-                      isOrigem
-                        ? "Local de partida"
-                        : isDestino
-                          ? "Para onde você vai?"
-                          : "Parada"
-                    }
-                    placeholderTextColor="#999"
-                    value={item.name}
-                    onFocus={() => setInputSelecionado(index)}
-                    onChangeText={(texto) => atualizarInput(texto, index)}
-                  />
-
-                  {/* CONTROLES DE PARADA */}
-                  {isParada && (
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                      }}
-                    >
-                      <TouchableOpacity onPress={() => moverParaCima(index)}>
-                        <Ionicons name="chevron-up" size={18} color="#777" />
-                      </TouchableOpacity>
-
-                      <TouchableOpacity onPress={() => moverParaBaixo(index)}>
-                        <Ionicons name="chevron-down" size={18} color="#777" />
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        onPress={() => removerParada(index)}
-                        style={{
-                          marginLeft: 8,
-                        }}
-                      >
-                        <Ionicons name="close" size={20} color="#777" />
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
-              );
-            })}
-
-            {/* ADICIONAR PARADA */}
-            <TouchableOpacity
-              style={{
-                marginTop: 12,
-                flexDirection: "row",
-                alignItems: "center",
-              }}
-              onPress={adicionarParada}
-            >
-              <Ionicons name="add" size={18} color="#666" />
-
-              <Text
-                style={{
-                  marginLeft: 6,
-                  color: "#666",
-                  fontWeight: "600",
-                }}
-              >
-                Adicionar parada
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* LISTA / SKELETON LOAD COMPONENTIZADO */}
+        {/* LISTA DE ENDEREÇOS RECENTES */}
         <EnderecosRecentes
           ref={enderecosRecentesRef}
           loading={loading}
@@ -611,52 +444,5 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#000",
     marginBottom: 28,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    marginBottom: 24,
-  },
-  lineContainer: {
-    alignItems: "center",
-    marginRight: 14,
-    paddingTop: 10,
-  },
-  circleTop: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#666",
-  },
-  verticalLine: {
-    width: 2,
-    flex: 1,
-    backgroundColor: "#DDD",
-    marginVertical: 4,
-  },
-  circleBottom: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#FF5500",
-  },
-  inputsContainer: {
-    flex: 1,
-  },
-  searchInput: {
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: 56,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ECECEC",
-  },
-  searchInputDestination: {
-    borderBottomColor: "#FFD7BF",
-  },
-  input: {
-    flex: 1,
-    marginLeft: 10,
-    fontSize: 17,
-    color: "#111",
-    fontWeight: "500",
   },
 });
