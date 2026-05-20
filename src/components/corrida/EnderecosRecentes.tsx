@@ -22,7 +22,7 @@ interface EnderecoItem {
   formattedAddress: string;
   latitude: number;
   longitude: number;
-  distancia: string | number;
+  distancia: string; // Ajustado de string | number para apenas string
 }
 
 interface EnderecosRecentesProps {
@@ -283,7 +283,7 @@ export default EnderecosRecentes;
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    maxHeight: 600, // Altura máxima que ativa o scroll cobrindo tudo de forma contínua
+    maxHeight: 600,
   },
   quickActions: {
     flexDirection: "row",
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
   },
   footerButtonsContainer: {
     marginTop: 8,
-    paddingBottom: 24, // Garante um espaçamento confortável ao rolar até o fim
+    paddingBottom: 24,
   },
   footerButton: {
     flexDirection: "row",
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   footerIconContainer: {
-    marginTop: 0, // Alinha verticalmente com o texto do botão de ação
+    marginTop: 0,
   },
   footerButtonText: {
     fontSize: 16,
