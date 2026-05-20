@@ -125,9 +125,9 @@ export default function ParaOndevamos({
       prev.map((item, i) =>
         i === index
           ? {
-              ...item,
-              name: texto,
-            }
+            ...item,
+            name: texto,
+          }
           : item,
       ),
     );
@@ -189,16 +189,16 @@ export default function ParaOndevamos({
             prev.map((item, index) =>
               index === 0
                 ? {
-                    ...item,
+                  ...item,
 
-                    name:
-                      locationData.formattedAddress ||
-                      "Localização Atual",
+                  name:
+                    locationData.formattedAddress ||
+                    "Localização Atual",
 
-                    formattedAddress:
-                      locationData.formattedAddress ||
-                      "",
-                  }
+                  formattedAddress:
+                    locationData.formattedAddress ||
+                    "",
+                }
                 : item,
             ),
           );
@@ -302,19 +302,19 @@ export default function ParaOndevamos({
         prev.map((input, index) =>
           index === inputSelecionado
             ? {
-                ...input,
+              ...input,
 
-                name: item.name,
+              name: item.name,
 
-                formattedAddress:
-                  item.formattedAddress,
+              formattedAddress:
+                item.formattedAddress,
 
-                latitude:
-                  item.latitude,
+              latitude:
+                item.latitude,
 
-                longitude:
-                  item.longitude,
-              }
+              longitude:
+                item.longitude,
+            }
             : input,
         ),
       );

@@ -162,9 +162,9 @@ const InputsItinerario = forwardRef<
           novaLista[index - 1],
           novaLista[index],
         ] = [
-          novaLista[index],
-          novaLista[index - 1],
-        ];
+            novaLista[index],
+            novaLista[index - 1],
+          ];
 
         return reorganizarOrders(
           novaLista,
@@ -190,9 +190,9 @@ const InputsItinerario = forwardRef<
           novaLista[index],
           novaLista[index + 1],
         ] = [
-          novaLista[index + 1],
-          novaLista[index],
-        ];
+            novaLista[index + 1],
+            novaLista[index],
+          ];
 
         return reorganizarOrders(
           novaLista,
@@ -212,7 +212,7 @@ const InputsItinerario = forwardRef<
             const isDestino =
               index ===
               inputsIntinerario.length -
-                1;
+              1;
 
             const isParada =
               !isOrigem && !isDestino;
@@ -269,7 +269,7 @@ const InputsItinerario = forwardRef<
                           styles.numberBox,
 
                           isDestino &&
-                          temParadas
+                            temParadas
                             ? styles.lastNumberBoxHighlight
                             : null,
                         ]}
@@ -279,7 +279,7 @@ const InputsItinerario = forwardRef<
                             styles.numberText,
 
                             isDestino &&
-                            temParadas
+                              temParadas
                               ? styles.lastNumberTextHighlight
                               : null,
                           ]}
@@ -306,7 +306,7 @@ const InputsItinerario = forwardRef<
                     styles.searchInput,
 
                     isDestino &&
-                      styles.searchInputDestination,
+                    styles.searchInputDestination,
                   ]}
                 >
                   <TextInput
@@ -322,10 +322,10 @@ const InputsItinerario = forwardRef<
                       isOrigem
                         ? "Local de partida"
                         : isDestino
-                        ? temParadas
-                          ? "Destino"
-                          : "Para onde você vai?"
-                        : "Parada"
+                          ? temParadas
+                            ? "Destino"
+                            : "Para onde você vai?"
+                          : "Parada"
                     }
                     placeholderTextColor="#999"
                     value={item.name}
