@@ -2,7 +2,12 @@
 
 import { Ionicons } from "@expo/vector-icons";
 
-import React from "react";
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 
 import {
   StyleSheet,
@@ -22,6 +27,12 @@ export interface EnderecoItem {
   order: number;
 }
 
+export interface InputsItinerarioRef {
+  focusInput: (index: number) => void;
+
+  getInputSelecionado: () => number;
+}
+
 interface InputsItinerarioProps {
   inputsIntinerario: EnderecoItem[];
 
@@ -29,364 +40,402 @@ interface InputsItinerarioProps {
     React.SetStateAction<EnderecoItem[]>
   >;
 
-  inputRefs: React.MutableRefObject<TextInput[]>;
-
-  setInputSelecionado: (index: number) => void;
-
   atualizarInput: (
     texto: string,
     index: number,
   ) => void;
 }
 
-export default function InputsItinerario({
-  inputsIntinerario,
-  setInputsIntinerario,
-  inputRefs,
-  setInputSelecionado,
-  atualizarInput,
-}: InputsItinerarioProps) {
-  // Condição para saber se existem paradas
-  const temParadas =
-    inputsIntinerario.length >= 3;
-
-  const reorganizarOrders = (
-    lista: EnderecoItem[],
+const InputsItinerario = forwardRef<
+  InputsItinerarioRef,
+  InputsItinerarioProps
+>(
+  (
+    {
+      inputsIntinerario,
+      setInputsIntinerario,
+      atualizarInput,
+    },
+    ref,
   ) => {
-    return lista.map((item, index) => ({
-      ...item,
-      order: index,
+    // INPUT ATIVO INTERNO
+    const [
+      inputSelecionado,
+      setInputSelecionado,
+    ] = useState(1);
+
+    // REFS INTERNOS
+    const inputRefs = useRef<TextInput[]>(
+      [],
+    );
+
+    // MÉTODOS EXPOSTOS AO COMPONENTE PAI
+    useImperativeHandle(ref, () => ({
+      focusInput: (index: number) => {
+        inputRefs.current[index]?.focus();
+      },
+
+      getInputSelecionado: () =>
+        inputSelecionado,
     }));
-  };
 
-  const adicionarParada = () => {
-    setInputsIntinerario((prev) => {
-      const novaLista = [...prev];
+    // Possui paradas?
+    const temParadas =
+      inputsIntinerario.length >= 3;
 
-      // Insere antes do destino
-      novaLista.splice(
-        novaLista.length - 1,
-        0,
-        {
-          id: `parada-${Date.now()}`,
-
-          name: "",
-
-          formattedAddress: "",
-
-          latitude: 0,
-
-          longitude: 0,
-
-          distancia: 0,
-
-          order: 0,
-        },
+    const reorganizarOrders = (
+      lista: EnderecoItem[],
+    ) => {
+      return lista.map(
+        (item, index) => ({
+          ...item,
+          order: index,
+        }),
       );
+    };
 
-      return reorganizarOrders(
-        novaLista,
-      );
-    });
-  };
+    const adicionarParada = () => {
+      setInputsIntinerario((prev) => {
+        const novaLista = [...prev];
 
-  const removerParada = (
-    index: number,
-  ) => {
-    // Origem nunca remove
-    if (index === 0) return;
+        novaLista.splice(
+          novaLista.length - 1,
+          0,
+          {
+            id: `parada-${Date.now()}`,
 
-    // Destino nunca remove
-    if (
-      index ===
-      inputsIntinerario.length - 1
-    )
-      return;
+            name: "",
 
-    setInputsIntinerario((prev) => {
-      const novaLista = prev.filter(
-        (_, i) => i !== index,
-      );
+            formattedAddress: "",
 
-      return reorganizarOrders(
-        novaLista,
-      );
-    });
-  };
+            latitude: 0,
 
-  const moverParaCima = (
-    index: number,
-  ) => {
-    // Não sobe origem
-    // Nem primeira parada
-    if (index <= 1) return;
+            longitude: 0,
 
-    setInputsIntinerario((prev) => {
-      const novaLista = [...prev];
+            distancia: 0,
 
-      [
-        novaLista[index - 1],
-        novaLista[index],
-      ] = [
-        novaLista[index],
-        novaLista[index - 1],
-      ];
+            order: 0,
+          },
+        );
 
-      return reorganizarOrders(
-        novaLista,
-      );
-    });
-  };
+        return reorganizarOrders(
+          novaLista,
+        );
+      });
+    };
 
-  const moverParaBaixo = (
-    index: number,
-  ) => {
-    // Não desce última parada
-    if (
-      index >=
-      inputsIntinerario.length - 2
-    )
-      return;
+    const removerParada = (
+      index: number,
+    ) => {
+      // Origem não remove
+      if (index === 0) return;
 
-    setInputsIntinerario((prev) => {
-      const novaLista = [...prev];
+      // Destino não remove
+      if (
+        index ===
+        inputsIntinerario.length - 1
+      ) {
+        return;
+      }
 
-      [
-        novaLista[index],
-        novaLista[index + 1],
-      ] = [
-        novaLista[index + 1],
-        novaLista[index],
-      ];
+      setInputsIntinerario((prev) => {
+        const novaLista = prev.filter(
+          (_, i) => i !== index,
+        );
 
-      return reorganizarOrders(
-        novaLista,
-      );
-    });
-  };
+        return reorganizarOrders(
+          novaLista,
+        );
+      });
+    };
 
-  return (
-    <View style={styles.searchContainer}>
-      {inputsIntinerario.map(
-        (item, index) => {
-          const isOrigem =
-            index === 0;
+    const moverParaCima = (
+      index: number,
+    ) => {
+      // Primeira parada não sobe
+      if (index <= 1) return;
 
-          const isDestino =
-            index ===
-            inputsIntinerario.length - 1;
+      setInputsIntinerario((prev) => {
+        const novaLista = [...prev];
 
-          const isParada =
-            !isOrigem && !isDestino;
+        [
+          novaLista[index - 1],
+          novaLista[index],
+        ] = [
+          novaLista[index],
+          novaLista[index - 1],
+        ];
 
-          return (
-            <View
-              key={item.id}
-              style={styles.rowContainer}
-            >
-              {/* COLUNA DA LINHA */}
+        return reorganizarOrders(
+          novaLista,
+        );
+      });
+    };
+
+    const moverParaBaixo = (
+      index: number,
+    ) => {
+      // Última parada não desce
+      if (
+        index >=
+        inputsIntinerario.length - 2
+      ) {
+        return;
+      }
+
+      setInputsIntinerario((prev) => {
+        const novaLista = [...prev];
+
+        [
+          novaLista[index],
+          novaLista[index + 1],
+        ] = [
+          novaLista[index + 1],
+          novaLista[index],
+        ];
+
+        return reorganizarOrders(
+          novaLista,
+        );
+      });
+    };
+
+    return (
+      <View
+        style={styles.searchContainer}
+      >
+        {inputsIntinerario.map(
+          (item, index) => {
+            const isOrigem =
+              index === 0;
+
+            const isDestino =
+              index ===
+              inputsIntinerario.length -
+                1;
+
+            const isParada =
+              !isOrigem && !isDestino;
+
+            return (
               <View
-                style={styles.lineContainer}
+                key={item.id}
+                style={
+                  styles.rowContainer
+                }
               >
+                {/* TIMELINE */}
                 <View
-                  style={styles.markerWrapper}
+                  style={
+                    styles.lineContainer
+                  }
                 >
-                  {isOrigem ? (
-                    // Origem
-                    <View
-                      style={
-                        styles.startOuterCircle
-                      }
-                    >
+                  <View
+                    style={
+                      styles.markerWrapper
+                    }
+                  >
+                    {isOrigem ? (
+                      // Origem
                       <View
                         style={
-                          styles.startInnerCircle
+                          styles.startOuterCircle
                         }
-                      />
-                    </View>
-                  ) : isDestino &&
-                    !temParadas ? (
-                    // Destino simples
-                    <View
-                      style={
-                        styles.startOuterSquare
-                      }
-                    >
+                      >
+                        <View
+                          style={
+                            styles.startInnerCircle
+                          }
+                        />
+                      </View>
+                    ) : isDestino &&
+                      !temParadas ? (
+                      // Destino simples
                       <View
                         style={
-                          styles.startInnerSquare
+                          styles.startOuterSquare
                         }
-                      />
-                    </View>
-                  ) : (
-                    // Paradas
-                    <View
-                      style={[
-                        styles.numberBox,
-
-                        isDestino &&
-                        temParadas
-                          ? styles.lastNumberBoxHighlight
-                          : null,
-                      ]}
-                    >
-                      <Text
+                      >
+                        <View
+                          style={
+                            styles.startInnerSquare
+                          }
+                        />
+                      </View>
+                    ) : (
+                      // Paradas
+                      <View
                         style={[
-                          styles.numberText,
+                          styles.numberBox,
 
                           isDestino &&
                           temParadas
-                            ? styles.lastNumberTextHighlight
+                            ? styles.lastNumberBoxHighlight
                             : null,
                         ]}
                       >
-                        {index}
-                      </Text>
-                    </View>
+                        <Text
+                          style={[
+                            styles.numberText,
+
+                            isDestino &&
+                            temParadas
+                              ? styles.lastNumberTextHighlight
+                              : null,
+                          ]}
+                        >
+                          {index}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Linha vertical */}
+                  {!isDestino && (
+                    <View
+                      style={
+                        styles.verticalLine
+                      }
+                    />
                   )}
                 </View>
 
-                {/* Linha Vertical */}
-                {!isDestino && (
-                  <View
-                    style={
-                      styles.verticalLine
+                {/* INPUT */}
+                <View
+                  style={[
+                    styles.searchInput,
+
+                    isDestino &&
+                      styles.searchInputDestination,
+                  ]}
+                >
+                  <TextInput
+                    ref={(ref) => {
+                      if (ref) {
+                        inputRefs.current[
+                          index
+                        ] = ref;
+                      }
+                    }}
+                    style={styles.input}
+                    placeholder={
+                      isOrigem
+                        ? "Local de partida"
+                        : isDestino
+                        ? temParadas
+                          ? "Destino"
+                          : "Para onde você vai?"
+                        : "Parada"
+                    }
+                    placeholderTextColor="#999"
+                    value={item.name}
+                    onFocus={() =>
+                      setInputSelecionado(
+                        index,
+                      )
+                    }
+                    onChangeText={(
+                      texto,
+                    ) =>
+                      atualizarInput(
+                        texto,
+                        index,
+                      )
                     }
                   />
-                )}
-              </View>
 
-              {/* INPUT */}
-              <View
-                style={[
-                  styles.searchInput,
-
-                  isDestino &&
-                    styles.searchInputDestination,
-                ]}
-              >
-                <TextInput
-                  ref={(ref) => {
-                    if (ref) {
-                      inputRefs.current[
-                        index
-                      ] = ref;
-                    }
-                  }}
-                  style={styles.input}
-                  placeholder={
-                    isOrigem
-                      ? "Local de partida"
-                      : isDestino
-                      ? temParadas
-                        ? "Destino"
-                        : "Para onde você vai?"
-                      : "Parada"
-                  }
-                  placeholderTextColor="#999"
-                  value={item.name}
-                  onFocus={() =>
-                    setInputSelecionado(
-                      index,
-                    )
-                  }
-                  onChangeText={(texto) =>
-                    atualizarInput(
-                      texto,
-                      index,
-                    )
-                  }
-                />
-
-                {/* BOTÃO ADD */}
-                {isDestino && (
-                  <TouchableOpacity
-                    onPress={
-                      adicionarParada
-                    }
-                    style={
-                      styles.addButtonInline
-                    }
-                  >
-                    <Ionicons
-                      name="add"
-                      size={20}
-                      color="#666"
-                    />
-                  </TouchableOpacity>
-                )}
-
-                {/* AÇÕES DAS PARADAS */}
-                {isParada && (
-                  <View
-                    style={{
-                      flexDirection:
-                        "row",
-
-                      alignItems:
-                        "center",
-                    }}
-                  >
+                  {/* ADD */}
+                  {isDestino && (
                     <TouchableOpacity
-                      onPress={() =>
-                        moverParaCima(
-                          index,
-                        )
-                      }
-                      style={{
-                        marginRight: 4,
-                      }}
-                    >
-                      <Ionicons
-                        name="chevron-up"
-                        size={16}
-                        color="#999"
-                      />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      onPress={() =>
-                        moverParaBaixo(
-                          index,
-                        )
-                      }
-                      style={{
-                        marginRight: 6,
-                      }}
-                    >
-                      <Ionicons
-                        name="chevron-down"
-                        size={16}
-                        color="#999"
-                      />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      onPress={() =>
-                        removerParada(
-                          index,
-                        )
+                      onPress={
+                        adicionarParada
                       }
                       style={
-                        styles.removeButtonInline
+                        styles.addButtonInline
                       }
                     >
                       <Ionicons
-                        name="close"
+                        name="add"
                         size={20}
-                        color="#777"
+                        color="#666"
                       />
                     </TouchableOpacity>
-                  </View>
-                )}
+                  )}
+
+                  {/* AÇÕES */}
+                  {isParada && (
+                    <View
+                      style={{
+                        flexDirection:
+                          "row",
+
+                        alignItems:
+                          "center",
+                      }}
+                    >
+                      <TouchableOpacity
+                        onPress={() =>
+                          moverParaCima(
+                            index,
+                          )
+                        }
+                        style={{
+                          marginRight: 4,
+                        }}
+                      >
+                        <Ionicons
+                          name="chevron-up"
+                          size={16}
+                          color="#999"
+                        />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() =>
+                          moverParaBaixo(
+                            index,
+                          )
+                        }
+                        style={{
+                          marginRight: 6,
+                        }}
+                      >
+                        <Ionicons
+                          name="chevron-down"
+                          size={16}
+                          color="#999"
+                        />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() =>
+                          removerParada(
+                            index,
+                          )
+                        }
+                        style={
+                          styles.removeButtonInline
+                        }
+                      >
+                        <Ionicons
+                          name="close"
+                          size={20}
+                          color="#777"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
               </View>
-            </View>
-          );
-        },
-      )}
-    </View>
-  );
-}
+            );
+          },
+        )}
+      </View>
+    );
+  },
+);
+
+export default InputsItinerario;
 
 const styles = StyleSheet.create({
   searchContainer: {
