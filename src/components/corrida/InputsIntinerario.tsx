@@ -1,16 +1,19 @@
 // components/InputsItinerario.tsx
 
 import { Ionicons } from "@expo/vector-icons";
+
 import React from "react";
+
 import {
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 export interface EnderecoItem {
+  id: string;
   name: string;
   formattedAddress: string;
   latitude: number;
@@ -21,137 +24,366 @@ export interface EnderecoItem {
 
 interface InputsItinerarioProps {
   inputsIntinerario: EnderecoItem[];
+
+  setInputsIntinerario: React.Dispatch<
+    React.SetStateAction<EnderecoItem[]>
+  >;
+
   inputRefs: React.MutableRefObject<TextInput[]>;
+
   setInputSelecionado: (index: number) => void;
-  atualizarInput: (texto: string, index: number) => void;
-  moverParaCima: (index: number) => void;
-  moverParaBaixo: (index: number) => void;
-  removerParada: (index: number) => void;
-  adicionarParada: () => void;
+
+  atualizarInput: (
+    texto: string,
+    index: number,
+  ) => void;
 }
 
 export default function InputsItinerario({
   inputsIntinerario,
+  setInputsIntinerario,
   inputRefs,
   setInputSelecionado,
   atualizarInput,
-  moverParaCima,
-  moverParaBaixo,
-  removerParada,
-  adicionarParada,
 }: InputsItinerarioProps) {
-  
-  // Condição para saber se a rota possui paradas intermediárias (3 ou mais endereços)
-  const temParadas = inputsIntinerario.length >= 3;
+  // Condição para saber se existem paradas
+  const temParadas =
+    inputsIntinerario.length >= 3;
+
+  const reorganizarOrders = (
+    lista: EnderecoItem[],
+  ) => {
+    return lista.map((item, index) => ({
+      ...item,
+      order: index,
+    }));
+  };
+
+  const adicionarParada = () => {
+    setInputsIntinerario((prev) => {
+      const novaLista = [...prev];
+
+      // Insere antes do destino
+      novaLista.splice(
+        novaLista.length - 1,
+        0,
+        {
+          id: `parada-${Date.now()}`,
+
+          name: "",
+
+          formattedAddress: "",
+
+          latitude: 0,
+
+          longitude: 0,
+
+          distancia: 0,
+
+          order: 0,
+        },
+      );
+
+      return reorganizarOrders(
+        novaLista,
+      );
+    });
+  };
+
+  const removerParada = (
+    index: number,
+  ) => {
+    // Origem nunca remove
+    if (index === 0) return;
+
+    // Destino nunca remove
+    if (
+      index ===
+      inputsIntinerario.length - 1
+    )
+      return;
+
+    setInputsIntinerario((prev) => {
+      const novaLista = prev.filter(
+        (_, i) => i !== index,
+      );
+
+      return reorganizarOrders(
+        novaLista,
+      );
+    });
+  };
+
+  const moverParaCima = (
+    index: number,
+  ) => {
+    // Não sobe origem
+    // Nem primeira parada
+    if (index <= 1) return;
+
+    setInputsIntinerario((prev) => {
+      const novaLista = [...prev];
+
+      [
+        novaLista[index - 1],
+        novaLista[index],
+      ] = [
+        novaLista[index],
+        novaLista[index - 1],
+      ];
+
+      return reorganizarOrders(
+        novaLista,
+      );
+    });
+  };
+
+  const moverParaBaixo = (
+    index: number,
+  ) => {
+    // Não desce última parada
+    if (
+      index >=
+      inputsIntinerario.length - 2
+    )
+      return;
+
+    setInputsIntinerario((prev) => {
+      const novaLista = [...prev];
+
+      [
+        novaLista[index],
+        novaLista[index + 1],
+      ] = [
+        novaLista[index + 1],
+        novaLista[index],
+      ];
+
+      return reorganizarOrders(
+        novaLista,
+      );
+    });
+  };
 
   return (
     <View style={styles.searchContainer}>
-      {inputsIntinerario.map((item, index) => {
-        const isOrigem = index === 0;
-        const isDestino = index === inputsIntinerario.length - 1;
-        const isParada = !isOrigem && !isDestino;
+      {inputsIntinerario.map(
+        (item, index) => {
+          const isOrigem =
+            index === 0;
 
-        return (
-          <View key={index} style={styles.rowContainer}>
-            
-            {/* COLUNA DA LINHA LATERAL CRONOLÓGICA */}
-            <View style={styles.lineContainer}>
-              <View style={styles.markerWrapper}>
-                {isOrigem ? (
-                  // Ponto de Partida Inicial (Sempre fixo)
-                  <View style={styles.startOuterCircle}>
-                    <View style={styles.startInnerCircle} />
-                  </View>
-                ) : isDestino && !temParadas ? (
-                  // Destino Final Direto (Quando NÃO há paradas intermediárias)
-                  <View style={styles.startOuterSquare}>
-                    <View style={styles.startInnerSquare} />
-                  </View>
-                ) : (
-                  // Caixas Numeradas (Para paradas intermediárias OU destino final quando HÁ paradas)
-                  <View 
-                    style={[
-                      styles.numberBox, 
-                      isDestino && temParadas ? styles.lastNumberBoxHighlight : null
-                    ]}
-                  >
-                    <Text 
+          const isDestino =
+            index ===
+            inputsIntinerario.length - 1;
+
+          const isParada =
+            !isOrigem && !isDestino;
+
+          return (
+            <View
+              key={item.id}
+              style={styles.rowContainer}
+            >
+              {/* COLUNA DA LINHA */}
+              <View
+                style={styles.lineContainer}
+              >
+                <View
+                  style={styles.markerWrapper}
+                >
+                  {isOrigem ? (
+                    // Origem
+                    <View
+                      style={
+                        styles.startOuterCircle
+                      }
+                    >
+                      <View
+                        style={
+                          styles.startInnerCircle
+                        }
+                      />
+                    </View>
+                  ) : isDestino &&
+                    !temParadas ? (
+                    // Destino simples
+                    <View
+                      style={
+                        styles.startOuterSquare
+                      }
+                    >
+                      <View
+                        style={
+                          styles.startInnerSquare
+                        }
+                      />
+                    </View>
+                  ) : (
+                    // Paradas
+                    <View
                       style={[
-                        styles.numberText, 
-                        isDestino && temParadas ? styles.lastNumberTextHighlight : null
+                        styles.numberBox,
+
+                        isDestino &&
+                        temParadas
+                          ? styles.lastNumberBoxHighlight
+                          : null,
                       ]}
                     >
-                      {index}
-                    </Text>
-                  </View>
+                      <Text
+                        style={[
+                          styles.numberText,
+
+                          isDestino &&
+                          temParadas
+                            ? styles.lastNumberTextHighlight
+                            : null,
+                        ]}
+                      >
+                        {index}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {/* Linha Vertical */}
+                {!isDestino && (
+                  <View
+                    style={
+                      styles.verticalLine
+                    }
+                  />
                 )}
               </View>
 
-              {/* Linha vertical conectora */}
-              {!isDestino && <View style={styles.verticalLine} />}
-            </View>
+              {/* INPUT */}
+              <View
+                style={[
+                  styles.searchInput,
 
-            {/* COLUNA DOS INPUTS DE TEXTO */}
-            <View
-              style={[
-                styles.searchInput,
-                isDestino && styles.searchInputDestination,
-              ]}
-            >
-              <TextInput
-                ref={(ref) => {
-                  if (ref) {
-                    inputRefs.current[index] = ref;
+                  isDestino &&
+                    styles.searchInputDestination,
+                ]}
+              >
+                <TextInput
+                  ref={(ref) => {
+                    if (ref) {
+                      inputRefs.current[
+                        index
+                      ] = ref;
+                    }
+                  }}
+                  style={styles.input}
+                  placeholder={
+                    isOrigem
+                      ? "Local de partida"
+                      : isDestino
+                      ? temParadas
+                        ? "Destino"
+                        : "Para onde você vai?"
+                      : "Parada"
                   }
-                }}
-                style={styles.input}
-                placeholder={
-                  isOrigem
-                    ? "Local de partida"
-                    : isDestino
-                    ? temParadas ? "Destino" : "Para onde você vai?"
-                    : "Parada"
-                }
-                placeholderTextColor="#999"
-                value={item.name}
-                onFocus={() => setInputSelecionado(index)}
-                onChangeText={(texto) => atualizarInput(texto, index)}
-              />
+                  placeholderTextColor="#999"
+                  value={item.name}
+                  onFocus={() =>
+                    setInputSelecionado(
+                      index,
+                    )
+                  }
+                  onChangeText={(texto) =>
+                    atualizarInput(
+                      texto,
+                      index,
+                    )
+                  }
+                />
 
-              {/* REQUISITO: BOTÃO ADICIONAR AO LADO DO DESTINO */}
-              {isDestino && (
-                <TouchableOpacity
-                  onPress={adicionarParada}
-                  style={styles.addButtonInline}
-                >
-                  <Ionicons name="add" size={20} color="#666" />
-                </TouchableOpacity>
-              )}
-
-              {/* REQUISITO: BOTÃO REMOVER EXCLUSIVO NAS PARADAS INTERMEDIÁRIAS */}
-              {isParada && (
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <TouchableOpacity onPress={() => moverParaCima(index)} style={{ marginRight: 4 }}>
-                    <Ionicons name="chevron-up" size={16} color="#999" />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity onPress={() => moverParaBaixo(index)} style={{ marginRight: 6 }}>
-                    <Ionicons name="chevron-down" size={16} color="#999" />
-                  </TouchableOpacity>
-
+                {/* BOTÃO ADD */}
+                {isDestino && (
                   <TouchableOpacity
-                    onPress={() => removerParada(index)}
-                    style={styles.removeButtonInline}
+                    onPress={
+                      adicionarParada
+                    }
+                    style={
+                      styles.addButtonInline
+                    }
                   >
-                    <Ionicons name="close" size={20} color="#777" />
+                    <Ionicons
+                      name="add"
+                      size={20}
+                      color="#666"
+                    />
                   </TouchableOpacity>
-                </View>
-              )}
-            </View>
+                )}
 
-          </View>
-        );
-      })}
+                {/* AÇÕES DAS PARADAS */}
+                {isParada && (
+                  <View
+                    style={{
+                      flexDirection:
+                        "row",
+
+                      alignItems:
+                        "center",
+                    }}
+                  >
+                    <TouchableOpacity
+                      onPress={() =>
+                        moverParaCima(
+                          index,
+                        )
+                      }
+                      style={{
+                        marginRight: 4,
+                      }}
+                    >
+                      <Ionicons
+                        name="chevron-up"
+                        size={16}
+                        color="#999"
+                      />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() =>
+                        moverParaBaixo(
+                          index,
+                        )
+                      }
+                      style={{
+                        marginRight: 6,
+                      }}
+                    >
+                      <Ionicons
+                        name="chevron-down"
+                        size={16}
+                        color="#999"
+                      />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() =>
+                        removerParada(
+                          index,
+                        )
+                      }
+                      style={
+                        styles.removeButtonInline
+                      }
+                    >
+                      <Ionicons
+                        name="close"
+                        size={20}
+                        color="#777"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </View>
+          );
+        },
+      )}
     </View>
   );
 }
@@ -162,24 +394,28 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     paddingHorizontal: 16,
   },
+
   rowContainer: {
     flexDirection: "row",
-    alignItems: "stretch", 
+    alignItems: "stretch",
   },
+
   lineContainer: {
     alignItems: "center",
     marginRight: 14,
     width: 24,
     position: "relative",
   },
+
   markerWrapper: {
     width: 24,
-    height: 56, 
+    height: 56,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 2,
   },
-  // Ícone de partida (Círculo externo e interno)
+
+  // Origem
   startOuterCircle: {
     width: 20,
     height: 20,
@@ -190,15 +426,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
   startInnerCircle: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: "#111",
   },
-  // Destino Direto Sem Paradas (Quadrado)
+
+  // Destino sem parada
   startOuterSquare: {
-   width: 20,
+    width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
@@ -207,13 +445,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
   startInnerSquare: {
     width: 8,
     height: 8,
     borderRadius: 1,
     backgroundColor: "#FF5500",
   },
-  // Caixa das Paradas com sequencial numérico padrão
+
+  // Paradas
   numberBox: {
     width: 20,
     height: 20,
@@ -222,26 +462,31 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
   numberText: {
     fontSize: 12,
     fontWeight: "700",
     color: "#333",
   },
-  // Modificadores para destacar o último número caso haja paradas
+
+  // Último item
   lastNumberBoxHighlight: {
     backgroundColor: "#FF5500",
   },
+
   lastNumberTextHighlight: {
     color: "#FFF",
   },
+
   verticalLine: {
     position: "absolute",
     width: 2,
-    top: 38, 
-    bottom: -18, 
+    top: 38,
+    bottom: -18,
     backgroundColor: "#DDD",
     zIndex: 1,
   },
+
   searchInput: {
     flex: 1,
     flexDirection: "row",
@@ -250,9 +495,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#ECECEC",
   },
+
   searchInputDestination: {
     borderBottomColor: "#FFD7BF",
   },
+
   input: {
     flex: 1,
     marginLeft: 10,
@@ -261,6 +508,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     paddingRight: 10,
   },
+
   addButtonInline: {
     width: 32,
     height: 32,
@@ -270,6 +518,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginLeft: 8,
   },
+
   removeButtonInline: {
     padding: 4,
     marginLeft: 2,

@@ -3,10 +3,16 @@
 import EnderecosRecentes, {
   EnderecosRecentesRef,
 } from "@/components/corrida/EnderecosRecentes";
-import InputsItinerario, { EnderecoItem } from "@/components/corrida/InputsIntinerario";
+
+import InputsItinerario, {
+  EnderecoItem,
+} from "@/components/corrida/InputsIntinerario";
+
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import React, { useEffect, useRef, useState } from "react";
+
 import {
   Animated,
   BackHandler,
@@ -18,9 +24,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import { api } from "../Services/api";
 
 const { width } = Dimensions.get("window");
+
 const CACHE_KEY = "@last_user_location";
 
 interface props {
@@ -31,6 +39,7 @@ interface props {
 
 const InputsIntinearioInicial: EnderecoItem[] = [
   {
+    id: "origem",
     name: "",
     formattedAddress: "",
     latitude: 0,
@@ -39,6 +48,7 @@ const InputsIntinearioInicial: EnderecoItem[] = [
     order: 0,
   },
   {
+    id: "destino",
     name: "",
     formattedAddress: "",
     latitude: 0,
@@ -54,80 +64,33 @@ export default function ParaOndevamos({
   duration = 300,
 }: props) {
   const translateX = useRef(new Animated.Value(width)).current;
+
   const overlayOpacity = useRef(new Animated.Value(0)).current;
+
   const skeletonOpacity = useRef(new Animated.Value(0.4)).current;
 
   const [isMounted, setIsMounted] = useState(visible);
+
   const [listaEnderecos, setListaEnderecos] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(false);
 
-  const [inputsIntinerario, setInputsIntinerario] = useState<EnderecoItem[]>(
-    InputsIntinearioInicial,
-  );
-  const [inputSelecionado, setInputSelecionado] = useState<number>(1);
+  const [inputsIntinerario, setInputsIntinerario] = useState<
+    EnderecoItem[]
+  >(InputsIntinearioInicial);
+
+  const [inputSelecionado, setInputSelecionado] =
+    useState<number>(1);
+
   const inputRefs = useRef<TextInput[]>([]);
-  const enderecosRecentesRef = useRef<EnderecosRecentesRef>(null);
 
-  const reorganizarOrders = (lista: EnderecoItem[]) => {
-    return lista.map((item, index) => ({
-      ...item,
-      order: index,
-    }));
-  };
+  const enderecosRecentesRef =
+    useRef<EnderecosRecentesRef>(null);
 
-  const adicionarParada = () => {
-    setInputsIntinerario((prev) => {
-      const novaLista = [...prev];
-      // Adiciona uma parada antes da última posição (que sempre será o destino)
-      novaLista.splice(novaLista.length - 1, 0, {
-        name: "",
-        formattedAddress: "",
-        latitude: 0,
-        longitude: 0,
-        distancia: 0,
-        order: 0,
-      });
-      return reorganizarOrders(novaLista);
-    });
-  };
-
-  const removerParada = (index: number) => {
-    if (index === 0) return;
-    if (index === inputsIntinerario.length - 1) return;
-
-    setInputsIntinerario((prev) => {
-      const novaLista = prev.filter((_, i) => i !== index);
-      return reorganizarOrders(novaLista);
-    });
-  };
-
-  const moverParaCima = (index: number) => {
-    if (index <= 1) return;
-
-    setInputsIntinerario((prev) => {
-      const novaLista = [...prev];
-      [novaLista[index - 1], novaLista[index]] = [
-        novaLista[index],
-        novaLista[index - 1],
-      ];
-      return reorganizarOrders(novaLista);
-    });
-  };
-
-  const moverParaBaixo = (index: number) => {
-    if (index >= inputsIntinerario.length - 2) return;
-
-    setInputsIntinerario((prev) => {
-      const novaLista = [...prev];
-      [novaLista[index], novaLista[index + 1]] = [
-        novaLista[index + 1],
-        novaLista[index],
-      ];
-      return reorganizarOrders(novaLista);
-    });
-  };
-
-  const atualizarInput = (texto: string, index: number) => {
+  const atualizarInput = (
+    texto: string,
+    index: number,
+  ) => {
     setInputsIntinerario((prev) =>
       prev.map((item, i) =>
         i === index
@@ -141,7 +104,9 @@ export default function ParaOndevamos({
   };
 
   useEffect(() => {
-    let animationLoop: Animated.CompositeAnimation | null = null;
+    let animationLoop:
+      | Animated.CompositeAnimation
+      | null = null;
 
     if (loading) {
       animationLoop = Animated.loop(
@@ -151,6 +116,7 @@ export default function ParaOndevamos({
             duration: 600,
             useNativeDriver: true,
           }),
+
           Animated.timing(skeletonOpacity, {
             toValue: 0.4,
             duration: 600,
@@ -158,35 +124,49 @@ export default function ParaOndevamos({
           }),
         ]),
       );
+
       animationLoop.start();
     } else {
       skeletonOpacity.setValue(0.4);
     }
 
     return () => {
-      if (animationLoop) animationLoop.stop();
+      if (animationLoop) {
+        animationLoop.stop();
+      }
     };
   }, [loading]);
 
   const carregarLocalizacaoSalva = async () => {
     try {
-      const cached = await AsyncStorage.getItem(CACHE_KEY);
+      const cached = await AsyncStorage.getItem(
+        CACHE_KEY,
+      );
+
       if (cached) {
         const locationData = JSON.parse(cached);
+
         setInputsIntinerario((prev) =>
           prev.map((item, index) =>
             index === 0
               ? {
                   ...item,
-                  name: locationData.formattedAddress || "Localização Atual",
-                  formattedAddress: locationData.formattedAddress || "",
+                  name:
+                    locationData.formattedAddress ||
+                    "Localização Atual",
+
+                  formattedAddress:
+                    locationData.formattedAddress || "",
                 }
               : item,
           ),
         );
       }
     } catch (error) {
-      console.log("Erro ao recuperar endereço para o input:", error);
+      console.log(
+        "Erro ao recuperar endereço para o input:",
+        error,
+      );
     }
   };
 
@@ -198,13 +178,25 @@ export default function ParaOndevamos({
     }
 
     setLoading(true);
+
     try {
-      const response = await api.get("/buscar-endereco", {
-        params: { endereco: texto },
-      });
+      const response = await api.get(
+        "/buscar-endereco",
+        {
+          params: {
+            endereco: texto,
+          },
+        },
+      );
 
       if (response.data) {
-        const { name, formattedAddress, latitude, longitude } = response.data;
+        const {
+          name,
+          formattedAddress,
+          latitude,
+          longitude,
+        } = response.data;
+
         const novoEnderecoObjeto = {
           name,
           formattedAddress,
@@ -212,17 +204,23 @@ export default function ParaOndevamos({
           longitude,
           distancia: "--",
         };
+
         setListaEnderecos([novoEnderecoObjeto]);
       }
     } catch (error) {
-      console.log("Erro ao buscar endereço no backend:", error);
+      console.log(
+        "Erro ao buscar endereço no backend:",
+        error,
+      );
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    const textoAtual = inputsIntinerario[inputSelecionado]?.name || "";
+    const textoAtual =
+      inputsIntinerario[inputSelecionado]?.name || "";
+
     const delayDebounceFn = setTimeout(() => {
       if (visible) {
         buscarEnderecoApi(textoAtual);
@@ -230,17 +228,23 @@ export default function ParaOndevamos({
     }, 600);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [inputsIntinerario, inputSelecionado]);
+  }, [
+    inputsIntinerario,
+    inputSelecionado,
+    visible,
+  ]);
 
-  // Ajustado parâmetro para aceitar any, corrigindo o erro estrutural apontado pelo TS no print 1
-  const handleSelecionarEndereco = async (item: any) => {
+  const handleSelecionarEndereco = async (
+    item: any,
+  ) => {
     setInputsIntinerario((prev) =>
       prev.map((input, index) =>
         index === inputSelecionado
           ? {
               ...input,
               name: item.name,
-              formattedAddress: item.formattedAddress,
+              formattedAddress:
+                item.formattedAddress,
               latitude: item.latitude,
               longitude: item.longitude,
             }
@@ -249,16 +253,21 @@ export default function ParaOndevamos({
     );
 
     if (enderecosRecentesRef.current) {
-      await enderecosRecentesRef.current.salvarEnderecoNoCache({
-        name: item.name,
-        formattedAddress: item.formattedAddress,
-        latitude: item.latitude,
-        longitude: item.longitude,
-        distancia: item.distancia || "--",
-      });
+      await enderecosRecentesRef.current.salvarEnderecoNoCache(
+        {
+          name: item.name,
+          formattedAddress:
+            item.formattedAddress,
+          latitude: item.latitude,
+          longitude: item.longitude,
+          distancia: item.distancia || "--",
+        },
+      );
     }
 
-    console.log("📍 Endereço Selecionado com Sucesso!");
+    console.log(
+      "📍 Endereço Selecionado com Sucesso!",
+    );
   };
 
   useEffect(() => {
@@ -267,19 +276,23 @@ export default function ParaOndevamos({
         onClose();
         return true;
       }
+
       return false;
     };
 
-    const subscription = BackHandler.addEventListener(
-      "hardwareBackPress",
-      onBackPress,
-    );
+    const subscription =
+      BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress,
+      );
+
     return () => subscription.remove();
   }, [visible, onClose]);
 
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
+
       carregarLocalizacaoSalva();
 
       Animated.parallel([
@@ -288,6 +301,7 @@ export default function ParaOndevamos({
           duration,
           useNativeDriver: true,
         }),
+
         Animated.timing(overlayOpacity, {
           toValue: 1,
           duration: duration * 0.8,
@@ -305,6 +319,7 @@ export default function ParaOndevamos({
           duration,
           useNativeDriver: true,
         }),
+
         Animated.timing(overlayOpacity, {
           toValue: 0,
           duration: duration * 0.8,
@@ -313,25 +328,44 @@ export default function ParaOndevamos({
       ]).start(({ finished }) => {
         if (finished) {
           setIsMounted(false);
-          setInputsIntinerario(InputsIntinearioInicial);
+
+          setInputsIntinerario(
+            InputsIntinearioInicial,
+          );
+
           setListaEnderecos([]);
+
           setLoading(false);
         }
       });
     }
-  }, [visible, translateX, overlayOpacity, duration]);
+  }, [
+    visible,
+    translateX,
+    overlayOpacity,
+    duration,
+  ]);
 
   if (!isMounted) return null;
 
   return (
-    <View style={[StyleSheet.absoluteFill, { zIndex: 30 }]}>
+    <View
+      style={[
+        StyleSheet.absoluteFill,
+        { zIndex: 30 },
+      ]}
+    >
       {/* Overlay */}
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        onPress={onClose}
+      >
         <Animated.View
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: "rgba(0,0,0,0.25)",
+              backgroundColor:
+                "rgba(0,0,0,0.25)",
               opacity: overlayOpacity,
             },
           ]}
@@ -350,16 +384,35 @@ export default function ParaOndevamos({
       >
         {/* HEADER */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="black" />
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.backButton}
+          >
+            <Ionicons
+              name="chevron-back"
+              size={24}
+              color="black"
+            />
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
             <View style={styles.userContainer}>
               <View style={styles.userPill}>
-                <Ionicons name="person-circle" size={28} color="#666" />
-                <Text style={styles.userName}>Diogo</Text>
-                <Ionicons name="chevron-down" size={16} color="#666" />
+                <Ionicons
+                  name="person-circle"
+                  size={28}
+                  color="#666"
+                />
+
+                <Text style={styles.userName}>
+                  Diogo
+                </Text>
+
+                <Ionicons
+                  name="chevron-down"
+                  size={16}
+                  color="#666"
+                />
               </View>
             </View>
           </View>
@@ -370,27 +423,34 @@ export default function ParaOndevamos({
         <View style={{ padding: 10 }} />
 
         {/* Título */}
-        <Text style={styles.title}>Para onde vamos?</Text>
+        <Text style={styles.title}>
+          Para onde vamos?
+        </Text>
 
-        {/* COMPONENTE DE INPUTS */}
+        {/* INPUTS */}
         <InputsItinerario
-          inputsIntinerario={inputsIntinerario}
+          inputsIntinerario={
+            inputsIntinerario
+          }
+          setInputsIntinerario={
+            setInputsIntinerario
+          }
           inputRefs={inputRefs}
-          setInputSelecionado={setInputSelecionado}
+          setInputSelecionado={
+            setInputSelecionado
+          }
           atualizarInput={atualizarInput}
-          moverParaCima={moverParaCima}
-          moverParaBaixo={moverParaBaixo}
-          removerParada={removerParada}
-          adicionarParada={adicionarParada}
         />
 
-        {/* LISTA DE ENDEREÇOS RECENTES */}
+        {/* LISTA */}
         <EnderecosRecentes
           ref={enderecosRecentesRef}
           loading={loading}
           skeletonOpacity={skeletonOpacity}
           listaEnderecos={listaEnderecos}
-          onSelecionarEndereco={handleSelecionarEndereco}
+          onSelecionarEndereco={
+            handleSelecionarEndereco
+          }
         />
       </Animated.View>
     </View>
@@ -408,23 +468,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 20,
   },
+
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginTop: 30,
   },
+
   backButton: {
     marginTop: 10,
   },
+
   headerCenter: {
     alignItems: "center",
   },
+
   userContainer: {
     alignItems: "center",
     marginTop: 24,
     marginBottom: 30,
   },
+
   userPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -433,12 +498,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
   },
+
   userName: {
     fontSize: 15,
     color: "#111",
     fontWeight: "600",
     marginHorizontal: 8,
   },
+
   title: {
     fontSize: 28,
     fontWeight: "700",
