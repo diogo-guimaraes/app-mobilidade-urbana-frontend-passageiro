@@ -429,7 +429,17 @@ export default function ViagemComParada({
             {inputsIntinerario.map((item, index) => {
               const isOrigem = index === 0;
               const isDestino = index === inputsIntinerario.length - 1;
+
+              // atingiu o limite máximo de paradas
+              const atingiuMaxParadas =
+                inputsIntinerario.length >= MAX_PARADAS + 1;
+
+              // parada normal
               const isParada = !isOrigem && !isDestino;
+
+              // último item pode exibir ações quando atingir o limite
+              const mostrarAcoesDestinoFinal =
+                isDestino && atingiuMaxParadas;
 
               return (
                 <View key={index} style={styles.rowContainer}>
@@ -498,7 +508,7 @@ export default function ViagemComParada({
                       </TouchableOpacity>
                     )}
 
-                    {isParada && (
+                    {(isParada || mostrarAcoesDestinoFinal) && (
                       <View style={styles.actionButtons}>
                         <TouchableOpacity
                           onPress={() => moverParaCima(index)}
@@ -510,6 +520,7 @@ export default function ViagemComParada({
                         <TouchableOpacity
                           onPress={() => moverParaBaixo(index)}
                           style={styles.actionButton}
+                          disabled={isDestino}
                         >
                           <Ionicons name="chevron-down" size={16} color="#999" />
                         </TouchableOpacity>
