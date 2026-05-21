@@ -7,12 +7,11 @@ import {
   Animated,
   BackHandler,
   Dimensions,
-  Pressable,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import { api } from "../../Services/api";
 
@@ -386,13 +385,10 @@ export default function ViagemComParada({
   if (!isMounted) return null;
 
   return (
-    <View style={[StyleSheet.absoluteFill, { zIndex: 30 }]}>
-      {/* Overlay invisível */}
-      <Pressable
-        style={StyleSheet.absoluteFill}
-        onPress={onClose}
-      />
-
+    <View
+      pointerEvents="box-none"
+      style={[StyleSheet.absoluteFill, { zIndex: 30 }]}
+    >
       <BottomSheet
         ref={bottomSheetRef}
         snapPoints={snapPoints}
