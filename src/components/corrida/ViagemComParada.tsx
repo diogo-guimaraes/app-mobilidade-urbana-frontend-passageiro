@@ -156,8 +156,16 @@ export default function ViagemComParada({
   };
 
   const removerParada = (index: number) => {
+    // nunca remove origem
     if (index === 0) return;
-    if (index === inputsIntinerario.length - 1) return;
+
+    const isUltimoItem = index === inputsIntinerario.length - 1;
+
+    // se ainda puder adicionar parada,
+    // o último item continua sendo destino fixo
+    if (isUltimoItem && podeAdicionarParada) {
+      return;
+    }
 
     setInputsIntinerario((prev) => {
       const novaLista = prev.filter((_, i) => i !== index);
