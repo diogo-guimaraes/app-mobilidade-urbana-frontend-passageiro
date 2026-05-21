@@ -1,4 +1,4 @@
-import FolhaEndereco from "@/components/FolhaEndereco";
+import FolhaBuscarEndereco from "@/components/FolhaBuscarEndereco";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -12,7 +12,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 const { width, height } = Dimensions.get("window");
@@ -30,10 +30,10 @@ export default function InformacoesDestinario({
 }: props) {
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
-  
+
   // ✅ Controle de opacidade para o fundo escuro da FolhaEndereco
   const sheetOverlayOpacity = useRef(new Animated.Value(0)).current;
-  
+
   const [isMounted, setIsMounted] = useState(visible);
 
   const [endereco, setEndereco] = useState("Rua Brasília, 2930");
@@ -76,7 +76,10 @@ export default function InformacoesDestinario({
       }
       return false;
     };
-    const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onBackPress,
+    );
     return () => subscription.remove();
   }, [visible, onClose, showEnderecoSheet]);
 
@@ -84,13 +87,29 @@ export default function InformacoesDestinario({
     if (visible) {
       setIsMounted(true);
       Animated.parallel([
-        Animated.timing(translateX, { toValue: 0, duration, useNativeDriver: true }),
-        Animated.timing(overlayOpacity, { toValue: 1, duration: duration * 0.8, useNativeDriver: true }),
+        Animated.timing(translateX, {
+          toValue: 0,
+          duration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 1,
+          duration: duration * 0.8,
+          useNativeDriver: true,
+        }),
       ]).start();
     } else {
       Animated.parallel([
-        Animated.timing(translateX, { toValue: width, duration, useNativeDriver: true }),
-        Animated.timing(overlayOpacity, { toValue: 0, duration: duration * 0.8, useNativeDriver: true }),
+        Animated.timing(translateX, {
+          toValue: width,
+          duration,
+          useNativeDriver: true,
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 0,
+          duration: duration * 0.8,
+          useNativeDriver: true,
+        }),
       ]).start(({ finished }) => finished && setIsMounted(false));
     }
   }, [visible, duration]);
@@ -110,12 +129,7 @@ export default function InformacoesDestinario({
       </Pressable>
 
       {/* 2. Drawer Principal */}
-      <Animated.View
-        style={[
-          styles.drawer,
-          { transform: [{ translateX }] },
-        ]}
-      >
+      <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.backButton}>
             <Ionicons name="chevron-back" size={28} color="#111" />
@@ -131,7 +145,9 @@ export default function InformacoesDestinario({
               onPress={() => setShowEnderecoSheet(true)}
               style={styles.inputContainer}
             >
-              <Text style={styles.label}>Endereço<Text style={{ color: 'red' }}>*</Text></Text>
+              <Text style={styles.label}>
+                Endereço<Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.inputWrapper}>
                 <Text style={styles.inputFake}>{endereco}</Text>
                 <Ionicons name="chevron-forward" size={20} color="#666" />
@@ -141,23 +157,38 @@ export default function InformacoesDestinario({
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Detalhes do endereço</Text>
               <View style={styles.inputWrapper}>
-                <TextInput style={styles.input} value={detalhes} onChangeText={setDetalhes} />
+                <TextInput
+                  style={styles.input}
+                  value={detalhes}
+                  onChangeText={setDetalhes}
+                />
               </View>
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Nome para contato<Text style={{ color: 'red' }}>*</Text></Text>
+              <Text style={styles.label}>
+                Nome para contato<Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.inputWrapper}>
-                <TextInput style={styles.input} value={nome} onChangeText={setNome} />
+                <TextInput
+                  style={styles.input}
+                  value={nome}
+                  onChangeText={setNome}
+                />
                 <MaterialIcons name="contact-phone" size={22} color="#666" />
               </View>
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Número de telefone<Text style={{ color: 'red' }}>*</Text></Text>
+              <Text style={styles.label}>
+                Número de telefone<Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.phoneInputWrapper}>
                 <View style={styles.countryPicker}>
-                  <Image source={{ uri: 'https://flagcdn.com/w40/br.png' }} style={styles.flag} />
+                  <Image
+                    source={{ uri: "https://flagcdn.com/w40/br.png" }}
+                    style={styles.flag}
+                  />
                   <Text style={styles.countryCode}>+55</Text>
                 </View>
                 <TextInput
@@ -177,21 +208,58 @@ export default function InformacoesDestinario({
           <View style={styles.recentSection}>
             <Text style={styles.recentTitle}>Endereços recentes</Text>
             {[
-              { addr: "Rua Rui Barbosa, 1493", sub: "Feijoada", detail: "Diogo • 69981400661" },
-              { addr: "Rua Portuguesa, 6244", sub: "casa", detail: "Diana Deise • 69981195656" },
-              { addr: "Rua Portuguesa, 6374", sub: "", detail: "Diogo • 69981400661" },
-              { addr: "Rua Brasília, 2930", sub: "Pen6 Marketing", detail: "Diogo • 69981400661" },
-              { addr: "Rua Rui Barbosa, 1493", sub: "Feijoada", detail: "Diogo • 69981400661" },
-              { addr: "Rua Portuguesa, 6244", sub: "casa", detail: "Diana Deise • 69981195656" },
-              { addr: "Rua Portuguesa, 6374", sub: "", detail: "Diogo • 69981400661" },
-              { addr: "Rua Brasília, 2930", sub: "Pen6 Marketing", detail: "Diogo • 69981400661" },
-              
+              {
+                addr: "Rua Rui Barbosa, 1493",
+                sub: "Feijoada",
+                detail: "Diogo • 69981400661",
+              },
+              {
+                addr: "Rua Portuguesa, 6244",
+                sub: "casa",
+                detail: "Diana Deise • 69981195656",
+              },
+              {
+                addr: "Rua Portuguesa, 6374",
+                sub: "",
+                detail: "Diogo • 69981400661",
+              },
+              {
+                addr: "Rua Brasília, 2930",
+                sub: "Pen6 Marketing",
+                detail: "Diogo • 69981400661",
+              },
+              {
+                addr: "Rua Rui Barbosa, 1493",
+                sub: "Feijoada",
+                detail: "Diogo • 69981400661",
+              },
+              {
+                addr: "Rua Portuguesa, 6244",
+                sub: "casa",
+                detail: "Diana Deise • 69981195656",
+              },
+              {
+                addr: "Rua Portuguesa, 6374",
+                sub: "",
+                detail: "Diogo • 69981400661",
+              },
+              {
+                addr: "Rua Brasília, 2930",
+                sub: "Pen6 Marketing",
+                detail: "Diogo • 69981400661",
+              },
             ].map((item, index) => (
               <View key={index} style={styles.recentItem}>
-                <Ionicons name="location-sharp" size={22} color="#888" style={styles.locationIcon} />
+                <Ionicons
+                  name="location-sharp"
+                  size={22}
+                  color="#888"
+                  style={styles.locationIcon}
+                />
                 <View style={styles.recentTextContainer}>
                   <Text style={styles.recentAddrText}>
-                    {item.addr}{item.sub ? ` - ${item.sub}` : ""}
+                    {item.addr}
+                    {item.sub ? ` - ${item.sub}` : ""}
                   </Text>
                   <Text style={styles.recentSubText}>{item.detail}</Text>
                 </View>
@@ -207,22 +275,22 @@ export default function InformacoesDestinario({
       {/* ✅ 3. Overlay Escuro da FolhaEndereco e a própria Folha */}
       {showEnderecoSheet && (
         <View style={StyleSheet.absoluteFill}>
-          <Pressable 
-            style={StyleSheet.absoluteFill} 
+          <Pressable
+            style={StyleSheet.absoluteFill}
             onPress={() => setShowEnderecoSheet(false)}
           >
             <Animated.View
               style={[
                 StyleSheet.absoluteFill,
-                { 
+                {
                   backgroundColor: "rgba(0,0,0,0.6)", // Fundo mais escuro conforme imagem
-                  opacity: sheetOverlayOpacity 
+                  opacity: sheetOverlayOpacity,
                 },
               ]}
             />
           </Pressable>
-          
-          <FolhaEndereco
+
+          <FolhaBuscarEndereco
             visible={showEnderecoSheet}
             onClose={() => setShowEnderecoSheet(false)}
             onSheetChange={handleSheetStateChange}
@@ -267,7 +335,7 @@ const styles = StyleSheet.create({
   },
   formSection: {
     padding: 20,
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
   },
   inputContainer: {
     marginBottom: 20,
@@ -278,10 +346,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: "#E0E0E0",
     paddingBottom: 8,
   },
   input: {
@@ -291,17 +359,17 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   phoneInputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: "#E0E0E0",
     paddingBottom: 8,
   },
   countryPicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderRightWidth: 1,
-    borderRightColor: '#EEE',
+    borderRightColor: "#EEE",
     paddingRight: 10,
   },
   flag: {
@@ -344,11 +412,11 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   recentItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 15,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: "#F0F0F0",
   },
   locationIcon: {
     marginRight: 15,

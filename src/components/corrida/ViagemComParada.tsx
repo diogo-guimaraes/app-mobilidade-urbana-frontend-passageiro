@@ -17,6 +17,8 @@ import {
   View,
 } from "react-native";
 
+import FolhaBuscarEndereco from "@/components/FolhaBuscarEndereco";
+
 const CACHE_KEY = "@last_user_location";
 const MAX_PARADAS = 4;
 
@@ -65,6 +67,8 @@ export default function ViagemComParada({
     InputsIntinearioInicial,
   );
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const [showFolhaBuscarEndereco, setShowFolhaBuscarEndereco] =
+    useState(visible);
 
   const snapPoints = useMemo(() => {
     const baseHeight = 48;
@@ -72,6 +76,10 @@ export default function ViagemComParada({
     const totalHeight = Math.min(baseHeight + additionalHeight, 85);
     return [`${totalHeight}%`];
   }, [inputsIntinerario.length]);
+
+  const handleSheetStateChange = useCallback((index: number) => {
+    console.log(index, "index handleSheetStateChange");
+  }, []);
 
   const reorganizarOrders = (lista: EnderecoItem[]) => {
     return lista.map((item, index) => ({
@@ -82,6 +90,7 @@ export default function ViagemComParada({
 
   const handleInputClick = (index: number) => {
     console.log("bateu", index);
+    setShowFolhaBuscarEndereco(true);
   };
 
   const adicionarParada = () => {
@@ -377,6 +386,11 @@ export default function ViagemComParada({
           </View>
         </BottomSheetView>
       </BottomSheet>
+      <FolhaBuscarEndereco
+        visible={showFolhaBuscarEndereco}
+        onClose={() => setShowFolhaBuscarEndereco(false)}
+        onSheetChange={handleSheetStateChange}
+      />
     </View>
   );
 }
