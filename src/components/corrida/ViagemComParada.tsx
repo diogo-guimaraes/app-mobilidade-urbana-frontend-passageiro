@@ -2,20 +2,21 @@
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
-  Animated,
   BackHandler,
-  Dimensions,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
-import { api } from "../../Services/api";
 
-const { width, height } = Dimensions.get("window");
 const CACHE_KEY = "@last_user_location";
 const MAX_PARADAS = 4;
 
@@ -54,50 +55,15 @@ const InputsIntinearioInicial: EnderecoItem[] = [
   },
 ];
 
-const enderecosRecentes = [
-  {
-    name: "Rua Portuguesa, 6244",
-    formattedAddress:
-      "Rua Portuguesa, 6244 - Conjunto Jamari, Porto Velho - RO, 76812-612, Brasil",
-    latitude: -8.7601,
-    longitude: -63.9002,
-    distancia: "5.4km",
-  },
-  {
-    name: "Rua Jobu Miró, 3287",
-    formattedAddress:
-      "Rua Jobu Miró, 3287 - Flodoaldo Pontes Pinto, Porto Velho - RO, 76820-608, Brasil",
-    latitude: -8.7523,
-    longitude: -63.8891,
-    distancia: "3.2km",
-  },
-  {
-    name: "Rua Brasília, 2930",
-    formattedAddress:
-      "Rua Brasília, 2930 - São Cristóvão, Porto Velho - RO, 76804-070, Brasil",
-    latitude: -8.7488,
-    longitude: -63.8734,
-    distancia: "7km",
-  },
-];
-
 export default function ViagemComParada({
   visible,
   onClose,
   onAdicionarParada,
-  duration = 300,
 }: props) {
-  const skeletonOpacity = useRef(new Animated.Value(0.4)).current;
-
   const [isMounted, setIsMounted] = useState(visible);
-  const [listaEnderecos, setListaEnderecos] = useState(enderecosRecentes);
-  const [loading, setLoading] = useState(false);
   const [inputsIntinerario, setInputsIntinerario] = useState<EnderecoItem[]>(
     InputsIntinearioInicial,
   );
-  const [inputSelecionado, setInputSelecionado] = useState<number>(1);
-
-  const inputRefs = useRef<TextInput[]>([]);
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const snapPoints = useMemo(() => {
@@ -115,7 +81,7 @@ export default function ViagemComParada({
   };
 
   const handleInputClick = (index: number) => {
-    setInputSelecionado(index);
+    console.log("bateu", index);
   };
 
   const adicionarParada = () => {
@@ -145,8 +111,7 @@ export default function ViagemComParada({
     }
   };
 
-  const podeAdicionarParada =
-    inputsIntinerario.length < MAX_PARADAS + 1;
+  const podeAdicionarParada = inputsIntinerario.length < MAX_PARADAS + 1;
 
   const removerParada = (index: number) => {
     if (index === 0) return;
@@ -193,46 +158,9 @@ export default function ViagemComParada({
     });
   };
 
-  const atualizarInput = (texto: string, index: number) => {
-    setInputsIntinerario((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, name: texto } : item,
-      ),
-    );
-  };
-
   const handleConfirmar = () => {
     console.log("Rota confirmada:", inputsIntinerario);
   };
-
-  useEffect(() => {
-    let animationLoop: Animated.CompositeAnimation | null = null;
-
-    if (loading) {
-      animationLoop = Animated.loop(
-        Animated.sequence([
-          Animated.timing(skeletonOpacity, {
-            toValue: 0.8,
-            duration: 600,
-            useNativeDriver: true,
-          }),
-          Animated.timing(skeletonOpacity, {
-            toValue: 0.4,
-            duration: 600,
-            useNativeDriver: true,
-          }),
-        ]),
-      );
-
-      animationLoop.start();
-    } else {
-      skeletonOpacity.setValue(0.4);
-    }
-
-    return () => {
-      if (animationLoop) animationLoop.stop();
-    };
-  }, [loading]);
 
   const carregarLocalizacaoSalva = async () => {
     try {
@@ -245,12 +173,10 @@ export default function ViagemComParada({
           prev.map((item, index) =>
             index === 0
               ? {
-                ...item,
-                name:
-                  locationData.formattedAddress || "Localização Atual",
-                formattedAddress:
-                  locationData.formattedAddress || "",
-              }
+                  ...item,
+                  name: locationData.formattedAddress || "Localização Atual",
+                  formattedAddress: locationData.formattedAddress || "",
+                }
               : item,
           ),
         );
@@ -258,84 +184,6 @@ export default function ViagemComParada({
     } catch (error) {
       console.log("Erro ao recuperar endereço:", error);
     }
-  };
-
-  const buscarEnderecoApi = async (texto: string) => {
-    if (!texto || texto.trim().length === 0) {
-      setListaEnderecos([]);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const response = await api.get("/buscar-endereco", {
-        params: { endereco: texto },
-      });
-
-      if (response.data) {
-        const { name, formattedAddress, latitude, longitude } =
-          response.data;
-
-        const novoEnderecoObjeto = {
-          name,
-          formattedAddress,
-          latitude,
-          longitude,
-          distancia: "--",
-        };
-
-        setListaEnderecos([novoEnderecoObjeto]);
-      }
-    } catch (error) {
-      console.log("Erro ao buscar endereço:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const textoAtual =
-      inputsIntinerario[inputSelecionado]?.name || "";
-
-    const itemAtual = inputsIntinerario[inputSelecionado];
-
-    if (itemAtual && itemAtual.formattedAddress !== "") {
-      return;
-    }
-
-    const delayDebounceFn = setTimeout(() => {
-      if (visible) {
-        buscarEnderecoApi(textoAtual);
-      }
-    }, 600);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [inputsIntinerario, inputSelecionado]);
-
-  const handleSelecionarEndereco = async (item: {
-    name: string;
-    formattedAddress: string;
-    latitude: number;
-    longitude: number;
-    distancia: string;
-  }) => {
-    setInputsIntinerario((prev) =>
-      prev.map((input, index) =>
-        index === inputSelecionado
-          ? {
-            ...input,
-            name: item.name,
-            formattedAddress: item.formattedAddress,
-            latitude: item.latitude,
-            longitude: item.longitude,
-          }
-          : input,
-      ),
-    );
-
-    setListaEnderecos([]);
   };
 
   useEffect(() => {
@@ -366,8 +214,6 @@ export default function ViagemComParada({
     } else {
       setIsMounted(false);
       setInputsIntinerario(InputsIntinearioInicial);
-      setListaEnderecos([]);
-      setLoading(false);
 
       bottomSheetRef.current?.close();
     }
@@ -401,15 +247,8 @@ export default function ViagemComParada({
       >
         <BottomSheetView style={styles.contentContainer}>
           <View style={styles.header}>
-            <TouchableOpacity
-              onPress={onClose}
-              style={styles.backButton}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={24}
-                color="black"
-              />
+            <TouchableOpacity onPress={onClose} style={styles.backButton}>
+              <Ionicons name="chevron-back" size={24} color="black" />
             </TouchableOpacity>
 
             <View style={{ width: 24 }} />
@@ -422,18 +261,14 @@ export default function ViagemComParada({
           <View style={styles.searchContainer}>
             {inputsIntinerario.map((item, index) => {
               const isOrigem = index === 0;
-              const isDestino =
-                index === inputsIntinerario.length - 1;
+              const isDestino = index === inputsIntinerario.length - 1;
 
               const atingiuMaxParadas =
-                inputsIntinerario.length >=
-                MAX_PARADAS + 1;
+                inputsIntinerario.length >= MAX_PARADAS + 1;
 
-              const isParada =
-                !isOrigem && !isDestino;
+              const isParada = !isOrigem && !isDestino;
 
-              const mostrarAcoesDestinoFinal =
-                isDestino && atingiuMaxParadas;
+              const mostrarAcoesDestinoFinal = isDestino && atingiuMaxParadas;
 
               return (
                 <View key={index} style={styles.rowContainer}>
@@ -447,17 +282,13 @@ export default function ViagemComParada({
                         <View
                           style={[
                             styles.numberBox,
-                            isDestino
-                              ? styles.lastNumberBoxHighlight
-                              : null,
+                            isDestino ? styles.lastNumberBoxHighlight : null,
                           ]}
                         >
                           <Text
                             style={[
                               styles.numberText,
-                              isDestino
-                                ? styles.lastNumberTextHighlight
-                                : null,
+                              isDestino ? styles.lastNumberTextHighlight : null,
                             ]}
                           >
                             {index}
@@ -466,30 +297,24 @@ export default function ViagemComParada({
                       )}
                     </View>
 
-                    {!isDestino && (
-                      <View style={styles.verticalLine} />
-                    )}
+                    {!isDestino && <View style={styles.verticalLine} />}
                   </View>
 
                   <View
                     style={[
                       styles.searchInput,
-                      isDestino &&
-                      styles.searchInputDestination,
+                      isDestino && styles.searchInputDestination,
                     ]}
                   >
                     <TouchableOpacity
                       style={styles.inputTouchable}
-                      onPress={() =>
-                        handleInputClick(index)
-                      }
+                      onPress={() => handleInputClick(index)}
                       activeOpacity={0.7}
                     >
                       <Text
                         style={[
                           styles.inputText,
-                          !item.name &&
-                          styles.placeholderText,
+                          !item.name && styles.placeholderText,
                         ]}
                         numberOfLines={1}
                       >
@@ -497,128 +322,49 @@ export default function ViagemComParada({
                       </Text>
                     </TouchableOpacity>
 
-                    {isDestino &&
-                      podeAdicionarParada && (
+                    {isDestino && podeAdicionarParada && (
+                      <TouchableOpacity
+                        onPress={adicionarParada}
+                        style={styles.addButtonInline}
+                      >
+                        <Ionicons name="add" size={20} color="#666" />
+                      </TouchableOpacity>
+                    )}
+
+                    {(isParada || mostrarAcoesDestinoFinal) && (
+                      <View style={styles.actionButtons}>
                         <TouchableOpacity
-                          onPress={adicionarParada}
-                          style={styles.addButtonInline}
+                          onPress={() => moverParaCima(index)}
+                          style={styles.actionButton}
+                        >
+                          <Ionicons name="chevron-up" size={16} color="#999" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={() => moverParaBaixo(index)}
+                          style={styles.actionButton}
+                          disabled={isDestino}
                         >
                           <Ionicons
-                            name="add"
-                            size={20}
-                            color="#666"
+                            name="chevron-down"
+                            size={16}
+                            color="#999"
                           />
                         </TouchableOpacity>
-                      )}
 
-                    {(isParada ||
-                      mostrarAcoesDestinoFinal) && (
-                        <View style={styles.actionButtons}>
-                          <TouchableOpacity
-                            onPress={() =>
-                              moverParaCima(index)
-                            }
-                            style={styles.actionButton}
-                          >
-                            <Ionicons
-                              name="chevron-up"
-                              size={16}
-                              color="#999"
-                            />
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                            onPress={() =>
-                              moverParaBaixo(index)
-                            }
-                            style={styles.actionButton}
-                            disabled={isDestino}
-                          >
-                            <Ionicons
-                              name="chevron-down"
-                              size={16}
-                              color="#999"
-                            />
-                          </TouchableOpacity>
-
-                          <TouchableOpacity
-                            onPress={() =>
-                              removerParada(index)
-                            }
-                            style={
-                              styles.removeButtonInline
-                            }
-                          >
-                            <Ionicons
-                              name="close"
-                              size={20}
-                              color="#777"
-                            />
-                          </TouchableOpacity>
-                        </View>
-                      )}
+                        <TouchableOpacity
+                          onPress={() => removerParada(index)}
+                          style={styles.removeButtonInline}
+                        >
+                          <Ionicons name="close" size={20} color="#777" />
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
                 </View>
               );
             })}
           </View>
-
-          {listaEnderecos.length > 0 && (
-            <View style={styles.suggestionsContainer}>
-              {listaEnderecos.map((item, idx) => (
-                <TouchableOpacity
-                  key={idx}
-                  style={styles.suggestionItem}
-                  onPress={() =>
-                    handleSelecionarEndereco(item)
-                  }
-                >
-                  <Ionicons
-                    name="location-outline"
-                    size={20}
-                    color="#666"
-                  />
-
-                  <View
-                    style={
-                      styles.suggestionTextContainer
-                    }
-                  >
-                    <Text style={styles.suggestionName}>
-                      {item.name}
-                    </Text>
-
-                    <Text
-                      style={styles.suggestionAddress}
-                    >
-                      {item.formattedAddress}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-
-          {loading && (
-            <View style={styles.skeletonContainer}>
-              <Animated.View
-                style={[
-                  styles.skeletonItem,
-                  { opacity: skeletonOpacity },
-                ]}
-              />
-
-              <Animated.View
-                style={[
-                  styles.skeletonItem,
-                  {
-                    opacity: skeletonOpacity,
-                    marginTop: 12,
-                  },
-                ]}
-              />
-            </View>
-          )}
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
@@ -626,9 +372,7 @@ export default function ViagemComParada({
               onPress={handleConfirmar}
               activeOpacity={0.8}
             >
-              <Text style={styles.confirmButtonText}>
-                Confirmar
-              </Text>
+              <Text style={styles.confirmButtonText}>Confirmar</Text>
             </TouchableOpacity>
           </View>
         </BottomSheetView>
@@ -801,50 +545,6 @@ const styles = StyleSheet.create({
   actionButton: {
     marginRight: 4,
     padding: 4,
-  },
-
-  suggestionsContainer: {
-    marginTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
-    paddingTop: 16,
-    maxHeight: 200,
-  },
-
-  suggestionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-
-  suggestionTextContainer: {
-    marginLeft: 12,
-    flex: 1,
-  },
-
-  suggestionName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#111",
-  },
-
-  suggestionAddress: {
-    fontSize: 13,
-    color: "#666",
-    marginTop: 2,
-  },
-
-  skeletonContainer: {
-    marginTop: 16,
-    paddingTop: 16,
-  },
-
-  skeletonItem: {
-    height: 60,
-    backgroundColor: "#E0E0E0",
-    borderRadius: 8,
   },
 
   buttonContainer: {

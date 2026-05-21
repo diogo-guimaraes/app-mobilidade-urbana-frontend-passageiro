@@ -1,11 +1,21 @@
 import DetalhesEntrega from "@/components/DetalhesEntrega";
-import { Ionicons, MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import {
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import BottomSheet, {
   BottomSheetFlatList,
-  BottomSheetTextInput
+  BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -24,13 +34,17 @@ interface Props {
   onSheetChange: (index: number) => void;
 }
 
-export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props) {
+export default function FolhaEndereco({
+  visible,
+  onClose,
+  onSheetChange,
+}: Props) {
   const snapPoints = useMemo(() => ["89%"], []);
   const sheetRef = useRef<BottomSheet>(null);
   const [showDetalhesEntrega, setShowDetalhesEntrega] = useState(false);
   const confirmarEndereco = useCallback((item: EnderecoItem) => {
     console.log("Endereço clicado:", item.local);
-    setShowDetalhesEntrega(true)
+    setShowDetalhesEntrega(true);
   }, []);
 
   // ✅ Dados baseados na imagem image_9c5f50.png
@@ -39,7 +53,8 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
       {
         id: "1",
         local: "Rua Jobu Miró, 3287",
-        subtitulo: "Flodoaldo Pontes Pinto, Porto Velho - RO, 76820-608, Brasil",
+        subtitulo:
+          "Flodoaldo Pontes Pinto, Porto Velho - RO, 76820-608, Brasil",
         distancia: "3.2km",
         iconType: "history",
       },
@@ -60,14 +75,16 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
       {
         id: "4",
         local: "Bob's Drive Thru - Av. Jorge Teixeira",
-        subtitulo: "Avenida Gov. Jorge Teixeira, 1612 - Embratel, Porto Velho - RO, 76820-844, Brasil",
+        subtitulo:
+          "Avenida Gov. Jorge Teixeira, 1612 - Embratel, Porto Velho - RO, 76820-844, Brasil",
         distancia: "6.3km",
         iconType: "history",
       },
       {
         id: "5",
         local: "Rua Jobu Miró, 3287",
-        subtitulo: "Flodoaldo Pontes Pinto, Porto Velho - RO, 76820-608, Brasil",
+        subtitulo:
+          "Flodoaldo Pontes Pinto, Porto Velho - RO, 76820-608, Brasil",
         distancia: "3.2km",
         iconType: "history",
       },
@@ -88,42 +105,55 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
       {
         id: "8",
         local: "Bob's Drive Thru - Av. Jorge Teixeira",
-        subtitulo: "Avenida Gov. Jorge Teixeira, 1612 - Embratel, Porto Velho - RO, 76820-844, Brasil",
+        subtitulo:
+          "Avenida Gov. Jorge Teixeira, 1612 - Embratel, Porto Velho - RO, 76820-844, Brasil",
         distancia: "6.3km",
         iconType: "history",
       },
     ],
-    []
+    [],
   );
 
-  const renderItem = useCallback(({ item }: { item: EnderecoItem }) => (
-    <TouchableOpacity
-      style={styles.itemContainer}
-      activeOpacity={0.7}
-      onPress={() => confirmarEndereco(item)}>
-      <View style={styles.iconCircle}>
-        <MaterialIcons
-          name={item.iconType === "history" ? "history" : "location-on"}
-          size={20}
-          color="#fff"
-        />
-      </View>
-      <View style={styles.textContainer}>
-        <View style={styles.rowBetween}>
-          <Text style={styles.localTitle} numberOfLines={1}>{item.local}</Text>
-          <Text style={styles.distanciaText}>{item.distancia}</Text>
+  const renderItem = useCallback(
+    ({ item }: { item: EnderecoItem }) => (
+      <TouchableOpacity
+        style={styles.itemContainer}
+        activeOpacity={0.7}
+        onPress={() => confirmarEndereco(item)}
+      >
+        <View style={styles.iconCircle}>
+          <MaterialIcons
+            name={item.iconType === "history" ? "history" : "location-on"}
+            size={20}
+            color="#fff"
+          />
         </View>
-        <Text style={styles.subtituloText} numberOfLines={2}>{item.subtitulo}</Text>
-      </View>
-    </TouchableOpacity>
-  ), [confirmarEndereco]);
+        <View style={styles.textContainer}>
+          <View style={styles.rowBetween}>
+            <Text style={styles.localTitle} numberOfLines={1}>
+              {item.local}
+            </Text>
+            <Text style={styles.distanciaText}>{item.distancia}</Text>
+          </View>
+          <Text style={styles.subtituloText} numberOfLines={2}>
+            {item.subtitulo}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    ),
+    [confirmarEndereco],
+  );
 
   const ListHeader = () => (
     <View style={styles.headerContent}>
       {/* Atalhos Rápidos */}
       <View style={styles.shortcutsRow}>
         <TouchableOpacity style={styles.shortcutItem}>
-          <MaterialCommunityIcons name="office-building" size={20} color="#666" />
+          <MaterialCommunityIcons
+            name="office-building"
+            size={20}
+            color="#666"
+          />
           <Text style={styles.shortcutText}>Avenida Bo...</Text>
         </TouchableOpacity>
 
@@ -146,7 +176,12 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
   const ListFooter = () => (
     <View style={styles.footerContainer}>
       <TouchableOpacity style={styles.footerItem}>
-        <MaterialIcons name="location-on" size={24} color="#CCC" style={styles.footerIcon} />
+        <MaterialIcons
+          name="location-on"
+          size={24}
+          color="#CCC"
+          style={styles.footerIcon}
+        />
         <Text style={styles.footerText}>Marque o local no mapa</Text>
       </TouchableOpacity>
 
@@ -158,12 +193,22 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.footerItem}>
-        <MaterialIcons name="edit" size={20} color="#CCC" style={styles.footerIcon} />
+        <MaterialIcons
+          name="edit"
+          size={20}
+          color="#CCC"
+          style={styles.footerIcon}
+        />
         <Text style={styles.footerText}>Sugerir alteração de local</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.footerItem}>
-        <MaterialIcons name="chat-bubble-outline" size={20} color="#CCC" style={styles.footerIcon} />
+        <MaterialIcons
+          name="chat-bubble-outline"
+          size={20}
+          color="#CCC"
+          style={styles.footerIcon}
+        />
         <Text style={styles.footerText}>Outros comentários</Text>
       </TouchableOpacity>
     </View>
@@ -194,7 +239,12 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
             {/* Header de Busca */}
             <View style={styles.searchHeader}>
               <View style={styles.inputWrapper}>
-                <MaterialCommunityIcons name="flag-variant" size={20} color="#000" style={styles.flagIcon} />
+                <MaterialCommunityIcons
+                  name="flag-variant"
+                  size={20}
+                  color="#000"
+                  style={styles.flagIcon}
+                />
                 <BottomSheetTextInput
                   style={styles.input}
                   placeholder="Entregar para"
@@ -216,15 +266,12 @@ export default function FolhaEndereco({ visible, onClose, onSheetChange }: Props
             />
           </>
         </BottomSheet>
-      </View></>
+      </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-    backgroundColor: "#FFF",
-  },
   searchHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -290,7 +337,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#000", // Ícones de histórico em preto na imagem
+    backgroundColor: "#000",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
@@ -326,7 +373,7 @@ const styles = StyleSheet.create({
   footerContainer: {
     marginTop: 10,
     borderTopWidth: 8,
-    borderTopColor: "#F8F8F8", // Divisor grosso entre lista e ações
+    borderTopColor: "#F8F8F8",
   },
   footerItem: {
     flexDirection: "row",
@@ -345,6 +392,6 @@ const styles = StyleSheet.create({
   dividerFooter: {
     height: 1,
     backgroundColor: "#F0F0F0",
-    marginLeft: 55, // Alinhado com o texto
+    marginLeft: 55,
   },
 });
