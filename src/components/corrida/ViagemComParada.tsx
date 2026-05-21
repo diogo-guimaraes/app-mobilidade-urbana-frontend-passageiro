@@ -100,7 +100,7 @@ export default function ViagemComParada({
 
   const inputRefs = useRef<TextInput[]>([]);
   const bottomSheetRef = useRef<BottomSheet>(null);
-  
+
   // Calcular snap point dinâmico baseado no número de inputs
   const snapPoints = useMemo(() => {
     const baseHeight = 48; // percentual base
@@ -132,11 +132,6 @@ export default function ViagemComParada({
     if (onAdicionarParada) {
       onAdicionarParada();
     }
-    
-    // Ajustar o snap point após adicionar parada
-    setTimeout(() => {
-      bottomSheetRef.current?.snapToIndex(0);
-    }, 50);
   };
 
   const removerParada = (index: number) => {
@@ -147,11 +142,6 @@ export default function ViagemComParada({
       const novaLista = prev.filter((_, i) => i !== index);
       return reorganizarOrders(novaLista);
     });
-    
-    // Ajustar o snap point após remover parada
-    setTimeout(() => {
-      bottomSheetRef.current?.snapToIndex(0);
-    }, 50);
   };
 
   const moverParaCima = (index: number) => {
@@ -415,8 +405,6 @@ export default function ViagemComParada({
               const isOrigem = index === 0;
               const isDestino = index === inputsIntinerario.length - 1;
               const isParada = !isOrigem && !isDestino;
-              // Número da parada (começa do 1 para a primeira parada)
-              const paradaNumber = isParada ? index : null;
 
               return (
                 <View key={index} style={styles.rowContainer}>
@@ -427,13 +415,25 @@ export default function ViagemComParada({
                         <View style={styles.startOuterCircle}>
                           <View style={styles.startInnerCircle} />
                         </View>
-                      ) : isParada ? (
-                        <View style={styles.numberBox}>
-                          <Text style={styles.numberText}>{paradaNumber}</Text>
-                        </View>
-                      ) : (
-                        <View style={styles.startOuterSquare}>
-                          <View style={styles.startInnerSquare} />
+                      ): (
+                        <View
+                          style={[
+                            styles.numberBox,
+                            isDestino
+                              ? styles.lastNumberBoxHighlight
+                              : null,
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.numberText,
+                              isDestino
+                                ? styles.lastNumberTextHighlight
+                                : null,
+                            ]}
+                          >
+                            {index}
+                          </Text>
                         </View>
                       )}
                     </View>
@@ -456,11 +456,7 @@ export default function ViagemComParada({
                       }}
                       style={styles.input}
                       placeholder={
-                        isOrigem
-                          ? "Local de partida"
-                          : isDestino
-                          ? "Destino"
-                          : "Adicionar parada"
+                       'Adicionar parada'
                       }
                       placeholderTextColor="#999"
                       value={item.name}
@@ -666,6 +662,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     color: "#333",
+  },
+  lastNumberBoxHighlight: {
+    backgroundColor: "#FF5500",
+  },
+  lastNumberTextHighlight: {
+    color: "#FFF",
   },
   verticalLine: {
     position: "absolute",
