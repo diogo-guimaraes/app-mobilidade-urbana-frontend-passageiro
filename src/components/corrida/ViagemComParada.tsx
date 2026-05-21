@@ -1,7 +1,8 @@
-// components/ParaOndeVamos.tsx
+// components/ViagemComParada.tsx
 import { Ionicons } from "@expo/vector-icons";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
@@ -15,12 +16,13 @@ import {
 } from "react-native";
 import { api } from "../../Services/api";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 const CACHE_KEY = "@last_user_location";
 
 interface props {
   visible: boolean;
   onClose: () => void;
+  onAdicionarParada?: () => void;
   duration?: number;
 }
 
@@ -29,7 +31,7 @@ interface EnderecoItem {
   formattedAddress: string;
   latitude: number;
   longitude: number;
-  distancia: string; // Atualizado para string estrita para bater com o tipo correto
+  distancia: string;
   order: number;
 }
 
@@ -52,7 +54,6 @@ const InputsIntinearioInicial: EnderecoItem[] = [
   },
 ];
 
-// Lista base estática padrão tipada corretamente
 const enderecosRecentes = [
   {
     name: "Rua Portuguesa, 6244",
@@ -80,12 +81,12 @@ const enderecosRecentes = [
   },
 ];
 
-export default function ParaOndevamos({
+export default function ViagemComParada({
   visible,
   onClose,
+  onAdicionarParada,
   duration = 300,
 }: props) {
-  const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const skeletonOpacity = useRef(new Animated.Value(0.4)).current;
 
@@ -98,6 +99,8 @@ export default function ParaOndevamos({
   const [inputSelecionado, setInputSelecionado] = useState<number>(1);
 
   const inputRefs = useRef<TextInput[]>([]);
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  const snapPoints = useMemo(() => ["92%"], []);
 
   const reorganizarOrders = (lista: EnderecoItem[]) => {
     return lista.map((item, index) => ({
@@ -119,6 +122,9 @@ export default function ParaOndevamos({
       });
       return reorganizarOrders(novaLista);
     });
+    if (onAdicionarParada) {
+      onAdicionarParada();
+    }
   };
 
   const removerParada = (index: number) => {
@@ -201,10 +207,10 @@ export default function ParaOndevamos({
           prev.map((item, index) =>
             index === 0
               ? {
-                ...item,
-                name: locationData.formattedAddress || "Localização Atual",
-                formattedAddress: locationData.formattedAddress || "",
-              }
+                  ...item,
+                  name: locationData.formattedAddress || "Localização Atual",
+                  formattedAddress: locationData.formattedAddress || "",
+                }
               : item,
           ),
         );
@@ -249,7 +255,6 @@ export default function ParaOndevamos({
   useEffect(() => {
     const textoAtual = inputsIntinerario[inputSelecionado]?.name || "";
 
-    // Se o texto for exatamente igual ao endereço selecionado no clique, ignora a busca na API
     const itemAtual = inputsIntinerario[inputSelecionado];
     if (itemAtual && itemAtual.formattedAddress !== "") {
       return;
@@ -271,24 +276,21 @@ export default function ParaOndevamos({
     longitude: number;
     distancia: string;
   }) => {
-    // 1. Atualiza o input selecionado no itinerário do pai
     setInputsIntinerario((prev) =>
       prev.map((input, index) =>
         index === inputSelecionado
           ? {
-            ...input,
-            name: item.name,
-            formattedAddress: item.formattedAddress,
-            latitude: item.latitude,
-            longitude: item.longitude,
-          }
+              ...input,
+              name: item.name,
+              formattedAddress: item.formattedAddress,
+              latitude: item.latitude,
+              longitude: item.longitude,
+            }
           : input,
       ),
     );
 
-    // 3. Reseta a lista temporária de autocomplete para voltar a mostrar o histórico padrão limpo
     setListaEnderecos([]);
-
     console.log("📍 Endereço Selecionado e Gravado em Cache com Sucesso!");
   };
 
@@ -314,44 +316,39 @@ export default function ParaOndevamos({
       setIsMounted(true);
       carregarLocalizacaoSalva();
 
-      Animated.parallel([
-        Animated.timing(translateX, {
-          toValue: 0,
-          duration,
-          useNativeDriver: true,
-        }),
-        Animated.timing(overlayOpacity, {
-          toValue: 1,
-          duration: duration * 0.8,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
+      Animated.timing(overlayOpacity, {
+        toValue: 1,
+        duration: duration * 0.8,
+        useNativeDriver: true,
+      }).start(() => {
         setTimeout(() => {
           inputRefs.current[1]?.focus();
         }, 100);
       });
+
+      bottomSheetRef.current?.snapToIndex(0);
     } else {
-      Animated.parallel([
-        Animated.timing(translateX, {
-          toValue: width,
-          duration,
-          useNativeDriver: true,
-        }),
-        Animated.timing(overlayOpacity, {
-          toValue: 0,
-          duration: duration * 0.8,
-          useNativeDriver: true,
-        }),
-      ]).start(({ finished }) => {
+      Animated.timing(overlayOpacity, {
+        toValue: 0,
+        duration: duration * 0.8,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
         if (finished) {
           setIsMounted(false);
           setInputsIntinerario(InputsIntinearioInicial);
           setListaEnderecos([]);
           setLoading(false);
+          bottomSheetRef.current?.close();
         }
       });
     }
-  }, [visible, translateX, overlayOpacity, duration]);
+  }, [visible, overlayOpacity, duration]);
+
+  const handleSheetChange = useCallback((index: number) => {
+    if (index === -1) {
+      onClose();
+    }
+  }, [onClose]);
 
   if (!isMounted) return null;
 
@@ -372,201 +369,220 @@ export default function ParaOndevamos({
         />
       </Pressable>
 
-      {/* Drawer */}
-      <Animated.View
-        style={[
-          styles.drawer,
-          {
-            transform: [{ translateX }],
-            zIndex: 31,
-          },
-        ]}
+      {/* BottomSheet */}
+      <BottomSheet
+        ref={bottomSheetRef}
+        snapPoints={snapPoints}
+        enableDynamicSizing={false}
+        onChange={handleSheetChange}
+        overDragResistanceFactor={13}
+        enablePanDownToClose={false}
+        backgroundStyle={styles.bottomSheetBackground}
+        handleIndicatorStyle={styles.handleIndicator}
       >
-        {/* HEADER */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="black" />
-          </TouchableOpacity>
+        <BottomSheetView style={styles.contentContainer}>
+          {/* HEADER */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={onClose} style={styles.backButton}>
+              <Ionicons name="chevron-back" size={24} color="black" />
+            </TouchableOpacity>
+            <View style={{ width: 24 }} />
+          </View>
 
-          {/* <View style={styles.headerCenter}>
-            <Text style={styles.title}>Para onde vamos?</Text>
-          </View> */}
-          <View style={{ width: 24 }} />
-        </View>
+          <View style={{ padding: 10 }} />
 
-        <View style={{ padding: 10 }} />
+          {/* Título */}
+          <Text style={styles.title}>Para onde vamos?</Text>
 
-        {/* Título */}
-        <Text style={styles.title}>Para onde vamos?</Text>
+          {/* INPUTS DINÂMICOS */}
+          <View style={styles.searchContainer}>
+            {inputsIntinerario.map((item, index) => {
+              const isOrigem = index === 0;
+              const isDestino = index === inputsIntinerario.length - 1;
+              const isParada = !isOrigem && !isDestino;
 
-        {/* INPUTS DINÂMICOS */}
-        <View style={styles.searchContainer}>
-          {inputsIntinerario.map((item, index) => {
-            const isOrigem = index === 0;
-            const isDestino = index === inputsIntinerario.length - 1;
-            const isParada = !isOrigem && !isDestino;
-
-            return (
-              <View key={index} style={styles.rowContainer}>
-                {/* TIMELINE */}
-                <View style={styles.lineContainer}>
-                  <View style={styles.markerWrapper}>
-                    {isOrigem ? (
-                      <View style={styles.startOuterCircle}>
-                        <View style={styles.startInnerCircle} />
-                      </View>
-                    ) : isDestino && !temParadas ? (
-                      <View style={styles.startOuterSquare}>
-                        <View style={styles.startInnerSquare} />
-                      </View>
-                    ) : (
-                      <View
-                        style={[
-                          styles.numberBox,
-                          isDestino && temParadas
-                            ? styles.lastNumberBoxHighlight
-                            : null,
-                        ]}
-                      >
-                        <Text
+              return (
+                <View key={index} style={styles.rowContainer}>
+                  {/* TIMELINE */}
+                  <View style={styles.lineContainer}>
+                    <View style={styles.markerWrapper}>
+                      {isOrigem ? (
+                        <View style={styles.startOuterCircle}>
+                          <View style={styles.startInnerCircle} />
+                        </View>
+                      ) : isDestino && !temParadas ? (
+                        <View style={styles.startOuterSquare}>
+                          <View style={styles.startInnerSquare} />
+                        </View>
+                      ) : (
+                        <View
                           style={[
-                            styles.numberText,
+                            styles.numberBox,
                             isDestino && temParadas
-                              ? styles.lastNumberTextHighlight
+                              ? styles.lastNumberBoxHighlight
                               : null,
                           ]}
                         >
-                          {index}
-                        </Text>
-                      </View>
-                    )}
+                          <Text
+                            style={[
+                              styles.numberText,
+                              isDestino && temParadas
+                                ? styles.lastNumberTextHighlight
+                                : null,
+                            ]}
+                          >
+                            {index}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {!isDestino && <View style={styles.verticalLine} />}
                   </View>
 
-                  {!isDestino && <View style={styles.verticalLine} />}
-                </View>
-
-                {/* INPUT */}
-                <View
-                  style={[
-                    styles.searchInput,
-                    isDestino && styles.searchInputDestination,
-                  ]}
-                >
-                  <TextInput
-                    ref={(ref) => {
-                      if (ref) {
-                        inputRefs.current[index] = ref;
-                      }
-                    }}
-                    style={styles.input}
-                    placeholder={
-                      isOrigem
-                        ? "Local de partida"
-                        : isDestino
+                  {/* INPUT */}
+                  <View
+                    style={[
+                      styles.searchInput,
+                      isDestino && styles.searchInputDestination,
+                    ]}
+                  >
+                    <TextInput
+                      ref={(ref) => {
+                        if (ref) {
+                          inputRefs.current[index] = ref;
+                        }
+                      }}
+                      style={styles.input}
+                      placeholder={
+                        isOrigem
+                          ? "Local de partida"
+                          : isDestino
                           ? temParadas
                             ? "Destino"
                             : "Para onde você vai?"
                           : "Parada"
-                    }
-                    placeholderTextColor="#999"
-                    value={item.name}
-                    onFocus={() => setInputSelecionado(index)}
-                    onChangeText={(texto) => {
-                      // Se o usuário voltar a digitar, limpa os dados antigos de geolocalização do nó do input
-                      setInputsIntinerario((prev) =>
-                        prev.map((inp, idx) =>
-                          idx === index
-                            ? { ...inp, name: texto, formattedAddress: "" }
-                            : inp,
-                        ),
-                      );
-                    }}
-                  />
+                      }
+                      placeholderTextColor="#999"
+                      value={item.name}
+                      onFocus={() => setInputSelecionado(index)}
+                      onChangeText={(texto) => {
+                        setInputsIntinerario((prev) =>
+                          prev.map((inp, idx) =>
+                            idx === index
+                              ? { ...inp, name: texto, formattedAddress: "" }
+                              : inp,
+                          ),
+                        );
+                      }}
+                    />
 
-                  {isDestino && (
-                    <TouchableOpacity
-                      onPress={adicionarParada}
-                      style={styles.addButtonInline}
-                    >
-                      <Ionicons name="add" size={20} color="#666" />
-                    </TouchableOpacity>
-                  )}
-
-                  {isParada && (
-                    <View style={styles.actionButtons}>
+                    {isDestino && (
                       <TouchableOpacity
-                        onPress={() => moverParaCima(index)}
-                        style={styles.actionButton}
+                        onPress={adicionarParada}
+                        style={styles.addButtonInline}
                       >
-                        <Ionicons name="chevron-up" size={16} color="#999" />
+                        <Ionicons name="add" size={20} color="#666" />
                       </TouchableOpacity>
+                    )}
 
-                      <TouchableOpacity
-                        onPress={() => moverParaBaixo(index)}
-                        style={styles.actionButton}
-                      >
-                        <Ionicons name="chevron-down" size={16} color="#999" />
-                      </TouchableOpacity>
+                    {isParada && (
+                      <View style={styles.actionButtons}>
+                        <TouchableOpacity
+                          onPress={() => moverParaCima(index)}
+                          style={styles.actionButton}
+                        >
+                          <Ionicons name="chevron-up" size={16} color="#999" />
+                        </TouchableOpacity>
 
-                      <TouchableOpacity
-                        onPress={() => removerParada(index)}
-                        style={styles.removeButtonInline}
-                      >
-                        <Ionicons name="close" size={20} color="#777" />
-                      </TouchableOpacity>
-                    </View>
-                  )}
+                        <TouchableOpacity
+                          onPress={() => moverParaBaixo(index)}
+                          style={styles.actionButton}
+                        >
+                          <Ionicons name="chevron-down" size={16} color="#999" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={() => removerParada(index)}
+                          style={styles.removeButtonInline}
+                        >
+                          <Ionicons name="close" size={20} color="#777" />
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
                 </View>
-              </View>
-            );
-          })}
-        </View>
-      </Animated.View>
+              );
+            })}
+          </View>
+
+          {/* LISTA DE ENDEREÇOS SUGERIDOS */}
+          {listaEnderecos.length > 0 && (
+            <View style={styles.suggestionsContainer}>
+              {listaEnderecos.map((item, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.suggestionItem}
+                  onPress={() => handleSelecionarEndereco(item)}
+                >
+                  <Ionicons name="location-outline" size={20} color="#666" />
+                  <View style={styles.suggestionTextContainer}>
+                    <Text style={styles.suggestionName}>{item.name}</Text>
+                    <Text style={styles.suggestionAddress}>
+                      {item.formattedAddress}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          {/* LOADING SKELETON */}
+          {loading && (
+            <View style={styles.skeletonContainer}>
+              <Animated.View
+                style={[
+                  styles.skeletonItem,
+                  { opacity: skeletonOpacity },
+                ]}
+              />
+              <Animated.View
+                style={[
+                  styles.skeletonItem,
+                  { opacity: skeletonOpacity, marginTop: 12 },
+                ]}
+              />
+            </View>
+          )}
+        </BottomSheetView>
+      </BottomSheet>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  drawer: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: "100%",
+  bottomSheetBackground: {
     backgroundColor: "#FFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  handleIndicator: {
+    backgroundColor: "#DDD",
+    width: 40,
+    height: 4,
+  },
+  contentContainer: {
+    flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingTop: 8,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginTop: 30,
   },
   backButton: {
     marginTop: 10,
-  },
-  headerCenter: {
-    alignItems: "center",
-  },
-  userContainer: {
-    alignItems: "center",
-    marginTop: 24,
-    marginBottom: 30,
-  },
-  userPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-  },
-  userName: {
-    fontSize: 15,
-    color: "#111",
-    fontWeight: "600",
-    marginHorizontal: 8,
   },
   title: {
     fontSize: 28,
@@ -694,5 +710,41 @@ const styles = StyleSheet.create({
   actionButton: {
     marginRight: 4,
     padding: 4,
+  },
+  suggestionsContainer: {
+    marginTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#F0F0F0",
+    paddingTop: 16,
+  },
+  suggestionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  suggestionTextContainer: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  suggestionName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111",
+  },
+  suggestionAddress: {
+    fontSize: 13,
+    color: "#666",
+    marginTop: 2,
+  },
+  skeletonContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+  },
+  skeletonItem: {
+    height: 60,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 8,
   },
 });
