@@ -121,7 +121,8 @@ export default function ViagemComParada({
           : item,
       ),
     );
-
+    console.log(inputsIntinerario, "inputsIntinerarioinputsIntinerario");
+    adicionarParada();
     setShowFolhaBuscarEndereco(false);
   };
 
