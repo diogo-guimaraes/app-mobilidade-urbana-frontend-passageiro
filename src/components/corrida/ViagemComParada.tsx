@@ -63,37 +63,78 @@ export default function ViagemComParada({
   onAdicionarParada,
 }: props) {
   const [isMounted, setIsMounted] = useState(visible);
-  const [inputsIntinerario, setInputsIntinerario] = useState<EnderecoItem[]>(
-    InputsIntinearioInicial,
-  );
-  const bottomSheetRef = useRef<BottomSheet>(null);
+
+  const [inputsIntinerario, setInputsIntinerario] =
+    useState<EnderecoItem[]>(
+      InputsIntinearioInicial,
+    );
+
   const [showFolhaBuscarEndereco, setShowFolhaBuscarEndereco] =
-    useState(visible);
+    useState(false);
+
+  const [inputSelecionadoIndex, setInputSelecionadoIndex] =
+    useState<number | null>(null);
+
+  const bottomSheetRef = useRef<BottomSheet>(null);
 
   const snapPoints = useMemo(() => {
     const baseHeight = 48;
-    const additionalHeight = (inputsIntinerario.length - 2) * 5;
-    const totalHeight = Math.min(baseHeight + additionalHeight, 85);
+
+    const additionalHeight =
+      (inputsIntinerario.length - 2) * 5;
+
+    const totalHeight = Math.min(
+      baseHeight + additionalHeight,
+      85,
+    );
+
     return [`${totalHeight}%`];
   }, [inputsIntinerario.length]);
 
-  const handleSheetStateChange = useCallback((index: number) => {
-    console.log(index, "index handleSheetStateChange");
-    if (index === -1) {
-      setShowFolhaBuscarEndereco(false)
-    }
-  }, []);
-
-  const reorganizarOrders = (lista: EnderecoItem[]) => {
+  const reorganizarOrders = (
+    lista: EnderecoItem[],
+  ) => {
     return lista.map((item, index) => ({
       ...item,
       order: index,
     }));
   };
 
+  const handleSheetStateChange = useCallback(
+    (index: number) => {
+      if (index === -1) {
+        setShowFolhaBuscarEndereco(false);
+      }
+    },
+    [],
+  );
+
   const handleInputClick = (index: number) => {
-    console.log("bateu", index);
+    setInputSelecionadoIndex(index);
+
     setShowFolhaBuscarEndereco(true);
+  };
+
+  const handleSelecionarEndereco = (
+    endereco: EnderecoItem,
+  ) => {
+    if (inputSelecionadoIndex === null) {
+      return;
+    }
+
+    setInputsIntinerario((prev) =>
+      prev.map((item, index) =>
+        index === inputSelecionadoIndex
+          ? {
+            ...item,
+            ...endereco,
+            order: index,
+          }
+          : item,
+      ),
+    );
+
+    setShowFolhaBuscarEndereco(false);
   };
 
   const adicionarParada = () => {
@@ -106,14 +147,18 @@ export default function ViagemComParada({
     setInputsIntinerario((prev) => {
       const novaLista = [...prev];
 
-      novaLista.splice(novaLista.length - 1, 0, {
-        name: "",
-        formattedAddress: "",
-        latitude: 0,
-        longitude: 0,
-        distancia: "0km",
-        order: 0,
-      });
+      novaLista.splice(
+        novaLista.length - 1,
+        0,
+        {
+          name: "",
+          formattedAddress: "",
+          latitude: 0,
+          longitude: 0,
+          distancia: "0km",
+          order: 0,
+        },
+      );
 
       return reorganizarOrders(novaLista);
     });
@@ -123,19 +168,24 @@ export default function ViagemComParada({
     }
   };
 
-  const podeAdicionarParada = inputsIntinerario.length < MAX_PARADAS + 1;
+  const podeAdicionarParada =
+    inputsIntinerario.length < MAX_PARADAS + 1;
 
   const removerParada = (index: number) => {
     if (index === 0) return;
 
-    const isUltimoItem = index === inputsIntinerario.length - 1;
+    const isUltimoItem =
+      index === inputsIntinerario.length - 1;
 
     if (isUltimoItem && podeAdicionarParada) {
       return;
     }
 
     setInputsIntinerario((prev) => {
-      const novaLista = prev.filter((_, i) => i !== index);
+      const novaLista = prev.filter(
+        (_, i) => i !== index,
+      );
+
       return reorganizarOrders(novaLista);
     });
   };
@@ -156,7 +206,8 @@ export default function ViagemComParada({
   };
 
   const moverParaBaixo = (index: number) => {
-    if (index >= inputsIntinerario.length - 2) return;
+    if (index >= inputsIntinerario.length - 2)
+      return;
 
     setInputsIntinerario((prev) => {
       const novaLista = [...prev];
@@ -171,12 +222,17 @@ export default function ViagemComParada({
   };
 
   const handleConfirmar = () => {
-    console.log("Rota confirmada:", inputsIntinerario);
+    console.log(
+      "Rota confirmada:",
+      inputsIntinerario,
+    );
   };
 
   const carregarLocalizacaoSalva = async () => {
     try {
-      const cached = await AsyncStorage.getItem(CACHE_KEY);
+      const cached = await AsyncStorage.getItem(
+        CACHE_KEY,
+      );
 
       if (cached) {
         const locationData = JSON.parse(cached);
@@ -186,15 +242,22 @@ export default function ViagemComParada({
             index === 0
               ? {
                 ...item,
-                name: locationData.formattedAddress || "Localização Atual",
-                formattedAddress: locationData.formattedAddress || "",
+                name:
+                  locationData.formattedAddress ||
+                  "Localização Atual",
+                formattedAddress:
+                  locationData.formattedAddress ||
+                  "",
               }
               : item,
           ),
         );
       }
     } catch (error) {
-      console.log("Erro ao recuperar endereço:", error);
+      console.log(
+        "Erro ao recuperar endereço:",
+        error,
+      );
     }
   };
 
@@ -202,16 +265,18 @@ export default function ViagemComParada({
     const onBackPress = () => {
       if (visible) {
         onClose();
+
         return true;
       }
 
       return false;
     };
 
-    const subscription = BackHandler.addEventListener(
-      "hardwareBackPress",
-      onBackPress,
-    );
+    const subscription =
+      BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress,
+      );
 
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -225,7 +290,10 @@ export default function ViagemComParada({
       bottomSheetRef.current?.snapToIndex(0);
     } else {
       setIsMounted(false);
-      setInputsIntinerario(InputsIntinearioInicial);
+
+      setInputsIntinerario(
+        InputsIntinearioInicial,
+      );
 
       bottomSheetRef.current?.close();
     }
@@ -245,7 +313,10 @@ export default function ViagemComParada({
   return (
     <View
       pointerEvents="box-none"
-      style={[StyleSheet.absoluteFill, { zIndex: 30 }]}
+      style={[
+        StyleSheet.absoluteFill,
+        { zIndex: 30 },
+      ]}
     >
       <BottomSheet
         ref={bottomSheetRef}
@@ -254,13 +325,26 @@ export default function ViagemComParada({
         onChange={handleSheetChange}
         overDragResistanceFactor={13}
         enablePanDownToClose={false}
-        backgroundStyle={styles.bottomSheetBackground}
-        handleIndicatorStyle={styles.handleIndicator}
+        backgroundStyle={
+          styles.bottomSheetBackground
+        }
+        handleIndicatorStyle={
+          styles.handleIndicator
+        }
       >
-        <BottomSheetView style={styles.contentContainer}>
+        <BottomSheetView
+          style={styles.contentContainer}
+        >
           <View style={styles.header}>
-            <TouchableOpacity onPress={onClose} style={styles.backButton}>
-              <Ionicons name="chevron-back" size={24} color="black" />
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.backButton}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={24}
+                color="black"
+              />
             </TouchableOpacity>
 
             <View style={{ width: 24 }} />
@@ -268,114 +352,191 @@ export default function ViagemComParada({
 
           <View style={{ padding: 10 }} />
 
-          <Text style={styles.title}>Adicionar paradas</Text>
+          <Text style={styles.title}>
+            Adicionar paradas
+          </Text>
 
           <View style={styles.searchContainer}>
-            {inputsIntinerario.map((item, index) => {
-              const isOrigem = index === 0;
-              const isDestino = index === inputsIntinerario.length - 1;
+            {inputsIntinerario.map(
+              (item, index) => {
+                const isOrigem = index === 0;
 
-              const atingiuMaxParadas =
-                inputsIntinerario.length >= MAX_PARADAS + 1;
+                const isDestino =
+                  index ===
+                  inputsIntinerario.length - 1;
 
-              const isParada = !isOrigem && !isDestino;
+                const atingiuMaxParadas =
+                  inputsIntinerario.length >=
+                  MAX_PARADAS + 1;
 
-              const mostrarAcoesDestinoFinal = isDestino && atingiuMaxParadas;
+                const isParada =
+                  !isOrigem && !isDestino;
 
-              return (
-                <View key={index} style={styles.rowContainer}>
-                  <View style={styles.lineContainer}>
-                    <View style={styles.markerWrapper}>
-                      {isOrigem ? (
-                        <View style={styles.startOuterCircle}>
-                          <View style={styles.startInnerCircle} />
-                        </View>
-                      ) : (
-                        <View
-                          style={[
-                            styles.numberBox,
-                            isDestino ? styles.lastNumberBoxHighlight : null,
-                          ]}
-                        >
-                          <Text
+                const mostrarAcoesDestinoFinal =
+                  isDestino &&
+                  atingiuMaxParadas;
+
+                return (
+                  <View
+                    key={index}
+                    style={styles.rowContainer}
+                  >
+                    <View
+                      style={styles.lineContainer}
+                    >
+                      <View
+                        style={styles.markerWrapper}
+                      >
+                        {isOrigem ? (
+                          <View
+                            style={
+                              styles.startOuterCircle
+                            }
+                          >
+                            <View
+                              style={
+                                styles.startInnerCircle
+                              }
+                            />
+                          </View>
+                        ) : (
+                          <View
                             style={[
-                              styles.numberText,
-                              isDestino ? styles.lastNumberTextHighlight : null,
+                              styles.numberBox,
+                              isDestino
+                                ? styles.lastNumberBoxHighlight
+                                : null,
                             ]}
                           >
-                            {index}
-                          </Text>
-                        </View>
+                            <Text
+                              style={[
+                                styles.numberText,
+                                isDestino
+                                  ? styles.lastNumberTextHighlight
+                                  : null,
+                              ]}
+                            >
+                              {index}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+
+                      {!isDestino && (
+                        <View
+                          style={
+                            styles.verticalLine
+                          }
+                        />
                       )}
                     </View>
 
-                    {!isDestino && <View style={styles.verticalLine} />}
-                  </View>
-
-                  <View
-                    style={[
-                      styles.searchInput,
-                      isDestino && styles.searchInputDestination,
-                    ]}
-                  >
-                    <TouchableOpacity
-                      style={styles.inputTouchable}
-                      onPress={() => handleInputClick(index)}
-                      activeOpacity={0.7}
+                    <View
+                      style={[
+                        styles.searchInput,
+                        isDestino &&
+                        styles.searchInputDestination,
+                      ]}
                     >
-                      <Text
-                        style={[
-                          styles.inputText,
-                          !item.name && styles.placeholderText,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {item.name || "Adicionar parada"}
-                      </Text>
-                    </TouchableOpacity>
-
-                    {isDestino && podeAdicionarParada && (
                       <TouchableOpacity
-                        onPress={adicionarParada}
-                        style={styles.addButtonInline}
+                        style={
+                          styles.inputTouchable
+                        }
+                        onPress={() =>
+                          handleInputClick(index)
+                        }
+                        activeOpacity={0.7}
                       >
-                        <Ionicons name="add" size={20} color="#666" />
+                        <Text
+                          style={[
+                            styles.inputText,
+                            !item.name &&
+                            styles.placeholderText,
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {item.name ||
+                            "Adicionar parada"}
+                        </Text>
                       </TouchableOpacity>
-                    )}
 
-                    {(isParada || mostrarAcoesDestinoFinal) && (
-                      <View style={styles.actionButtons}>
-                        <TouchableOpacity
-                          onPress={() => moverParaCima(index)}
-                          style={styles.actionButton}
-                        >
-                          <Ionicons name="chevron-up" size={16} color="#999" />
-                        </TouchableOpacity>
+                      {isDestino &&
+                        podeAdicionarParada && (
+                          <TouchableOpacity
+                            onPress={
+                              adicionarParada
+                            }
+                            style={
+                              styles.addButtonInline
+                            }
+                          >
+                            <Ionicons
+                              name="add"
+                              size={20}
+                              color="#666"
+                            />
+                          </TouchableOpacity>
+                        )}
 
-                        <TouchableOpacity
-                          onPress={() => moverParaBaixo(index)}
-                          style={styles.actionButton}
-                          disabled={isDestino}
-                        >
-                          <Ionicons
-                            name="chevron-down"
-                            size={16}
-                            color="#999"
-                          />
-                        </TouchableOpacity>
+                      {(isParada ||
+                        mostrarAcoesDestinoFinal) && (
+                          <View
+                            style={
+                              styles.actionButtons
+                            }
+                          >
+                            <TouchableOpacity
+                              onPress={() =>
+                                moverParaCima(index)
+                              }
+                              style={
+                                styles.actionButton
+                              }
+                            >
+                              <Ionicons
+                                name="chevron-up"
+                                size={16}
+                                color="#999"
+                              />
+                            </TouchableOpacity>
 
-                        <TouchableOpacity
-                          onPress={() => removerParada(index)}
-                          style={styles.removeButtonInline}
-                        >
-                          <Ionicons name="close" size={20} color="#777" />
-                        </TouchableOpacity>
-                      </View>
-                    )}
+                            <TouchableOpacity
+                              onPress={() =>
+                                moverParaBaixo(index)
+                              }
+                              style={
+                                styles.actionButton
+                              }
+                              disabled={isDestino}
+                            >
+                              <Ionicons
+                                name="chevron-down"
+                                size={16}
+                                color="#999"
+                              />
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              onPress={() =>
+                                removerParada(index)
+                              }
+                              style={
+                                styles.removeButtonInline
+                              }
+                            >
+                              <Ionicons
+                                name="close"
+                                size={20}
+                                color="#777"
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                    </View>
                   </View>
-                </View>
-              );
-            })}
+                );
+              },
+            )}
           </View>
 
           <View style={styles.buttonContainer}>
@@ -384,16 +545,26 @@ export default function ViagemComParada({
               onPress={handleConfirmar}
               activeOpacity={0.8}
             >
-              <Text style={styles.confirmButtonText}>Confirmar</Text>
+              <Text
+                style={styles.confirmButtonText}
+              >
+                Confirmar
+              </Text>
             </TouchableOpacity>
           </View>
         </BottomSheetView>
       </BottomSheet>
+
       <FolhaBuscarEndereco
         visible={showFolhaBuscarEndereco}
-        onClose={() => setShowFolhaBuscarEndereco(false)}
+        onClose={() =>
+          setShowFolhaBuscarEndereco(false)
+        }
         onSheetChange={handleSheetStateChange}
-        servico={'corrida'}
+        servico={"corrida"}
+        onSelecionarEndereco={
+          handleSelecionarEndereco
+        }
       />
     </View>
   );

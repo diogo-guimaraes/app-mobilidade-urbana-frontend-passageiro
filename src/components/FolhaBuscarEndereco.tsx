@@ -5,11 +5,14 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
+
 import BottomSheet, {
   BottomSheetFlatList,
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import React, {
   useCallback,
   useEffect,
@@ -17,6 +20,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+
 import {
   Animated,
   StyleSheet,
@@ -38,9 +42,14 @@ interface Props {
   onClose: () => void;
   onSheetChange: (index: number) => void;
   servico: string;
+
+  onSelecionarEndereco: (
+    endereco: EnderecoItem,
+  ) => void;
 }
 
-const CACHE_HISTORICO_KEY = "@historico_enderecos";
+const CACHE_HISTORICO_KEY =
+  "@historico_enderecos";
 
 const enderecosPadrao: EnderecoItem[] = [
   {
@@ -74,19 +83,26 @@ export default function FolhaBuscarEndereco({
   onClose,
   onSheetChange,
   servico,
+  onSelecionarEndereco,
 }: Props) {
-  const snapPoints = useMemo(() => ["89"], []);
+  const snapPoints = useMemo(
+    () => ["89%"],
+    [],
+  );
 
   const sheetRef = useRef<BottomSheet>(null);
 
   const inputRef = useRef<any>(null);
 
-  const skeletonOpacity = useRef(new Animated.Value(0.4)).current;
+  const skeletonOpacity = useRef(
+    new Animated.Value(0.4),
+  ).current;
 
   const [showDetalhesEntrega, setShowDetalhesEntrega] =
     useState(false);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
   const [historicoCache, setHistoricoCache] =
     useState<EnderecoItem[]>([]);
@@ -94,7 +110,8 @@ export default function FolhaBuscarEndereco({
   const [listaEnderecos, setListaEnderecos] =
     useState<EnderecoItem[]>([]);
 
-  const [endereco, setEndereco] = useState("");
+  const [endereco, setEndereco] =
+    useState("");
 
   useEffect(() => {
     if (visible) {
@@ -106,31 +123,41 @@ export default function FolhaBuscarEndereco({
     }
   }, [visible]);
 
-  const carregarHistoricoCache = async () => {
-    try {
-      const cachedData = await AsyncStorage.getItem(
-        CACHE_HISTORICO_KEY,
-      );
+  const carregarHistoricoCache =
+    async () => {
+      try {
+        const cachedData =
+          await AsyncStorage.getItem(
+            CACHE_HISTORICO_KEY,
+          );
 
-      if (cachedData) {
-        setHistoricoCache(JSON.parse(cachedData));
-      } else {
-        setHistoricoCache(enderecosPadrao);
+        if (cachedData) {
+          setHistoricoCache(
+            JSON.parse(cachedData),
+          );
+        } else {
+          setHistoricoCache(
+            enderecosPadrao,
+          );
 
-        await AsyncStorage.setItem(
-          CACHE_HISTORICO_KEY,
-          JSON.stringify(enderecosPadrao),
+          await AsyncStorage.setItem(
+            CACHE_HISTORICO_KEY,
+            JSON.stringify(
+              enderecosPadrao,
+            ),
+          );
+        }
+      } catch (error) {
+        console.log(
+          "Erro ao carregar histórico do cache:",
+          error,
+        );
+
+        setHistoricoCache(
+          enderecosPadrao,
         );
       }
-    } catch (error) {
-      console.log(
-        "Erro ao carregar histórico do cache:",
-        error,
-      );
-
-      setHistoricoCache(enderecosPadrao);
-    }
-  };
+    };
 
   useEffect(() => {
     if (visible) {
@@ -146,17 +173,23 @@ export default function FolhaBuscarEndereco({
     if (loading) {
       animationLoop = Animated.loop(
         Animated.sequence([
-          Animated.timing(skeletonOpacity, {
-            toValue: 0.8,
-            duration: 600,
-            useNativeDriver: true,
-          }),
+          Animated.timing(
+            skeletonOpacity,
+            {
+              toValue: 0.8,
+              duration: 600,
+              useNativeDriver: true,
+            },
+          ),
 
-          Animated.timing(skeletonOpacity, {
-            toValue: 0.4,
-            duration: 600,
-            useNativeDriver: true,
-          }),
+          Animated.timing(
+            skeletonOpacity,
+            {
+              toValue: 0.4,
+              duration: 600,
+              useNativeDriver: true,
+            },
+          ),
         ]),
       );
 
@@ -175,9 +208,13 @@ export default function FolhaBuscarEndereco({
   const buscarEnderecoApi = async (
     texto: string,
   ) => {
-    if (!texto || texto.trim().length === 0) {
+    if (
+      !texto ||
+      texto.trim().length === 0
+    ) {
       setListaEnderecos([]);
       setLoading(false);
+
       return;
     }
 
@@ -201,7 +238,8 @@ export default function FolhaBuscarEndereco({
           longitude,
         } = response.data;
 
-        const novoEnderecoObjeto: EnderecoItem = {
+        const novoEnderecoObjeto: EnderecoItem =
+        {
           name,
           formattedAddress,
           latitude,
@@ -209,7 +247,9 @@ export default function FolhaBuscarEndereco({
           distancia: "--",
         };
 
-        setListaEnderecos([novoEnderecoObjeto]);
+        setListaEnderecos([
+          novoEnderecoObjeto,
+        ]);
       }
     } catch (error) {
       console.log(
@@ -222,89 +262,117 @@ export default function FolhaBuscarEndereco({
   };
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (visible) {
-        buscarEnderecoApi(endereco);
-      }
-    }, 600);
+    const delayDebounceFn =
+      setTimeout(() => {
+        if (visible) {
+          buscarEnderecoApi(
+            endereco,
+          );
+        }
+      }, 600);
 
-    return () => clearTimeout(delayDebounceFn);
+    return () =>
+      clearTimeout(delayDebounceFn);
   }, [endereco, visible]);
 
-  const salvarEnderecoNoCache = async (
-    novoEndereco: EnderecoItem,
-  ) => {
-    try {
-      const historicoFiltrado =
-        historicoCache.filter(
-          (item) =>
-            item.formattedAddress !==
-            novoEndereco.formattedAddress,
+  const salvarEnderecoNoCache =
+    async (
+      novoEndereco: EnderecoItem,
+    ) => {
+      try {
+        const historicoFiltrado =
+          historicoCache.filter(
+            (item) =>
+              item.formattedAddress !==
+              novoEndereco.formattedAddress,
+          );
+
+        const novoHistorico = [
+          novoEndereco,
+          ...historicoFiltrado,
+        ];
+
+        const historicoLimitado =
+          novoHistorico.slice(0, 10);
+
+        setHistoricoCache(
+          historicoLimitado,
         );
 
-      const novoHistorico = [
-        novoEndereco,
-        ...historicoFiltrado,
-      ];
-
-      const historicoLimitado =
-        novoHistorico.slice(0, 10);
-
-      setHistoricoCache(historicoLimitado);
-
-      await AsyncStorage.setItem(
-        CACHE_HISTORICO_KEY,
-        JSON.stringify(historicoLimitado),
-      );
-    } catch (error) {
-      console.log(
-        "Erro ao salvar endereço no cache:",
-        error,
-      );
-    }
-  };
-
-  const removerEnderecoDoCache = async (
-    enderecoParaRemover: EnderecoItem,
-  ) => {
-    try {
-      const historicoAtualizado =
-        historicoCache.filter(
-          (item) =>
-            item.formattedAddress !==
-            enderecoParaRemover.formattedAddress,
+        await AsyncStorage.setItem(
+          CACHE_HISTORICO_KEY,
+          JSON.stringify(
+            historicoLimitado,
+          ),
         );
-
-      setHistoricoCache(historicoAtualizado);
-
-      await AsyncStorage.setItem(
-        CACHE_HISTORICO_KEY,
-        JSON.stringify(historicoAtualizado),
-      );
-    } catch (error) {
-      console.log(
-        "Erro ao remover endereço do cache:",
-        error,
-      );
-    }
-  };
-
-  const confirmarEndereco = useCallback(
-    async (item: EnderecoItem) => {
-      setEndereco(item.name);
-
-      await salvarEnderecoNoCache(item);
-
-      setListaEnderecos([]);
-
-      if (servico === "corrida") {
-        return;
+      } catch (error) {
+        console.log(
+          "Erro ao salvar endereço no cache:",
+          error,
+        );
       }
+    };
 
-      setShowDetalhesEntrega(true);
-    },
-    [servico, historicoCache],
-  );
+  const removerEnderecoDoCache =
+    async (
+      enderecoParaRemover: EnderecoItem,
+    ) => {
+      try {
+        const historicoAtualizado =
+          historicoCache.filter(
+            (item) =>
+              item.formattedAddress !==
+              enderecoParaRemover.formattedAddress,
+          );
+
+        setHistoricoCache(
+          historicoAtualizado,
+        );
+
+        await AsyncStorage.setItem(
+          CACHE_HISTORICO_KEY,
+          JSON.stringify(
+            historicoAtualizado,
+          ),
+        );
+      } catch (error) {
+        console.log(
+          "Erro ao remover endereço do cache:",
+          error,
+        );
+      }
+    };
+
+  const confirmarEndereco =
+    useCallback(
+      async (
+        item: EnderecoItem,
+      ) => {
+        setEndereco(item.name);
+
+        await salvarEnderecoNoCache(
+          item,
+        );
+
+        setListaEnderecos([]);
+
+        onSelecionarEndereco(item);
+
+        onClose();
+
+        if (servico === "corrida") {
+          return;
+        }
+
+        setShowDetalhesEntrega(true);
+      },
+      [
+        servico,
+        historicoCache,
+        onSelecionarEndereco,
+        onClose,
+      ],
+    );
 
   const listaExibicao =
     listaEnderecos.length > 0
@@ -319,11 +387,15 @@ export default function FolhaBuscarEndereco({
     <TouchableOpacity
       style={styles.itemContainer}
       activeOpacity={0.7}
-      onPress={() => confirmarEndereco(item)}
+      onPress={() =>
+        confirmarEndereco(item)
+      }
     >
       <TouchableOpacity
         style={styles.iconCircle}
-        onPress={() => removerEnderecoDoCache(item)}
+        onPress={() =>
+          removerEnderecoDoCache(item)
+        }
       >
         <Ionicons
           name="close"
@@ -341,7 +413,9 @@ export default function FolhaBuscarEndereco({
             {item.name}
           </Text>
 
-          <Text style={styles.distanciaText}>
+          <Text
+            style={styles.distanciaText}
+          >
             {item.distancia}
           </Text>
         </View>
@@ -373,17 +447,21 @@ export default function FolhaBuscarEndereco({
         style={[
           styles.iconCircle,
           {
-            backgroundColor: "#EAEAEA",
+            backgroundColor:
+              "#EAEAEA",
           },
         ]}
       />
 
-      <View style={styles.textContainer}>
+      <View
+        style={styles.textContainer}
+      >
         <View
           style={{
             width: "60%",
             height: 14,
-            backgroundColor: "#EBEBEB",
+            backgroundColor:
+              "#EBEBEB",
             borderRadius: 4,
             marginBottom: 8,
           }}
@@ -393,7 +471,8 @@ export default function FolhaBuscarEndereco({
           style={{
             width: "90%",
             height: 10,
-            backgroundColor: "#EBEBEB",
+            backgroundColor:
+              "#EBEBEB",
             borderRadius: 4,
           }}
         />
@@ -413,7 +492,9 @@ export default function FolhaBuscarEndereco({
             color="#666"
           />
 
-          <Text style={styles.shortcutText}>
+          <Text
+            style={styles.shortcutText}
+          >
             Avenida Bo...
           </Text>
         </TouchableOpacity>
@@ -427,7 +508,9 @@ export default function FolhaBuscarEndereco({
             color="#666"
           />
 
-          <Text style={styles.shortcutText}>
+          <Text
+            style={styles.shortcutText}
+          >
             Trabalho
           </Text>
 
@@ -447,7 +530,9 @@ export default function FolhaBuscarEndereco({
             color="#666"
           />
 
-          <Text style={styles.shortcutText}>
+          <Text
+            style={styles.shortcutText}
+          >
             Favoritos
           </Text>
 
@@ -459,13 +544,17 @@ export default function FolhaBuscarEndereco({
         </TouchableOpacity>
       </View>
 
-      <View style={styles.dividerFull} />
+      <View
+        style={styles.dividerFull}
+      />
     </View>
   );
 
   const ListFooter = () => (
     <View style={styles.footerContainer}>
-      <TouchableOpacity style={styles.footerItem}>
+      <TouchableOpacity
+        style={styles.footerItem}
+      >
         <MaterialIcons
           name="location-on"
           size={24}
@@ -473,14 +562,20 @@ export default function FolhaBuscarEndereco({
           style={styles.footerIcon}
         />
 
-        <Text style={styles.footerText}>
+        <Text
+          style={styles.footerText}
+        >
           Marque o local no mapa
         </Text>
       </TouchableOpacity>
 
-      <View style={styles.dividerFooter} />
+      <View
+        style={styles.dividerFooter}
+      />
 
-      <TouchableOpacity style={styles.footerItem}>
+      <TouchableOpacity
+        style={styles.footerItem}
+      >
         <Ionicons
           name="add"
           size={24}
@@ -488,12 +583,16 @@ export default function FolhaBuscarEndereco({
           style={styles.footerIcon}
         />
 
-        <Text style={styles.footerText}>
+        <Text
+          style={styles.footerText}
+        >
           Adicionar local
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.footerItem}>
+      <TouchableOpacity
+        style={styles.footerItem}
+      >
         <MaterialIcons
           name="edit"
           size={20}
@@ -501,12 +600,16 @@ export default function FolhaBuscarEndereco({
           style={styles.footerIcon}
         />
 
-        <Text style={styles.footerText}>
+        <Text
+          style={styles.footerText}
+        >
           Sugerir alteração de local
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.footerItem}>
+      <TouchableOpacity
+        style={styles.footerItem}
+      >
         <MaterialIcons
           name="chat-bubble-outline"
           size={20}
@@ -514,7 +617,9 @@ export default function FolhaBuscarEndereco({
           style={styles.footerIcon}
         />
 
-        <Text style={styles.footerText}>
+        <Text
+          style={styles.footerText}
+        >
           Outros comentários
         </Text>
       </TouchableOpacity>
@@ -526,9 +631,13 @@ export default function FolhaBuscarEndereco({
   return (
     <>
       <DetalhesEntrega
-        visible={showDetalhesEntrega}
+        visible={
+          showDetalhesEntrega
+        }
         onClose={() =>
-          setShowDetalhesEntrega(false)
+          setShowDetalhesEntrega(
+            false,
+          )
         }
       />
 
@@ -538,11 +647,16 @@ export default function FolhaBuscarEndereco({
           index={0}
           snapPoints={snapPoints}
           enableDynamicSizing={false}
-          overDragResistanceFactor={13}
-          enablePanDownToClose={true}
+          overDragResistanceFactor={
+            13
+          }
+          enablePanDownToClose={
+            true
+          }
           onChange={onSheetChange}
           handleIndicatorStyle={{
-            backgroundColor: "#DDD",
+            backgroundColor:
+              "#DDD",
             width: 40,
           }}
           enableOverDrag={false}
@@ -551,8 +665,12 @@ export default function FolhaBuscarEndereco({
           android_keyboardInputMode="adjustResize"
         >
           <>
-            <View style={styles.searchHeader}>
-              <View style={styles.inputWrapper}>
+            <View
+              style={styles.searchHeader}
+            >
+              <View
+                style={styles.inputWrapper}
+              >
                 <MaterialCommunityIcons
                   name="flag-variant"
                   size={20}
@@ -566,14 +684,24 @@ export default function FolhaBuscarEndereco({
                   placeholder="Endereço"
                   placeholderTextColor="#CCC"
                   value={endereco}
-                  onChangeText={(texto) => {
-                    setEndereco(texto);
+                  onChangeText={(
+                    texto,
+                  ) => {
+                    setEndereco(
+                      texto,
+                    );
                   }}
                 />
               </View>
 
-              <TouchableOpacity onPress={onClose}>
-                <Text style={styles.cancelText}>
+              <TouchableOpacity
+                onPress={onClose}
+              >
+                <Text
+                  style={
+                    styles.cancelText
+                  }
+                >
                   Cancelar
                 </Text>
               </TouchableOpacity>
@@ -583,7 +711,9 @@ export default function FolhaBuscarEndereco({
               <View>
                 <ListHeader />
 
-                {Array.from({ length: 4 }).map(
+                {Array.from({
+                  length: 4,
+                }).map(
                   renderSkeletonItem,
                 )}
 
@@ -598,10 +728,18 @@ export default function FolhaBuscarEndereco({
                 ) =>
                   `${item.formattedAddress}-${index}`
                 }
-                renderItem={renderEnderecoItem}
-                ListHeaderComponent={ListHeader}
-                ListFooterComponent={ListFooter}
-                showsVerticalScrollIndicator={false}
+                renderItem={
+                  renderEnderecoItem
+                }
+                ListHeaderComponent={
+                  ListHeader
+                }
+                ListFooterComponent={
+                  ListFooter
+                }
+                showsVerticalScrollIndicator={
+                  false
+                }
                 keyboardShouldPersistTaps="handled"
               />
             )}
