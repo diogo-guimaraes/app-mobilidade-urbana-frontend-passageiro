@@ -171,30 +171,46 @@ export default function ViagemComParada({
   const removerParada = (index: number) => {
     if (index === 0) return;
 
+    const isUltimoItem = index === inputsIntinerario.length - 1;
+
+    if (isUltimoItem && podeAdicionarParada) {
+      return;
+    }
+
+    setInputsIntinerario((prev) => {
+      const novaLista = prev.filter((_, i) => i !== index);
+
+      return reorganizarOrders(novaLista);
+    });
+  };
+
+  const moverParaCima = (index: number) => {
+    if (index <= 1) return;
+
     setInputsIntinerario((prev) => {
       const novaLista = [...prev];
 
-      const isUltimoItem = index === novaLista.length - 1;
+      [novaLista[index - 1], novaLista[index]] = [
+        novaLista[index],
+        novaLista[index - 1],
+      ];
 
-      // se estiver removendo o último destino,
-      // apenas limpa ele quando só existir origem + destino
-      if (novaLista.length === 2 && isUltimoItem) {
-        novaLista[index] = {
-          ...novaLista[index],
-          name: "",
-          formattedAddress: "",
-          latitude: 0,
-          longitude: 0,
-          distancia: "0km",
-        };
+      return reorganizarOrders(novaLista);
+    });
+  };
 
-        return reorganizarOrders(novaLista);
-      }
+  const moverParaBaixo = (index: number) => {
+    if (index >= inputsIntinerario.length - 2) return;
 
-      // remove normalmente
-      const listaFiltrada = novaLista.filter((_, i) => i !== index);
+    setInputsIntinerario((prev) => {
+      const novaLista = [...prev];
 
-      return reorganizarOrders(listaFiltrada);
+      [novaLista[index], novaLista[index + 1]] = [
+        novaLista[index + 1],
+        novaLista[index],
+      ];
+
+      return reorganizarOrders(novaLista);
     });
   };
 
@@ -365,8 +381,36 @@ export default function ViagemComParada({
                       </Text>
                     </TouchableOpacity>
 
-                    {!isOrigem && item.name && (
+                    {isDestino && podeAdicionarParada && (
+                      <TouchableOpacity
+                        onPress={adicionarParada}
+                        style={styles.addButtonInline}
+                      >
+                        <Ionicons name="add" size={20} color="#666" />
+                      </TouchableOpacity>
+                    )}
+
+                    {(isParada || mostrarAcoesDestinoFinal) && (
                       <View style={styles.actionButtons}>
+                        <TouchableOpacity
+                          onPress={() => moverParaCima(index)}
+                          style={styles.actionButton}
+                        >
+                          <Ionicons name="chevron-up" size={16} color="#999" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={() => moverParaBaixo(index)}
+                          style={styles.actionButton}
+                          disabled={isDestino}
+                        >
+                          <Ionicons
+                            name="chevron-down"
+                            size={16}
+                            color="#999"
+                          />
+                        </TouchableOpacity>
+
                         <TouchableOpacity
                           onPress={() => removerParada(index)}
                           style={styles.removeButtonInline}
