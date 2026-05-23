@@ -5,18 +5,62 @@ import ViagemComParada from "@/components/corrida/ViagemComParada";
 import { useAuth } from "@/context/AuthProvider";
 import { useUi } from "@/context/UiContext";
 import { useRouter } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { Region } from "react-native-maps";
 
+export interface EnderecoItem {
+  name: string;
+  formattedAddress: string;
+  latitude: number;
+  longitude: number;
+  distancia: string;
+  order: number;
+}
+
+const itinerarioInicial: EnderecoItem[] = [
+  {
+    name: "",
+    formattedAddress: "",
+    latitude: 0,
+    longitude: 0,
+    distancia: "0km",
+    order: 0,
+  },
+  {
+    name: "",
+    formattedAddress: "",
+    latitude: 0,
+    longitude: 0,
+    distancia: "0km",
+    order: 1,
+  },
+];
+
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
+
   const { setModalVisible } = useUi();
+
   const router = useRouter();
-  const [region, setRegion] = useState<Region | null>(null);
-  const [showViagemComParada, setShowViagemComParada] = useState(false);
-  const userInitialRegion = useRef<Region | null>(null);
-  const [bottomSheetIndex, setBottomSheetIndex] = useState<number>(0);
+
+  const [region, setRegion] =
+    useState<Region | null>(null);
+
+  const [showViagemComParada, setShowViagemComParada] =
+    useState(false);
+
+  const userInitialRegion =
+    useRef<Region | null>(null);
+
+  const [bottomSheetIndex, setBottomSheetIndex] =
+    useState<number>(0);
+
+  // 🔥 NOVO: Estado global do itinerário
+  const [itinerario, setItinerario] =
+    useState<EnderecoItem[]>(
+      itinerarioInicial,
+    );
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -29,41 +73,94 @@ export default function Home() {
     setModalVisible(showViagemComParada);
   }, [showViagemComParada, setModalVisible]);
 
-  const handleUserLocationFound = useCallback((userRegion: Region) => {
-    userInitialRegion.current = {
-      ...userRegion,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    };
+  const handleUserLocationFound =
+    useCallback(
+      (
+        userRegion: Region,
+        addressName?: string,
+      ) => {
+        userInitialRegion.current = {
+          ...userRegion,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        };
 
-    const offsetLatitude = 0.0064;
-    const adjustedRegion: Region = {
-      ...userRegion,
-      latitude: userRegion.latitude - offsetLatitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    };
-    setRegion(adjustedRegion);
-  }, []);
+        const offsetLatitude = 0.0064;
 
-  const handleSheetStateChange = useCallback((index: number) => {
-    setBottomSheetIndex(index);
-  }, []);
+        const adjustedRegion: Region = {
+          ...userRegion,
+          latitude:
+            userRegion.latitude -
+            offsetLatitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        };
 
-  const handleAdicionarParada = useCallback(() => {
-    // Fecha o FolhaInferior indiretamente ao abrir o ViagemComParada
-    setShowViagemComParada(true);
-  }, []);
+        setRegion(adjustedRegion);
 
-  const handleCloseViagemComParada = useCallback(() => {
-    setShowViagemComParada(false);
-  }, []);
+        // 🔥 NOVO:
+        // injeta origem automaticamente no itinerário
+        if (addressName) {
+          setItinerario((prev) =>
+            prev.map((item, index) =>
+              index === 0
+                ? {
+                    ...item,
+                    name: addressName,
+                    formattedAddress:
+                      addressName,
+                    latitude:
+                      userRegion.latitude,
+                    longitude:
+                      userRegion.longitude,
+                  }
+                : item,
+            ),
+          );
+        }
+      },
+      [],
+    );
+
+  const handleSheetStateChange =
+    useCallback((index: number) => {
+      setBottomSheetIndex(index);
+    }, []);
+
+  const handleAdicionarParada =
+    useCallback(() => {
+      // Fecha o FolhaInferior indiretamente ao abrir o ViagemComParada
+      setShowViagemComParada(true);
+    }, []);
+
+  const handleCloseViagemComParada =
+    useCallback(() => {
+      setShowViagemComParada(false);
+    }, []);
+
+  // 🔥 NOVO:
+  // lista operacional do mapa
+  // remove placeholders vazios
+  const itinerarioMapa = useMemo(() => {
+    return itinerario.filter(
+      (item) =>
+        item.name &&
+        item.latitude &&
+        item.longitude,
+    );
+  }, [itinerario]);
 
   if (authLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#000" />
-        <Text style={styles.loadingText}>Verificando autenticação...</Text>
+        <ActivityIndicator
+          size="large"
+          color="#000"
+        />
+
+        <Text style={styles.loadingText}>
+          Verificando autenticação...
+        </Text>
       </View>
     );
   }
@@ -75,22 +172,37 @@ export default function Home() {
       <Map
         region={region}
         onRegionChange={setRegion}
-        onUserLocationFound={handleUserLocationFound}
-        bottomSheetIndex={bottomSheetIndex}
+        onUserLocationFound={
+          handleUserLocationFound
+        }
+        bottomSheetIndex={
+          bottomSheetIndex
+        }
+        // 🔥 NOVO
+        itinerario={itinerarioMapa}
       />
 
       {/* FolhaInferior só é renderizado quando ViagemComParada NÃO está visível */}
       {!showViagemComParada && (
-        <FolhaInferior 
-          onSheetChange={handleSheetStateChange}
-          onAdicionarParada={handleAdicionarParada}
+        <FolhaInferior
+          onSheetChange={
+            handleSheetStateChange
+          }
+          onAdicionarParada={
+            handleAdicionarParada
+          }
         />
       )}
 
       {/* ViagemComParada visível apenas quando showViagemComParada for true */}
       <ViagemComParada
         visible={showViagemComParada}
-        onClose={handleCloseViagemComParada}
+        onClose={
+          handleCloseViagemComParada
+        }
+        // 🔥 NOVO
+        itinerario={itinerario}
+        setItinerario={setItinerario}
       />
     </View>
   );
@@ -98,12 +210,14 @@ export default function Home() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
   },
+
   loadingText: {
     marginTop: 16,
     fontSize: 16,

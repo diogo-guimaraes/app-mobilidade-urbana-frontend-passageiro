@@ -1,7 +1,6 @@
 // components/ViagemComParada.tsx
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   useCallback,
   useEffect,
@@ -9,6 +8,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+
 import {
   BackHandler,
   StyleSheet,
@@ -19,17 +19,9 @@ import {
 
 import FolhaBuscarEndereco from "@/components/FolhaBuscarEndereco";
 
-const CACHE_KEY = "@last_user_location";
 const MAX_PARADAS = 4;
 
-interface props {
-  visible: boolean;
-  onClose: () => void;
-  onAdicionarParada?: () => void;
-  duration?: number;
-}
-
-interface EnderecoItem {
+export interface EnderecoItem {
   name: string;
   formattedAddress: string;
   latitude: number;
@@ -38,43 +30,42 @@ interface EnderecoItem {
   order: number;
 }
 
-const InputsIntinearioInicial: EnderecoItem[] = [
-  {
-    name: "",
-    formattedAddress: "",
-    latitude: 0,
-    longitude: 0,
-    distancia: "0km",
-    order: 0,
-  },
-  {
-    name: "",
-    formattedAddress: "",
-    latitude: 0,
-    longitude: 0,
-    distancia: "0km",
-    order: 1,
-  },
-];
+interface props {
+  visible: boolean;
+  onClose: () => void;
+  onAdicionarParada?: () => void;
+  duration?: number;
+
+  // 🔥 NOVO
+  itinerario: EnderecoItem[];
+  setItinerario: React.Dispatch<
+    React.SetStateAction<EnderecoItem[]>
+  >;
+}
 
 export default function ViagemComParada({
   visible,
   onClose,
   onAdicionarParada,
+
+  // 🔥 NOVO
+  itinerario,
+  setItinerario,
 }: props) {
   const [isMounted, setIsMounted] =
     useState(visible);
 
-  const [inputsIntinerario, setInputsIntinerario] =
-    useState<EnderecoItem[]>(
-      InputsIntinearioInicial,
-    );
+  const [
+    showFolhaBuscarEndereco,
+    setShowFolhaBuscarEndereco,
+  ] = useState(false);
 
-  const [showFolhaBuscarEndereco, setShowFolhaBuscarEndereco] =
-    useState(false);
-
-  const [inputSelecionadoIndex, setInputSelecionadoIndex] =
-    useState<number | null>(null);
+  const [
+    inputSelecionadoIndex,
+    setInputSelecionadoIndex,
+  ] = useState<number | null>(
+    null,
+  );
 
   const bottomSheetRef =
     useRef<BottomSheet>(null);
@@ -83,7 +74,7 @@ export default function ViagemComParada({
     const baseHeight = 48;
 
     const additionalHeight =
-      (inputsIntinerario.length - 2) * 5;
+      (itinerario.length - 2) * 5;
 
     const totalHeight = Math.min(
       baseHeight + additionalHeight,
@@ -91,7 +82,7 @@ export default function ViagemComParada({
     );
 
     return [`${totalHeight}%`];
-  }, [inputsIntinerario.length]);
+  }, [itinerario.length]);
 
   const reorganizarOrders = (
     lista: EnderecoItem[],
@@ -105,7 +96,9 @@ export default function ViagemComParada({
   const handleSheetStateChange =
     useCallback((index: number) => {
       if (index === -1) {
-        setShowFolhaBuscarEndereco(false);
+        setShowFolhaBuscarEndereco(
+          false,
+        );
       }
     }, []);
 
@@ -114,85 +107,83 @@ export default function ViagemComParada({
   ) => {
     setInputSelecionadoIndex(index);
 
-    setShowFolhaBuscarEndereco(true);
-  };
-
-  const handleSelecionarEndereco = (
-    endereco: EnderecoItem,
-  ) => {
-    if (inputSelecionadoIndex === null) {
-      return;
-    }
-
-    setInputsIntinerario((prev) =>
-      prev.map((item, index) =>
-        index === inputSelecionadoIndex
-          ? {
-            ...item,
-            ...endereco,
-            order: index,
-          }
-          : item,
-      ),
+    setShowFolhaBuscarEndereco(
+      true,
     );
-
-    adicionarParada();
-
-    setShowFolhaBuscarEndereco(false);
   };
 
-  const adicionarParada = () => {
-    const maxInputs =
-      MAX_PARADAS + 1;
-
-    if (
-      inputsIntinerario.length >=
-      maxInputs
-    ) {
-      return;
-    }
-
-    setInputsIntinerario((prev) => {
-      const ultimoItem =
-        prev[prev.length - 1];
-
-      // só adiciona se último estiver preenchido
-      if (!ultimoItem.name) {
-        return prev;
+  // 🔥 PRINCIPAL MUDANÇA:
+  // agora altera o itinerário vindo do HOME
+  const handleSelecionarEndereco =
+    (endereco: EnderecoItem) => {
+      if (
+        inputSelecionadoIndex ===
+        null
+      ) {
+        return;
       }
 
-      const novaLista = [...prev];
+      setItinerario((prev) => {
+        let novaLista = prev.map(
+          (item, index) =>
+            index ===
+              inputSelecionadoIndex
+              ? {
+                ...item,
+                ...endereco,
+                order: index,
+              }
+              : item,
+        );
 
-      novaLista.push({
-        name: "",
-        formattedAddress: "",
-        latitude: 0,
-        longitude: 0,
-        distancia: "0km",
-        order: 0,
+        const ultimoItem =
+          novaLista[
+          novaLista.length - 1
+          ];
+
+        const possuiInputVazio =
+          novaLista.some(
+            (item) => !item.name,
+          );
+
+        // 🔥 mantém sempre um input vazio
+        if (
+          ultimoItem.name &&
+          !possuiInputVazio &&
+          novaLista.length <
+          MAX_PARADAS + 1
+        ) {
+          novaLista.push({
+            name: "",
+            formattedAddress: "",
+            latitude: 0,
+            longitude: 0,
+            distancia: "0km",
+            order: 0,
+          });
+        }
+
+        return reorganizarOrders(
+          novaLista,
+        );
       });
 
-      return reorganizarOrders(
-        novaLista,
+      setShowFolhaBuscarEndereco(
+        false,
       );
-    });
-
-    if (onAdicionarParada) {
-      onAdicionarParada();
-    }
-  };
+    };
 
   const removerParada = (
     index: number,
   ) => {
     if (index === 0) return;
 
-    setInputsIntinerario((prev) => {
+    setItinerario((prev) => {
       let novaLista = prev.filter(
         (_, i) => i !== index,
       );
 
-      // garante origem + destino mínimo
+      // garante mínimo
       if (novaLista.length === 1) {
         novaLista.push({
           name: "",
@@ -204,13 +195,12 @@ export default function ViagemComParada({
         });
       }
 
-      // se não atingiu o limite máximo,
-      // garante um input vazio ao final
       const possuiInputVazio =
         novaLista.some(
           (item) => !item.name,
         );
 
+      // 🔥 mantém placeholder
       if (
         novaLista.length <
         MAX_PARADAS + 1 &&
@@ -235,47 +225,9 @@ export default function ViagemComParada({
   const handleConfirmar = () => {
     console.log(
       "Rota confirmada:",
-      inputsIntinerario,
+      itinerario,
     );
   };
-
-  const carregarLocalizacaoSalva =
-    async () => {
-      try {
-        const cached =
-          await AsyncStorage.getItem(
-            CACHE_KEY,
-          );
-
-        if (cached) {
-          const locationData =
-            JSON.parse(cached);
-
-          setInputsIntinerario(
-            (prev) =>
-              prev.map(
-                (item, index) =>
-                  index === 0
-                    ? {
-                      ...item,
-                      name:
-                        locationData.formattedAddress ||
-                        "Localização Atual",
-                      formattedAddress:
-                        locationData.formattedAddress ||
-                        "",
-                    }
-                    : item,
-              ),
-          );
-        }
-      } catch (error) {
-        console.log(
-          "Erro ao recuperar endereço:",
-          error,
-        );
-      }
-    };
 
   useEffect(() => {
     const onBackPress = () => {
@@ -298,21 +250,17 @@ export default function ViagemComParada({
       subscription.remove();
   }, [visible, onClose]);
 
+  // 🔥 IMPORTANTE:
+  // não reseta mais o itinerário
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
-
-      carregarLocalizacaoSalva();
 
       bottomSheetRef.current?.snapToIndex(
         0,
       );
     } else {
       setIsMounted(false);
-
-      setInputsIntinerario(
-        InputsIntinearioInicial,
-      );
 
       bottomSheetRef.current?.close();
     }
@@ -341,10 +289,18 @@ export default function ViagemComParada({
       <BottomSheet
         ref={bottomSheetRef}
         snapPoints={snapPoints}
-        enableDynamicSizing={false}
-        onChange={handleSheetChange}
-        overDragResistanceFactor={13}
-        enablePanDownToClose={false}
+        enableDynamicSizing={
+          false
+        }
+        onChange={
+          handleSheetChange
+        }
+        overDragResistanceFactor={
+          13
+        }
+        enablePanDownToClose={
+          false
+        }
         backgroundStyle={
           styles.bottomSheetBackground
         }
@@ -353,12 +309,16 @@ export default function ViagemComParada({
         }
       >
         <BottomSheetView
-          style={styles.contentContainer}
+          style={
+            styles.contentContainer
+          }
         >
           <View style={styles.header}>
             <TouchableOpacity
               onPress={onClose}
-              style={styles.backButton}
+              style={
+                styles.backButton
+              }
             >
               <Ionicons
                 name="chevron-back"
@@ -367,24 +327,32 @@ export default function ViagemComParada({
               />
             </TouchableOpacity>
 
-            <View style={{ width: 24 }} />
+            <View
+              style={{ width: 24 }}
+            />
           </View>
 
-          <View style={{ padding: 10 }} />
+          <View
+            style={{ padding: 10 }}
+          />
 
           <Text style={styles.title}>
             Adicionar paradas
           </Text>
 
-          <View style={styles.searchContainer}>
-            {inputsIntinerario.map(
+          <View
+            style={
+              styles.searchContainer
+            }
+          >
+            {itinerario.map(
               (item, index) => {
                 const isOrigem =
                   index === 0;
 
                 const isDestino =
                   index ===
-                  inputsIntinerario.length -
+                  itinerario.length -
                   1;
 
                 return (
@@ -478,7 +446,9 @@ export default function ViagemComParada({
                             index,
                           )
                         }
-                        activeOpacity={0.7}
+                        activeOpacity={
+                          0.7
+                        }
                       >
                         <Text
                           style={[
@@ -486,7 +456,9 @@ export default function ViagemComParada({
                             !item.name &&
                             styles.placeholderText,
                           ]}
-                          numberOfLines={1}
+                          numberOfLines={
+                            1
+                          }
                         >
                           {item.name ||
                             "Adicionar parada"}
@@ -526,13 +498,17 @@ export default function ViagemComParada({
           </View>
 
           <View
-            style={styles.buttonContainer}
+            style={
+              styles.buttonContainer
+            }
           >
             <TouchableOpacity
               style={
                 styles.confirmButton
               }
-              onPress={handleConfirmar}
+              onPress={
+                handleConfirmar
+              }
               activeOpacity={0.8}
             >
               <Text
