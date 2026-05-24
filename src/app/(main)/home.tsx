@@ -53,6 +53,11 @@ const itinerarioInicial: EnderecoItem[] = [
 ];
 
 export default function Home() {
+  const [
+    showBuscarEndereco,
+    setShowBuscarEndereco,
+  ] = useState(false);
+
   const { user, loading: authLoading } =
     useAuth();
 
@@ -121,28 +126,28 @@ export default function Home() {
         addressName?: string,
       ) => {
         userInitialRegion.current =
-          {
-            ...userRegion,
-            latitudeDelta:
-              0.01,
-            longitudeDelta:
-              0.01,
-          };
+        {
+          ...userRegion,
+          latitudeDelta:
+            0.01,
+          longitudeDelta:
+            0.01,
+        };
 
         const offsetLatitude =
           0.0064;
 
         const adjustedRegion: Region =
-          {
-            ...userRegion,
-            latitude:
-              userRegion.latitude -
-              offsetLatitude,
-            latitudeDelta:
-              0.01,
-            longitudeDelta:
-              0.01,
-          };
+        {
+          ...userRegion,
+          latitude:
+            userRegion.latitude -
+            offsetLatitude,
+          latitudeDelta:
+            0.01,
+          longitudeDelta:
+            0.01,
+        };
 
         setRegion(
           adjustedRegion,
@@ -159,16 +164,16 @@ export default function Home() {
                 ) =>
                   index === 0
                     ? {
-                        ...item,
-                        name:
-                          addressName,
-                        formattedAddress:
-                          addressName,
-                        latitude:
-                          userRegion.latitude,
-                        longitude:
-                          userRegion.longitude,
-                      }
+                      ...item,
+                      name:
+                        addressName,
+                      formattedAddress:
+                        addressName,
+                      latitude:
+                        userRegion.latitude,
+                      longitude:
+                        userRegion.longitude,
+                    }
                     : item,
               ),
           );
@@ -263,25 +268,26 @@ export default function Home() {
       />
 
       {/* 🔥 BOTÃO FLUTUANTE IGUAL 99 */}
-      {showViagemComParada && (
-        <TouchableOpacity
-          onPress={
-            handleCloseViagemComParada
-          }
-          activeOpacity={
-            0.8
-          }
-          style={
-            styles.backFloatingButton
-          }
-        >
-          <Ionicons
-            name="chevron-back"
-            size={26}
-            color="#000"
-          />
-        </TouchableOpacity>
-      )}
+      {showViagemComParada &&
+        !showBuscarEndereco && (
+          <TouchableOpacity
+            onPress={
+              handleCloseViagemComParada
+            }
+            activeOpacity={
+              0.8
+            }
+            style={
+              styles.backFloatingButton
+            }
+          >
+            <Ionicons
+              name="chevron-back"
+              size={26}
+              color="#000"
+            />
+          </TouchableOpacity>
+        )}
 
       {/* FolhaInferior só aparece quando ViagemComParada NÃO está visível */}
       {!showViagemComParada && (
@@ -296,6 +302,9 @@ export default function Home() {
       )}
 
       <ViagemComParada
+        onShowBuscarEndereco={
+          setShowBuscarEndereco
+        }
         visible={
           showViagemComParada
         }
@@ -338,13 +347,13 @@ const styles =
     backFloatingButton: {
       position: "absolute",
 
-      top: 58,
+      top: 40,
 
       left: 18,
 
-      width: 56,
+      width: 48,
 
-      height: 56,
+      height: 48,
 
       borderRadius: 28,
 

@@ -35,6 +35,7 @@ interface props {
   onClose: () => void;
   onAdicionarParada?: () => void;
   duration?: number;
+  onShowBuscarEndereco?: (visible: boolean) => void;
 
   // 🔥 NOVO
   itinerario: EnderecoItem[];
@@ -47,6 +48,7 @@ export default function ViagemComParada({
   visible,
   onClose,
   onAdicionarParada,
+  onShowBuscarEndereco,
 
   // 🔥 NOVO
   itinerario,
@@ -110,6 +112,7 @@ export default function ViagemComParada({
     setShowFolhaBuscarEndereco(
       true,
     );
+    onShowBuscarEndereco?.(true);
   };
 
   // 🔥 PRINCIPAL MUDANÇA:
@@ -171,6 +174,7 @@ export default function ViagemComParada({
       setShowFolhaBuscarEndereco(
         false,
       );
+      onShowBuscarEndereco?.(false);
     };
 
   const removerParada = (
@@ -505,11 +509,14 @@ export default function ViagemComParada({
         visible={
           showFolhaBuscarEndereco
         }
-        onClose={() =>
+        onClose={() => {
           setShowFolhaBuscarEndereco(
             false,
-          )
-        }
+          );
+          onShowBuscarEndereco?.(
+            false,
+          );
+        }}
         onSheetChange={
           handleSheetStateChange
         }
