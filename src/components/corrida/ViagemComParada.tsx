@@ -42,9 +42,14 @@ interface props {
   setItinerario: React.Dispatch<
     React.SetStateAction<EnderecoItem[]>
   >;
+
+  onMapPaddingChange?: (
+    padding: number,
+  ) => void;
 }
 
 export default function ViagemComParada({
+  onMapPaddingChange,
   visible,
   onClose,
   onAdicionarParada,
@@ -232,6 +237,15 @@ export default function ViagemComParada({
       itinerario,
     );
   };
+
+  useEffect(() => {
+    const padding =
+      320 + itinerario.length * 40;
+
+    onMapPaddingChange?.(
+      padding,
+    );
+  }, [itinerario.length]);
 
   useEffect(() => {
     const onBackPress = () => {

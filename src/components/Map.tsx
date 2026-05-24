@@ -50,6 +50,9 @@ interface MapProps {
 
   // 🔥 NOVO
   itinerario?: EnderecoItem[];
+
+  mapBottomPadding?: number;
+
 }
 
 // Região padrão (São Paulo)
@@ -66,6 +69,7 @@ const CACHE_KEY =
 const OFFSET_LATITUDE = 0.0064;
 
 export default function Map({
+  mapBottomPadding = 320,
   region,
   onRegionChange,
   onUserLocationFound,
@@ -141,7 +145,7 @@ export default function Map({
           edgePadding: {
             top: 180,
             right: 60,
-            bottom: 320,
+            bottom: mapBottomPadding,
             left: 60,
           },
           animated: true,

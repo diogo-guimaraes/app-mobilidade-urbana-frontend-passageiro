@@ -86,6 +86,9 @@ export default function Home() {
     setBottomSheetIndex,
   ] = useState<number>(0);
 
+  const [mapBottomPadding, setMapBottomPadding] =
+  useState(320);
+
   // 🔥 NOVO: Estado global do itinerário
   const [
     itinerario,
@@ -300,6 +303,7 @@ export default function Home() {
       }
     >
       <Map
+        mapBottomPadding={mapBottomPadding}
         region={region}
         onRegionChange={
           setRegion
@@ -350,6 +354,7 @@ export default function Home() {
       )}
 
       <ViagemComParada
+        onMapPaddingChange={setMapBottomPadding}
         onShowBuscarEndereco={
           setShowBuscarEndereco
         }
