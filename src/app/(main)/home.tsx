@@ -119,6 +119,28 @@ export default function Home() {
     setModalVisible,
   ]);
 
+  // 🔥 ao abrir ViagemComParada,
+  // recentraliza no usuário
+  useEffect(() => {
+    if (
+      showViagemComParada &&
+      userInitialRegion.current
+    ) {
+      const offsetLatitude =
+        0.0064;
+
+      setRegion({
+        ...userInitialRegion.current,
+        latitude:
+          userInitialRegion.current
+            .latitude -
+          offsetLatitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    }
+  }, [showViagemComParada]);
+
   const handleUserLocationFound =
     useCallback(
       (
