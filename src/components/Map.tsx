@@ -636,13 +636,6 @@ export default function Map({
             true,
           );
 
-          if (mapRef.current) {
-            mapRef.current.animateToRegion(
-              newUserRegion,
-              1000,
-            );
-          }
-
           await AsyncStorage.setItem(
             CACHE_KEY,
             JSON.stringify(
