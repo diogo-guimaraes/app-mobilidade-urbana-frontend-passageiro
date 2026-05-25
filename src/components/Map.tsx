@@ -825,21 +825,69 @@ export default function Map({
       >
         {/* 🔥 MARKERS */}
         {itinerario.map(
-          (item, index) => (
-            <Marker
-              key={`${item.latitude}-${item.longitude}-${index}`}
-              coordinate={{
-                latitude:
-                  item.latitude,
-                longitude:
-                  item.longitude,
-              }}
-              title={item.name}
-              description={
-                item.formattedAddress
-              }
-            />
-          ),
+          (item, index) => {
+            const isOrigem =
+              index === 0;
+
+            return (
+              <Marker
+                key={`${item.latitude}-${item.longitude}-${index}`}
+                coordinate={{
+                  latitude:
+                    item.latitude,
+                  longitude:
+                    item.longitude,
+                }}
+                title={item.name}
+                description={
+                  item.formattedAddress
+                }
+              >
+                {/* 🔥 ORIGEM */}
+                {isOrigem ? (
+                  <View
+                    style={
+                      styles.originMarker
+                    }
+                  >
+                    <View
+                      style={
+                        styles.originMarkerInner
+                      }
+                    />
+                  </View>
+                ) : (
+                  /* 🔥 PARADAS */
+                  <View
+                    style={
+                      styles.stopMarkerContainer
+                    }
+                  >
+                    <View
+                      style={
+                        styles.stopMarker
+                      }
+                    >
+                      <Text
+                        style={
+                          styles.stopMarkerText
+                        }
+                      >
+                        {index}
+                      </Text>
+                    </View>
+
+                    {/* 🔥 ponta inferior */}
+                    <View
+                      style={
+                        styles.stopMarkerPointer
+                      }
+                    />
+                  </View>
+                )}
+              </Marker>
+            );
+          },
         )}
 
         {/* 🔥 POLYLINE */}
@@ -871,7 +919,7 @@ export default function Map({
                 .EXPO_PUBLIC_GOOGLE_MAPS_API_KEY as string
             }
             strokeWidth={4}
-            strokeColor="#111827"
+            strokeColor="#2563EB"
             optimizeWaypoints={true}
           />
         )}
@@ -928,6 +976,96 @@ export default function Map({
 
 const styles =
   StyleSheet.create({
+    originMarker: {
+      width: 18,
+
+      height: 18,
+
+      borderRadius: 9,
+
+      backgroundColor: "#FFF",
+
+      justifyContent: "center",
+
+      alignItems: "center",
+
+      borderWidth: 2,
+
+      borderColor: "#111827",
+    },
+
+    originMarkerInner: {
+      width: 8,
+
+      height: 8,
+
+      borderRadius: 4,
+
+      backgroundColor: "#111827",
+    },
+
+    stopMarkerContainer: {
+      alignItems: "center",
+    },
+
+    stopMarker: {
+      width: 30,
+
+      height: 30,
+
+      borderRadius: 15,
+
+      backgroundColor: "#2563EB",
+
+      justifyContent: "center",
+
+      alignItems: "center",
+
+      borderWidth: 2,
+
+      borderColor: "#FFF",
+
+      shadowColor: "#000",
+
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+
+      shadowOpacity: 0.2,
+
+      shadowRadius: 4,
+
+      elevation: 4,
+    },
+
+    stopMarkerPointer: {
+      width: 0,
+
+      height: 0,
+
+      borderLeftWidth: 6,
+
+      borderRightWidth: 6,
+
+      borderTopWidth: 10,
+
+      borderLeftColor: "transparent",
+
+      borderRightColor: "transparent",
+
+      borderTopColor: "#2563EB",
+
+      marginTop: -2,
+    },
+
+    stopMarkerText: {
+      color: "#FFF",
+
+      fontSize: 13,
+
+      fontWeight: "700",
+    },
     errorContainer: {
       ...StyleSheet.absoluteFillObject,
 
