@@ -26,7 +26,6 @@ interface props {
   visible: boolean;
   onClose: () => void;
   duration?: number;
-  onAdicionarParada?: () => void; // Nova prop para comunicar o clique do botão +
 }
 
 interface EnderecoItem {
@@ -34,7 +33,7 @@ interface EnderecoItem {
   formattedAddress: string;
   latitude: number;
   longitude: number;
-  distancia: string;
+  distancia: string; // Atualizado para string estrita para bater com o tipo correto
   order: number;
 }
 
@@ -57,6 +56,7 @@ const InputsIntinearioInicial: EnderecoItem[] = [
   },
 ];
 
+// Lista base estática padrão tipada corretamente
 const enderecosRecentes = [
   {
     name: "Rua Portuguesa, 6244",
@@ -88,12 +88,12 @@ export default function ParaOndevamos({
   visible,
   onClose,
   duration = 300,
-  onAdicionarParada, // Recebe a nova prop
 }: props) {
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const skeletonOpacity = useRef(new Animated.Value(0.4)).current;
 
+  // Criamos a Ref para conversar com o EnderecosRecentes
   const enderecosRecentesRef = useRef<EnderecosRecentesRef>(null);
 
   const [isMounted, setIsMounted] = useState(visible);
@@ -106,14 +106,68 @@ export default function ParaOndevamos({
 
   const inputRefs = useRef<TextInput[]>([]);
 
-  // Método associado ao botão "+" de adicionar parada
-  const handleAdicionarParada = () => {
-    // Fecha o componente ParaOndeVamos primeiro
-    onClose();
-    // Depois chama o callback para abrir o ViagemComParada
-    if (onAdicionarParada) {
-      onAdicionarParada();
-    }
+  const reorganizarOrders = (lista: EnderecoItem[]) => {
+    return lista.map((item, index) => ({
+      ...item,
+      order: index,
+    }));
+  };
+
+  const adicionarParada = () => {
+    setInputsIntinerario((prev) => {
+      const novaLista = [...prev];
+      novaLista.splice(novaLista.length - 1, 0, {
+        name: "",
+        formattedAddress: "",
+        latitude: 0,
+        longitude: 0,
+        distancia: "0km",
+        order: 0,
+      });
+      return reorganizarOrders(novaLista);
+    });
+  };
+
+  const removerParada = (index: number) => {
+    if (index === 0) return;
+    if (index === inputsIntinerario.length - 1) return;
+
+    setInputsIntinerario((prev) => {
+      const novaLista = prev.filter((_, i) => i !== index);
+      return reorganizarOrders(novaLista);
+    });
+  };
+
+  const moverParaCima = (index: number) => {
+    if (index <= 1) return;
+
+    setInputsIntinerario((prev) => {
+      const novaLista = [...prev];
+      [novaLista[index - 1], novaLista[index]] = [
+        novaLista[index],
+        novaLista[index - 1],
+      ];
+      return reorganizarOrders(novaLista);
+    });
+  };
+
+  const moverParaBaixo = (index: number) => {
+    if (index >= inputsIntinerario.length - 2) return;
+
+    setInputsIntinerario((prev) => {
+      const novaLista = [...prev];
+      [novaLista[index], novaLista[index + 1]] = [
+        novaLista[index + 1],
+        novaLista[index],
+      ];
+      return reorganizarOrders(novaLista);
+    });
+  };
+
+  const atualizarInput = (texto: string, index: number) => {
+    setInputsIntinerario((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, name: texto } : item)),
+    );
   };
 
   useEffect(() => {
@@ -201,8 +255,9 @@ export default function ParaOndevamos({
 
   useEffect(() => {
     const textoAtual = inputsIntinerario[inputSelecionado]?.name || "";
-    const itemAtual = inputsIntinerario[inputSelecionado];
 
+    // Se o texto for exatamente igual ao endereço selecionado no clique, ignora a busca na API
+    const itemAtual = inputsIntinerario[inputSelecionado];
     if (itemAtual && itemAtual.formattedAddress !== "") {
       return;
     }
@@ -223,6 +278,7 @@ export default function ParaOndevamos({
     longitude: number;
     distancia: string;
   }) => {
+    // 1. Atualiza o input selecionado no itinerário do pai
     setInputsIntinerario((prev) =>
       prev.map((input, index) =>
         index === inputSelecionado
@@ -237,11 +293,14 @@ export default function ParaOndevamos({
       ),
     );
 
+    // 2. DISPARA A GRAVAÇÃO DO ITEM NO CACHE DO HISTÓRICO
     if (enderecosRecentesRef.current) {
       await enderecosRecentesRef.current.salvarEnderecoNoCache(item);
     }
 
+    // 3. Reseta a lista temporária de autocomplete para voltar a mostrar o histórico padrão limpo
     setListaEnderecos([]);
+
     console.log("📍 Endereço Selecionado e Gravado em Cache com Sucesso!");
   };
 
@@ -308,21 +367,15 @@ export default function ParaOndevamos({
 
   if (!isMounted) return null;
 
+  const temParadas = inputsIntinerario.length >= 3;
+
   return (
-    <View
-      style={[
-        { flex: 1, position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-        { zIndex: 30 },
-      ]}
-    >
+    <View style={[StyleSheet.absoluteFill, { zIndex: 30 }]}>
       {/* Overlay */}
-      <Pressable
-        style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }]}
-        onPress={onClose}
-      >
+      <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
         <Animated.View
           style={[
-            { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
+            StyleSheet.absoluteFill,
             {
               backgroundColor: "rgba(0,0,0,0.25)",
               opacity: overlayOpacity,
@@ -365,11 +418,12 @@ export default function ParaOndevamos({
         {/* Título */}
         <Text style={styles.title}>Para onde vamos?</Text>
 
-        {/* INPUTS FIXOS (ORIGEM E DESTINO) */}
+        {/* INPUTS DINÂMICOS */}
         <View style={styles.searchContainer}>
           {inputsIntinerario.map((item, index) => {
             const isOrigem = index === 0;
-            const isDestino = index === 1;
+            const isDestino = index === inputsIntinerario.length - 1;
+            const isParada = !isOrigem && !isDestino;
 
             return (
               <View key={index} style={styles.rowContainer}>
@@ -380,14 +434,34 @@ export default function ParaOndevamos({
                       <View style={styles.startOuterCircle}>
                         <View style={styles.startInnerCircle} />
                       </View>
-                    ) : (
+                    ) : isDestino && !temParadas ? (
                       <View style={styles.startOuterSquare}>
                         <View style={styles.startInnerSquare} />
+                      </View>
+                    ) : (
+                      <View
+                        style={[
+                          styles.numberBox,
+                          isDestino && temParadas
+                            ? styles.lastNumberBoxHighlight
+                            : null,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.numberText,
+                            isDestino && temParadas
+                              ? styles.lastNumberTextHighlight
+                              : null,
+                          ]}
+                        >
+                          {index}
+                        </Text>
                       </View>
                     )}
                   </View>
 
-                  {isOrigem && <View style={styles.verticalLine} />}
+                  {!isDestino && <View style={styles.verticalLine} />}
                 </View>
 
                 {/* INPUT */}
@@ -405,12 +479,19 @@ export default function ParaOndevamos({
                     }}
                     style={styles.input}
                     placeholder={
-                      isOrigem ? "Local de partida" : "Para onde você vai?"
+                      isOrigem
+                        ? "Local de partida"
+                        : isDestino
+                          ? temParadas
+                            ? "Destino"
+                            : "Para onde você vai?"
+                          : "Parada"
                     }
                     placeholderTextColor="#999"
                     value={item.name}
                     onFocus={() => setInputSelecionado(index)}
                     onChangeText={(texto) => {
+                      // Se o usuário voltar a digitar, limpa os dados antigos de geolocalização do nó do input
                       setInputsIntinerario((prev) =>
                         prev.map((inp, idx) =>
                           idx === index
@@ -423,11 +504,36 @@ export default function ParaOndevamos({
 
                   {isDestino && (
                     <TouchableOpacity
-                      onPress={handleAdicionarParada}
+                      onPress={adicionarParada}
                       style={styles.addButtonInline}
                     >
                       <Ionicons name="add" size={20} color="#666" />
                     </TouchableOpacity>
+                  )}
+
+                  {isParada && (
+                    <View style={styles.actionButtons}>
+                      <TouchableOpacity
+                        onPress={() => moverParaCima(index)}
+                        style={styles.actionButton}
+                      >
+                        <Ionicons name="chevron-up" size={16} color="#999" />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => moverParaBaixo(index)}
+                        style={styles.actionButton}
+                      >
+                        <Ionicons name="chevron-down" size={16} color="#999" />
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => removerParada(index)}
+                        style={styles.removeButtonInline}
+                      >
+                        <Ionicons name="close" size={20} color="#777" />
+                      </TouchableOpacity>
+                    </View>
                   )}
                 </View>
               </View>
@@ -435,7 +541,10 @@ export default function ParaOndevamos({
           })}
         </View>
 
-        {/* HISTÓRICO */}
+        {/* DIVIDER */}
+        {/* <View style={styles.divider} /> */}
+
+        {/* COMPONENTE DE HISTÓRICO COM A REF PASSADA */}
         <EnderecosRecentes
           ref={enderecosRecentesRef}
           loading={loading}
@@ -447,6 +556,7 @@ export default function ParaOndevamos({
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   drawer: {
     position: "absolute",
@@ -549,6 +659,25 @@ const styles = StyleSheet.create({
     borderRadius: 1,
     backgroundColor: "#FF5500",
   },
+  numberBox: {
+    width: 20,
+    height: 20,
+    backgroundColor: "#E0E0E0",
+    borderRadius: 3,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  numberText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#333",
+  },
+  lastNumberBoxHighlight: {
+    backgroundColor: "#FF5500",
+  },
+  lastNumberTextHighlight: {
+    color: "#FFF",
+  },
   verticalLine: {
     position: "absolute",
     width: 2,
@@ -584,5 +713,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginLeft: 8,
+  },
+  removeButtonInline: {
+    padding: 4,
+    marginLeft: 2,
+  },
+  actionButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  actionButton: {
+    marginRight: 4,
+    padding: 4,
   },
 });

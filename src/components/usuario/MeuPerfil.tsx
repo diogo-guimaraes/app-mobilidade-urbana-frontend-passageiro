@@ -1,6 +1,8 @@
+import { useAuth } from "@/context/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   BackHandler,
   Dimensions,
@@ -10,11 +12,13 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import AlterarEmail from "./AlterarEmail";
+import AlterarFoto from "./AlterarFoto";
 import AlterarNumero from "./AlterarNumero";
 import AlterarSenha from "./AlterarSenha";
+import CameraFotoPerfil from "./CameraFotoPerfil";
 import DocumentosPendentes from "./DocumentosPendentes";
 import GestaoDispositivos from "./GestaoDispositivos";
 
@@ -36,31 +40,45 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
   const [showAlterarSenha, setShowAlterarSenha] = useState(false);
   const [showDocumentosPendentes, setShowDocumentosPendentes] = useState(false);
   const [showGestaoDispositivos, setShowGestaoDispositivos] = useState(false);
+  const [imageLoading] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [showAlterarFoto, setShowAlterarFoto] = useState(false);
+  const [showCameraFotoPerfil, setshowCameraFotoPerfil] = useState(visible);
+
+  const { user } = useAuth();
 
   useEffect(() => {
+    console.log(user, "user");
+
     const onBackPress = () => {
       if (visible) {
         onClose();
+
         return true;
       }
+
       return false;
     };
+
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
       onBackPress,
     );
+
     return () => subscription.remove();
   }, [visible]);
 
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
+
       Animated.parallel([
         Animated.timing(translateX, {
           toValue: 0,
           duration,
           useNativeDriver: true,
         }),
+
         Animated.timing(overlayOpacity, {
           toValue: 1,
           duration: duration * 0.8,
@@ -74,6 +92,7 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
           duration,
           useNativeDriver: true,
         }),
+
         Animated.timing(overlayOpacity, {
           toValue: 0,
           duration: duration * 0.8,
@@ -89,13 +108,15 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
     icon: any,
     title: string,
     subtitle?: string,
-    onPress?: () => void
+    onPress?: () => void,
   ) => (
     <TouchableOpacity onPress={onPress} style={styles.item}>
       <View style={styles.left}>
         <Ionicons name={icon} size={22} color="#333" />
+
         <View style={{ marginLeft: 12 }}>
           <Text style={styles.title}>{title}</Text>
+
           {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
         </View>
       </View>
@@ -112,7 +133,10 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
           <Animated.View
             style={[
               StyleSheet.absoluteFill,
-              { backgroundColor: "rgba(0,0,0,0.25)", opacity: overlayOpacity },
+              {
+                backgroundColor: "rgba(0,0,0,0.25)",
+                opacity: overlayOpacity,
+              },
             ]}
           />
         </Pressable>
@@ -120,7 +144,10 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
         {/* Drawer */}
         <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
           {/* HEADER */}
-          <View style={styles.header}>
+          <View
+            style={styles.header}
+            onLayout={(e) => setHeaderHeight(e.nativeEvent.layout.height)}
+          >
             <View style={styles.headerRow}>
               <TouchableOpacity onPress={onClose}>
                 <Ionicons name="close-outline" size={26} color="#111" />
@@ -130,71 +157,134 @@ export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
             </View>
           </View>
 
-          <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+          <ScrollView
+            style={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
+          >
             {/* BODY */}
             <View style={styles.body}>
               {/* SEÇÃO */}
               <Text style={styles.sectionTitle}>Informações pessoais</Text>
 
-
-
               {/* PROFILE INFO */}
               <View style={styles.profileCard}>
                 <View style={styles.avatarWrapper}>
-                  <Image
-                    source={{ uri: 'https://i.pravatar.cc/150?img=12' }}
-                    style={styles.avatar}
-                  />
-                  <TouchableOpacity style={styles.editBadge}>
-                    <Ionicons name="camera" size={16} color="#fff" />
+                  {user?.foto ? (
+                    <Image
+                      source={{
+                        uri: user.foto,
+                      }}
+                      style={styles.avatar}
+                    />
+                  ) : (
+                    <View style={styles.avatarPlaceholder}>
+                      <Ionicons
+                        name="person-circle-outline"
+                        size={110}
+                        color="#c4c4c4"
+                      />
+                    </View>
+                  )}
+
+                  <TouchableOpacity
+                    style={styles.editBadge}
+                    onPress={() => setShowAlterarFoto(true)}
+                    disabled={imageLoading}
+                  >
+                    {imageLoading ? (
+                      <ActivityIndicator color="#fff" size="small" />
+                    ) : (
+                      <Ionicons name="camera" size={16} color="#fff" />
+                    )}
                   </TouchableOpacity>
                 </View>
-                <Text style={styles.userName}>Diogo</Text>
-                {/* <Text style={styles.userEmail}>diogo.dev@exemplo.com</Text>
-              <Text style={styles.userPhone}>(69) 99999-9999</Text> */}
+
+                <Text style={styles.userName}>{user?.name?.split(" ")[0]}</Text>
               </View>
 
               <View>
-                {/* {renderItem("", "Foto de perfil", undefined, true)} */}
-                {renderItem("call-outline", "Número de telefone", "+5569981400661",
-                  () =>
-                    setShowAlterarNumero(true)
+                {renderItem(
+                  "call-outline",
+                  "Número de telefone",
+                  user?.telefone || "",
+                  () => setShowAlterarNumero(true),
                 )}
-                {renderItem("mail-outline", "E-mail", "diogoguimaraes.br@gmail.com",
-                  () =>
-                    setShowAlterarEmail(true)
+
+                {renderItem("mail-outline", "E-mail", user?.email || "", () =>
+                  setShowAlterarEmail(true),
                 )}
-                {renderItem("location-outline", "Cidade", "Porto Velho",
-                  () =>
-                    setShowAlterarCidade(true)
+
+                {renderItem("location-outline", "Cidades", "Porto Velho", () =>
+                  setShowAlterarCidade(true),
                 )}
-                {renderItem("key-outline", "Senha", "",
-                  () =>
-                    setShowAlterarSenha(true))}
+
+                {renderItem("key-outline", "Senha", "", () =>
+                  setShowAlterarSenha(true),
+                )}
 
                 {/* SEÇÃO */}
                 <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
                   Gerenciamento de perfil
                 </Text>
 
-                {renderItem("document-text-outline", "Documentos pendentes", "",
-                  () =>
-                    setShowDocumentosPendentes(true)
+                {renderItem(
+                  "document-text-outline",
+                  "Documentos pendentes",
+                  "",
+                  () => setShowDocumentosPendentes(true),
                 )}
-                {renderItem("phone-portrait-outline", "Gestão de dispositivo", "",
-                  () =>
-                    setShowGestaoDispositivos(true)
+
+                {renderItem(
+                  "phone-portrait-outline",
+                  "Gestão de dispositivo",
+                  "",
+                  () => setShowGestaoDispositivos(true),
                 )}
               </View>
             </View>
           </ScrollView>
         </Animated.View>
+        <AlterarFoto
+          visible={showAlterarFoto}
+          onClose={() => setShowAlterarFoto(false)}
+          headerHeight={headerHeight}
+          onOpenCamera={() => {
+            setShowAlterarFoto(false);
+            setTimeout(() => {
+              setshowCameraFotoPerfil(true);
+            }, 250);
+          }}
+        />
+        <CameraFotoPerfil
+          visible={showCameraFotoPerfil}
+          onClose={() => setshowCameraFotoPerfil(false)}
+        />
       </View>
-      <AlterarNumero visible={showAlterarNumero} onClose={() => setShowAlterarNumero(false)} />
-      <AlterarEmail visible={showAlterarEmail} onClose={() => setShowAlterarEmail(false)} />
-      <AlterarSenha visible={showAlterarSenha} onClose={() => setShowAlterarSenha(false)} />
-      <DocumentosPendentes visible={showDocumentosPendentes} onClose={() => setShowDocumentosPendentes(false)} />
-      <GestaoDispositivos visible={showGestaoDispositivos} onClose={() => setShowGestaoDispositivos(false)} />
+
+      <AlterarNumero
+        visible={showAlterarNumero}
+        onClose={() => setShowAlterarNumero(false)}
+      />
+
+      <AlterarEmail
+        visible={showAlterarEmail}
+        onClose={() => setShowAlterarEmail(false)}
+      />
+
+      <AlterarSenha
+        visible={showAlterarSenha}
+        onClose={() => setShowAlterarSenha(false)}
+      />
+
+      <DocumentosPendentes
+        visible={showDocumentosPendentes}
+        onClose={() => setShowDocumentosPendentes(false)}
+      />
+
+      <GestaoDispositivos
+        visible={showGestaoDispositivos}
+        onClose={() => setShowGestaoDispositivos(false)}
+      />
     </>
   );
 }
@@ -270,12 +360,12 @@ const styles = StyleSheet.create({
   //   borderRadius: 18,
   // },
   profileCard: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 30,
     // backgroundColor: '#fff',
   },
   avatarWrapper: {
-    position: 'relative',
+    position: "relative",
     marginBottom: 15,
   },
   avatar: {
@@ -283,37 +373,45 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     borderWidth: 3,
-    borderColor: '#f0f0f0',
+    borderColor: "#f0f0f0",
   },
   editBadge: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: '#FFD600',
+    backgroundColor: "#FFD600",
     width: 32,
     height: 32,
     borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 3,
-    borderColor: '#fff',
+    borderColor: "#fff",
   },
   userName: {
     fontSize: 22,
-    fontWeight: '800',
-    color: '#111',
+    fontWeight: "800",
+    color: "#111",
   },
   userEmail: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginTop: 4,
   },
   userPhone: {
     fontSize: 14,
-    color: '#999',
+    color: "#999",
     marginTop: 2,
   },
   scrollContainer: {
     flex: 1,
+  },
+  avatarPlaceholder: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f3f3f3",
   },
 });

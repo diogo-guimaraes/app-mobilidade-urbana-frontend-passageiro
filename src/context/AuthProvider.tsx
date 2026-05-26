@@ -1,5 +1,5 @@
 // context/AuthProvider.tsx
-import * as SecureStore from "expo-secure-store";
+
 import React, {
   createContext,
   ReactNode,
@@ -8,106 +8,298 @@ import React, {
   useState,
 } from "react";
 
+import * as SecureStore from "expo-secure-store";
+
+import { api } from "../Services/api";
+
+// =========================
+// INTERFACES
+// =========================
+
+
+
 interface Usuario {
   id: string;
   email: string;
-  nome: string;
-  sobrenome: string;
-  tipoUsuario: string;
+  name: string;
+  telefone: string;
+  cpf: string;
+  data_nascimento: string;
+  foto: string;
+  foto_thumbnail: string;
+}
+
+interface AuthResponse {
+  user: Usuario;
+  token: string;
+}
+
+interface DadosCadastro {
+  email: string;
+  name: string;
+  cpf: string;
+  data_nascimento: string;
+  password: string;
+}
+
+interface AtualizarFotoPayload {
+  foto: string;
+  foto_thumbnail: string;
 }
 
 interface AuthContextType {
   user: Usuario | null;
+
   loading: boolean;
-  login: (user: Usuario) => void;
-  logout: () => void;
-  register: (usuario: Usuario) => void;
+
+  login: (email: string, password: string) => Promise<void>;
+
+  loginComToken: (
+    user: Usuario,
+    token: string,
+  ) => Promise<void>;
+
+
+  logout: () => Promise<void>;
+
+  register: (dados: DadosCadastro) => Promise<void>;
+
+  atualizarFotoUsuario: (
+    dados: AtualizarFotoPayload,
+  ) => Promise<void>;
 }
+
+// =========================
+// CONTEXT
+// =========================
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+
   loading: true,
-  login: () => {},
-  logout: () => {},
-  register: () => {},
+
+  login: async (email: string, password: string) => { },
+
+  loginComToken: async (
+    user: Usuario,
+    token: string,
+  ) => { },
+
+  logout: async () => { },
+
+  register: async (dados: DadosCadastro) => { },
+
+  atualizarFotoUsuario: async (
+    dados: AtualizarFotoPayload,
+  ) => { },
 });
+
+// =========================
+// PROVIDER
+// =========================
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<Usuario | null>(null);
+
   const [loading, setLoading] = useState(true);
 
-  // Busca o usuário do SecureStore na inicialização
+  // =========================
+  // RESTAURA SESSÃO
+  // =========================
+
   useEffect(() => {
-    const fetchUser = async () => {
+    const restoreSession = async () => {
       try {
-        // Simula delay de requisição ao banco (2 segundos)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
         const storedUser = await SecureStore.getItemAsync("user");
-        
+
         if (storedUser) {
-          try {
-            // Tenta fazer parse como JSON
-            const parsedUser = JSON.parse(storedUser);
-            setUser(parsedUser);
-          } catch (parseError) {
-            // Se falhar no parse, limpa o dado inválido
-            console.warn("Usuário salvo em formato inválido, limpando...");
-            await SecureStore.deleteItemAsync("user");
-            setUser(null);
-          }
+          const parsedUser = JSON.parse(storedUser);
+
+          setUser(parsedUser);
         }
       } catch (error) {
-        console.error("Erro ao buscar usuário do SecureStore:", error);
+        console.error("Erro ao restaurar sessão:", error);
+
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUser();
+    restoreSession();
   }, []);
 
-  const login = async (userData: Usuario) => {
-    setLoading(true);
+  // =========================
+  // LOGIN
+  // =========================
+
+  const login = async (email: string, password: string) => {
     try {
-      setUser(userData);
-      await SecureStore.setItemAsync("user", JSON.stringify(userData));
-    } catch (error) {
+      setLoading(true);
+
+      const response = await api.post<AuthResponse>("/auth/login", {
+        email,
+        password,
+      });
+
+      const { user, token } = response.data;
+
+      setUser(user);
+
+      await SecureStore.setItemAsync("user", JSON.stringify(user));
+
+      await SecureStore.setItemAsync("token", token);
+    } catch (error: any) {
       console.error("Erro ao fazer login:", error);
+
+      console.log("Mensagem:", error?.message);
+
+      console.log("Código:", error?.code);
+
+      console.log("Response:", error?.response?.data);
+
+      console.log("Status:", error?.response?.status);
+
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
+  const loginComToken = async (
+    userData: Usuario,
+    token: string,
+  ) => {
+    try {
+      setLoading(true);
+      console.log(userData , 'userData')
+      setUser(userData);
+
+      await SecureStore.setItemAsync(
+        "user",
+        JSON.stringify(userData),
+      );
+
+      await SecureStore.setItemAsync(
+        "token",
+        token,
+      );
+    } catch (error) {
+      console.error(
+        "Erro ao autenticar com token:",
+        error,
+      );
+
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =========================
+  // LOGOUT
+  // =========================
+
   const logout = async () => {
     try {
       setUser(null);
+
       await SecureStore.deleteItemAsync("user");
+
+      await SecureStore.deleteItemAsync("token");
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
     }
   };
 
-  const register = async (novoUsuario: Usuario) => {
-    setLoading(true);
+  // =========================
+  // REGISTER
+  // =========================
+
+  const register = async (dadosCadastro: DadosCadastro) => {
     try {
-      setUser(novoUsuario);
-      await SecureStore.setItemAsync("user", JSON.stringify(novoUsuario));
-    } catch (error) {
+      setLoading(true);
+
+      console.log("Enviando cadastro:", dadosCadastro);
+
+      const response = await api.post<AuthResponse>(
+        "/auth/register",
+        dadosCadastro,
+      );
+
+      console.log("Resposta da API:", response.data);
+
+      const { user, token } = response.data;
+
+      setUser(user);
+
+      await SecureStore.setItemAsync("user", JSON.stringify(user));
+
+      await SecureStore.setItemAsync("token", token);
+    } catch (error: any) {
       console.error("Erro ao registrar:", error);
+
+      console.log("Mensagem:", error?.message);
+
+      console.log("Código:", error?.code);
+
+      console.log("Response:", error?.response?.data);
+
+      console.log("Status:", error?.response?.status);
+
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
+  // =========================
+  // ATUALIZAR FOTO USUÁRIO
+  // =========================
+
+  const atualizarFotoUsuario = async ({
+    foto,
+    foto_thumbnail,
+  }: AtualizarFotoPayload) => {
+    if (!user) return;
+
+    const usuarioAtualizado = {
+      ...user,
+      foto,
+      foto_thumbnail,
+    };
+
+    setUser(usuarioAtualizado);
+
+    await SecureStore.setItemAsync(
+      "user",
+      JSON.stringify(usuarioAtualizado),
+    );
+  };
+
+  // =========================
+  // PROVIDER
+  // =========================
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, logout, register }}
+      value={{
+        user,
+        loading,
+        login,
+        loginComToken,
+        logout,
+        register,
+        atualizarFotoUsuario,
+      }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+
+// =========================
+// HOOK
+// =========================
 
 export const useAuth = () => useContext(AuthContext);

@@ -1,161 +1,427 @@
 // components/Map.tsx
 import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import MapView, { Region, UserLocationChangeEvent } from "react-native-maps";
+
+import MapView, {
+  Marker,
+  Region,
+  UserLocationChangeEvent,
+} from "react-native-maps";
+
+import MapViewDirections from "react-native-maps-directions";
+interface EnderecoItem {
+  name: string;
+  formattedAddress: string;
+  latitude: number;
+  longitude: number;
+  distancia: string;
+  order: number;
+}
 
 interface MapProps {
   region: Region | null;
+
   onRegionChange: (region: Region) => void;
-  onUserLocationFound?: (region: Region) => void;
-  bottomSheetIndex?: number; // 👈 nova prop
+
+  // 🔥 recebe endereço formatado
+  onUserLocationFound?: (region: Region, addressName?: string) => void;
+
+  bottomSheetIndex?: number;
+
+  // 🔥 NOVO
+  itinerario?: EnderecoItem[];
+
+  mapBottomPadding?: number;
 }
 
-// Região inicial vazia - será substituída pela localização do usuário
-const emptyRegion: Region = {
-  latitude: 0,
-  longitude: 0,
-  latitudeDelta: 0.01, // 🔹 atualizado para manter consistência com home.tsx
+// Região padrão (São Paulo)
+const DEFAULT_REGION: Region = {
+  latitude: -23.5505,
+  longitude: -46.6333,
+  latitudeDelta: 0.01,
   longitudeDelta: 0.01,
 };
 
+const CACHE_KEY = "@last_user_location";
+
+const OFFSET_LATITUDE = 0.0064;
+
 export default function Map({
+  mapBottomPadding = 320,
   region,
   onRegionChange,
   onUserLocationFound,
-  bottomSheetIndex, // 👈 recebendo o valor
+  bottomSheetIndex,
+
+  // 🔥 NOVO
+  itinerario = [],
 }: MapProps) {
   const mapRef = useRef<MapView>(null);
+
   const [userLocation, setUserLocation] = useState<Region | null>(null);
-  const [locationPermission, setLocationPermission] = useState<boolean>(false);
+
+  const [locationPermission, setLocationPermission] = useState<boolean | null>(
+    null,
+  );
+
   const [isLoading, setIsLoading] = useState(true);
+
   const [hasInitialLocation, setHasInitialLocation] = useState(false);
 
-  // 🔹 guarda a região original do usuário para aplicar offsets conforme o BottomSheet
+  const [isMapReady, setIsMapReady] = useState(false);
+
   const userInitialRegion = useRef<Region | null>(null);
+
   const [mapAdjusted, setMapAdjusted] = useState(false);
 
-  // Solicitar permissão de localização
+  const locationWatchSubscription =
+    useRef<Location.LocationSubscription | null>(null);
+
+  // 🔥 NOVO
+  // renderiza rota automaticamente
   useEffect(() => {
-    (async () => {
+    console.log(itinerario, "itinerario");
+    if (!mapRef.current) {
+      return;
+    }
+
+    // 🔥 se existir apenas origem
+    // volta pro usuário
+    if (itinerario.length <= 1 && userInitialRegion.current) {
+      const offsetLatitude = 0.0064;
+
+      mapRef.current.animateToRegion(
+        {
+          ...userInitialRegion.current,
+          latitude: userInitialRegion.current.latitude - offsetLatitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        800,
+      );
+
+      return;
+    }
+
+    // 🔥 rota normal
+    if (itinerario.length >= 2) {
+      const coordinates = itinerario.map((item) => ({
+        latitude: item.latitude,
+        longitude: item.longitude,
+      }));
+
+      setTimeout(() => {
+        mapRef.current?.fitToCoordinates(coordinates, {
+          edgePadding: {
+            top: 180,
+            right: 60,
+            bottom: mapBottomPadding,
+            left: 60,
+          },
+          animated: true,
+        });
+      }, 300);
+    }
+  }, [itinerario, mapBottomPadding]);
+
+  // 🗺️ Executa em paralelo
+  const fetchAddressInBackground = async (
+    lat: number,
+    lon: number,
+    currentRegion: Region,
+  ) => {
+    try {
+      const reverseGeocode = await Location.reverseGeocodeAsync({
+        latitude: lat,
+        longitude: lon,
+      });
+
+      let formattedAddress = "Localização Atual";
+
+      if (reverseGeocode && reverseGeocode.length > 0) {
+        const address = reverseGeocode[0];
+
+        const rua = address.street || "";
+
+        const numero = address.streetNumber ? `, ${address.streetNumber}` : "";
+
+        formattedAddress = rua
+          ? `${rua}${numero}`
+          : address.district || "Minha Localização";
+      }
+
+      const updatedRegionWithAddress = {
+        ...currentRegion,
+        formattedAddress: formattedAddress,
+      };
+
+      await AsyncStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify(updatedRegionWithAddress),
+      );
+
+      if (onUserLocationFound) {
+        onUserLocationFound(updatedRegionWithAddress, formattedAddress);
+      }
+    } catch (error) {
+      console.log("Erro na geocodificação reversa:", error);
+
+      const fallbackRegion = {
+        ...currentRegion,
+        formattedAddress: "Localização Atual",
+      };
+
+      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(fallbackRegion));
+    }
+  };
+
+  // Carregar cache
+  const loadCachedLocation = useCallback(async () => {
+    try {
+      const cached = await AsyncStorage.getItem(CACHE_KEY);
+
+      if (cached) {
+        const location = JSON.parse(cached);
+
+        const cachedRegion: Region = {
+          latitude: location.latitude - OFFSET_LATITUDE,
+
+          longitude: location.longitude,
+
+          latitudeDelta: 0.01,
+
+          longitudeDelta: 0.01,
+        };
+
+        setUserLocation(cachedRegion);
+
+        userInitialRegion.current = location;
+
+        setHasInitialLocation(true);
+
+        if (onUserLocationFound) {
+          onUserLocationFound(
+            location,
+            location.formattedAddress || "Localização Atual",
+          );
+        }
+
+        fetchAddressInBackground(
+          location.latitude,
+          location.longitude,
+          location,
+        );
+
+        return true;
+      }
+    } catch (error) {
+      console.log("Erro ao carregar cache:", error);
+    }
+
+    return false;
+  }, [onUserLocationFound]);
+
+  // Inicialização
+  useEffect(() => {
+    let isMounted = true;
+
+    const initializeLocation = async () => {
       try {
         setIsLoading(true);
-        console.log("Solicitando permissão de localização...");
 
-        let { status } = await Location.requestForegroundPermissionsAsync();
+        const hasCache = await loadCachedLocation();
+
+        if (hasCache && isMounted) {
+          setIsLoading(false);
+        }
+
+        let { status } = await Location.getForegroundPermissionsAsync();
+
+        if (status !== "granted") {
+          const { status: newStatus } =
+            await Location.requestForegroundPermissionsAsync();
+
+          status = newStatus;
+        }
+
+        if (!isMounted) return;
 
         if (status === "granted") {
           setLocationPermission(true);
-          console.log("Permissão concedida, obtendo localização...");
 
-          // Obter localização atual
-          let location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
+          const subscription = await Location.watchPositionAsync(
+            {
+              accuracy: Location.Accuracy.Balanced,
 
-          console.log("Localização obtida:", location.coords);
+              timeInterval: 5000,
 
-          // 🔹 Aplicando a mesma lógica de offset do home.tsx
-          const offsetLatitude = 0.0064;
-          const userRegion: Region = {
-            latitude: location.coords.latitude - offsetLatitude,
-            longitude: location.coords.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          };
+              distanceInterval: 10,
+            },
 
-          userInitialRegion.current = {
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          };
+            (location) => {
+              if (!isMounted) return;
 
-          setUserLocation(userRegion);
-          setHasInitialLocation(true);
+              const userRegion: Region = {
+                latitude: location.coords.latitude - OFFSET_LATITUDE,
 
-          // Notificar o componente pai sobre a localização encontrada
-          if (onUserLocationFound) {
-            onUserLocationFound(userInitialRegion.current);
-          }
+                longitude: location.coords.longitude,
 
-          // Centralizar no usuário
-          if (mapRef.current) {
-            mapRef.current.animateToRegion(userRegion, 1000);
-          }
-        } else {
-          console.log("Permissão de localização negada");
-          setLocationPermission(false);
-          Alert.alert(
-            "Localização Necessária",
-            "Este app precisa da sua localização para funcionar corretamente. Por favor, permita o acesso à localização nas configurações do seu dispositivo.",
-            [{ text: "OK" }],
+                latitudeDelta: 0.01,
+
+                longitudeDelta: 0.01,
+              };
+
+              const originalRegion = {
+                latitude: location.coords.latitude,
+
+                longitude: location.coords.longitude,
+
+                latitudeDelta: 0.01,
+
+                longitudeDelta: 0.01,
+              };
+
+              if (!userInitialRegion.current) {
+                setUserLocation(userRegion);
+
+                userInitialRegion.current = originalRegion;
+
+                setHasInitialLocation(true);
+
+                AsyncStorage.setItem(CACHE_KEY, JSON.stringify(originalRegion));
+
+                if (onUserLocationFound) {
+                  onUserLocationFound(originalRegion, "Localização Atual");
+                }
+
+                if (mapRef.current && isMapReady) {
+                  mapRef.current.animateToRegion(userRegion, 1000);
+                }
+
+                if (isMounted) {
+                  setIsLoading(false);
+                }
+
+                fetchAddressInBackground(
+                  originalRegion.latitude,
+                  originalRegion.longitude,
+                  originalRegion,
+                );
+              }
+            },
           );
+
+          locationWatchSubscription.current = subscription;
+
+          setTimeout(() => {
+            if (isMounted && !userInitialRegion.current) {
+              setIsLoading(false);
+            }
+          }, 3000);
+        } else {
+          setLocationPermission(false);
+
+          setIsLoading(false);
         }
       } catch (error) {
-        console.error("Erro ao obter localização:", error);
-        setLocationPermission(false);
-        Alert.alert(
-          "Erro de Localização",
-          "Não foi possível obter sua localização. Verifique se o GPS está ativado.",
-          [{ text: "OK" }],
-        );
-      } finally {
-        setIsLoading(false);
-        console.log("Loading finalizado");
-      }
-    })();
-  }, [onUserLocationFound]); // Corrigido: incluída a dependência
+        console.error("Erro na inicialização:", error);
 
-  // Atualizar localização do usuário quando ele se move
+        setLocationPermission(false);
+
+        setIsLoading(false);
+      }
+    };
+
+    initializeLocation();
+
+    return () => {
+      isMounted = false;
+
+      if (locationWatchSubscription.current) {
+        locationWatchSubscription.current.remove();
+      }
+    };
+  }, [loadCachedLocation, onUserLocationFound, isMapReady]);
+
+  // Atualiza localização
   const handleUserLocationChange = (event: UserLocationChangeEvent) => {
     const { coordinate } = event.nativeEvent;
-    if (coordinate) {
+
+    if (coordinate && userInitialRegion.current) {
       const newUserRegion = {
-        latitude: coordinate.latitude,
+        latitude: coordinate.latitude - OFFSET_LATITUDE,
+
         longitude: coordinate.longitude,
-        latitudeDelta: 0.01, // 🔹 atualizado
+
+        latitudeDelta: 0.01,
+
         longitudeDelta: 0.01,
       };
+
       setUserLocation(newUserRegion);
     }
   };
 
-  // Centralizar no usuário
+  // Centralizar usuário
   const centerOnUser = async () => {
-    console.log("➡️ centerOnUser chamado!");
     if (userInitialRegion.current && mapRef.current) {
-      const offsetLatitude = 0.0064;
       const regionWithOffset = {
         ...userInitialRegion.current,
-        latitude: userInitialRegion.current.latitude - offsetLatitude,
+
+        latitude: userInitialRegion.current.latitude - OFFSET_LATITUDE,
       };
+
       mapRef.current.animateToRegion(regionWithOffset, 1000);
     } else if (userLocation && mapRef.current) {
       mapRef.current.animateToRegion(userLocation, 1000);
     } else {
-      // Tentar obter localização novamente
       try {
         setIsLoading(true);
+
         let location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });
 
-        const offsetLatitude = 0.0064;
         const newUserRegion = {
-          latitude: location.coords.latitude - offsetLatitude,
+          latitude: location.coords.latitude - OFFSET_LATITUDE,
+
           longitude: location.coords.longitude,
+
           latitudeDelta: 0.01,
+
+          longitudeDelta: 0.01,
+        };
+
+        const originalRegion = {
+          latitude: location.coords.latitude,
+
+          longitude: location.coords.longitude,
+
+          latitudeDelta: 0.01,
+
           longitudeDelta: 0.01,
         };
 
         setUserLocation(newUserRegion);
-        if (mapRef.current) {
-          mapRef.current.animateToRegion(newUserRegion, 1000);
-        }
+
+        userInitialRegion.current = originalRegion;
+
+        setHasInitialLocation(true);
+
+        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(originalRegion));
+
+        fetchAddressInBackground(
+          originalRegion.latitude,
+          originalRegion.longitude,
+          originalRegion,
+        );
       } catch (error) {
         console.error("Erro ao obter localização:", error);
+
         Alert.alert("Erro", "Não foi possível obter sua localização");
       } finally {
         setIsLoading(false);
@@ -163,96 +429,64 @@ export default function Map({
     }
   };
 
-  // 👇 NOVO useEffect: reage à mudança de estado do BottomSheet
+  // BottomSheet adjustment
   useEffect(() => {
     if (bottomSheetIndex === undefined || !userInitialRegion.current) return;
 
-    console.log("🗺️ BottomSheet mudou para índice:", bottomSheetIndex);
-
-    // Índice 1 corresponde ao snap point superior ("80%")
-    if (bottomSheetIndex) {
+    if (bottomSheetIndex === 1) {
       const largerOffset = 0.045;
+
       const zoomedLatitudeDelta = 0.055;
+
       const zoomedLongitudeDelta = 0.055;
 
       const newRegion: Region = {
         ...userInitialRegion.current,
+
         latitude: userInitialRegion.current.latitude - largerOffset,
+
         latitudeDelta: zoomedLatitudeDelta,
+
         longitudeDelta: zoomedLongitudeDelta,
       };
 
       if (mapRef.current) {
         mapRef.current.animateToRegion(newRegion, 1000);
       }
+
       setMapAdjusted(true);
     } else if (bottomSheetIndex === 0 && mapAdjusted) {
-      const initialOffset = 0.0064;
       const initialRegion: Region = {
         ...userInitialRegion.current,
-        latitude: userInitialRegion.current.latitude - initialOffset,
+
+        latitude: userInitialRegion.current.latitude - OFFSET_LATITUDE,
+
         latitudeDelta: userInitialRegion.current.latitudeDelta ?? 0.01,
+
         longitudeDelta: userInitialRegion.current.longitudeDelta ?? 0.01,
       };
 
       if (mapRef.current) {
         mapRef.current.animateToRegion(initialRegion, 1000);
       }
+
       setMapAdjusted(false);
     }
   }, [bottomSheetIndex, mapAdjusted]);
 
-  // Se ainda está carregando, mostrar loading
-  if (isLoading) {
+  if (locationPermission === false) {
     return (
-      <View style={[StyleSheet.absoluteFill, styles.loadingContainer]}>
-        <MaterialIcons name="location-searching" size={48} color="#007AFF" />
-        <Text style={styles.loadingText}>Obtendo sua localização...</Text>
-      </View>
-    );
-  }
-
-  // Se não tem permissão, mostrar erro
-  if (!locationPermission) {
-    return (
-      <View style={[StyleSheet.absoluteFill, styles.errorContainer]}>
+      <View style={styles.errorContainer}>
         <MaterialIcons name="location-off" size={48} color="#FF3B30" />
+
         <Text style={styles.errorText}>
           Permissão de localização necessária
         </Text>
+
         <Text style={styles.errorSubtext}>
           Ative a localização nas configurações do seu dispositivo para usar o
           app
         </Text>
-        <TouchableOpacity
-          style={styles.retryButton}
-          onPress={() => {
-            setIsLoading(true);
-            setLocationPermission(false);
-            // Recarregar o componente
-            setTimeout(() => {
-              setIsLoading(false);
-            }, 100);
-          }}
-        >
-          <Text style={styles.retryButtonText}>Tentar Novamente</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  // Se tem permissão mas não conseguiu localização inicial (caso raro)
-  if (locationPermission && !hasInitialLocation) {
-    return (
-      <View style={[StyleSheet.absoluteFill, styles.errorContainer]}>
-        <MaterialIcons name="location-disabled" size={48} color="#FF9500" />
-        <Text style={styles.errorText}>Não foi possível obter localização</Text>
-        <Text style={styles.errorSubtext}>
-          Verifique se o GPS está ativado e tente novamente
-        </Text>
-        <TouchableOpacity style={styles.retryButton} onPress={centerOnUser}>
-          <Text style={styles.retryButtonText}>Tentar Novamente</Text>
-        </TouchableOpacity>
       </View>
     );
   }
@@ -262,23 +496,102 @@ export default function Map({
       <MapView
         ref={mapRef}
         style={StyleSheet.absoluteFill}
-        region={region || userLocation || emptyRegion}
+        region={region || userLocation || DEFAULT_REGION}
         onRegionChangeComplete={onRegionChange}
-        showsUserLocation={true}
+        showsUserLocation={locationPermission === true}
         showsMyLocationButton={false}
         onUserLocationChange={handleUserLocationChange}
         followsUserLocation={false}
         mapType="standard"
-      />
+        onMapReady={() => setIsMapReady(true)}
+      >
+        {/* 🔥 MARKERS */}
+        {itinerario.map((item, index) => {
+          const isOrigem = index === 0;
+
+          return (
+            <Marker
+             anchor={{ x: 0.5, y: 1 }}
+              key={`${item.latitude}-${item.longitude}-${index}`}
+              coordinate={{
+                latitude: item.latitude,
+                longitude: item.longitude,
+              }}
+              title={item.name}
+              description={item.formattedAddress}
+            >
+              {/* 🔥 ORIGEM */}
+              {isOrigem ? (
+                <View style={styles.originMarker}>
+                  <View style={styles.originMarkerInner} />
+                </View>
+              ) : (
+                /* 🔥 PARADAS */
+                <View style={styles.stopMarkerContainer}>
+                  <View style={styles.stopMarker}>
+                    <Text style={styles.stopMarkerText}>{index}</Text>
+                  </View>
+
+                  {/* 🔥 haste */}
+                  <View
+                    style={
+                      styles.stopMarkerLine
+                    }
+                  />
+
+                  {/* 🔥 base */}
+                  <View
+                    style={
+                      styles.stopMarkerBase
+                    }
+                  />
+                </View>
+              )}
+            </Marker>
+          );
+        })}
+
+        {/* 🔥 POLYLINE */}
+        {/* 🔥 ROTA REAL */}
+        {itinerario.length >= 2 && (
+          <MapViewDirections
+            origin={{
+              latitude: itinerario[0].latitude,
+              longitude: itinerario[0].longitude,
+            }}
+            destination={{
+              latitude: itinerario[itinerario.length - 1].latitude,
+              longitude: itinerario[itinerario.length - 1].longitude,
+            }}
+            waypoints={itinerario.slice(1, -1).map((item) => ({
+              latitude: item.latitude,
+              longitude: item.longitude,
+            }))}
+            apikey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY as string}
+            strokeWidth={4}
+            strokeColor="#2563EB"
+          // optimizeWaypoints={true}
+          />
+        )}
+      </MapView>
+
+      {isLoading && !userLocation && (
+        <View style={styles.loadingOverlay}>
+          <MaterialIcons name="location-searching" size={32} color="#007AFF" />
+
+          <Text style={styles.loadingText}>Buscando localização...</Text>
+        </View>
+      )}
+
       <TouchableOpacity
-        className="absolute top-32 bottom-32 right-2 rounded-full bg-white w-12 h-12 items-center justify-center z-20"
+        style={styles.locationButton}
         onPress={centerOnUser}
-        disabled={isLoading}
+        disabled={isLoading && !userLocation}
       >
         <MaterialIcons
           name="my-location"
           size={24}
-          color={isLoading ? "#ccc" : "#007AFF"}
+          color={isLoading && !userLocation ? "#ccc" : "#007AFF"}
         />
       </TouchableOpacity>
     </View>
@@ -286,46 +599,215 @@ export default function Map({
 }
 
 const styles = StyleSheet.create({
-  loadingContainer: {
+  originMarker: {
+    width: 18,
+
+    height: 18,
+
+    borderRadius: 9,
+
+    backgroundColor: "#FFF",
+
     justifyContent: "center",
+
     alignItems: "center",
-    backgroundColor: "#f8f8f8",
+
+    borderWidth: 2,
+
+    borderColor: "#111827",
+  },
+
+  originMarkerInner: {
+    width: 8,
+
+    height: 8,
+
+    borderRadius: 4,
+
+    backgroundColor: "#111827",
+  },
+
+  stopMarkerContainer: {
+    alignItems: "center",
+
+    height: 52,
+
+    width: 32,
+
+    justifyContent: "flex-start",
+  },
+
+  stopMarker: {
+    width: 30,
+
+    height: 30,
+
+    borderRadius: 15,
+
+    backgroundColor: "#2563EB",
+
+    justifyContent: "center",
+
+    alignItems: "center",
+
+    borderWidth: 2,
+
+    borderColor: "#FFF",
+
+    shadowColor: "#000",
+
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+
+    shadowOpacity: 0.2,
+
+    shadowRadius: 4,
+
+    elevation: 4,
+  },
+
+  stopMarkerLine: {
+    width: 2,
+
+    height: 12,
+
+    backgroundColor: "#000",
+
+    marginTop: -1,
+  },
+
+  stopMarkerBase: {
+    width: 8,
+
+    height: 8,
+
+    borderRadius: 4,
+
+    backgroundColor: "#FF3B30",
+
+    borderWidth: 1.5,
+
+    borderColor: "#FFF",
+  },
+
+  stopMarkerText: {
+    color: "#FFF",
+
+    fontSize: 13,
+
+    fontWeight: "700",
   },
   errorContainer: {
+    ...StyleSheet.absoluteFillObject,
+
     justifyContent: "center",
+
     alignItems: "center",
+
     backgroundColor: "#f8f8f8",
+
     padding: 20,
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#666",
-    textAlign: "center",
-  },
+
   errorText: {
     marginTop: 16,
+
     fontSize: 18,
+
     color: "#FF3B30",
-    textAlign: "center",
+
     fontWeight: "bold",
+
+    textAlign: "center",
   },
+
   errorSubtext: {
     marginTop: 8,
+
     fontSize: 14,
+
     color: "#666",
+
     textAlign: "center",
-    marginBottom: 20,
   },
-  retryButton: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 20,
+
+  loadingOverlay: {
+    position: "absolute",
+
+    top: 40,
+
+    alignSelf: "center",
+
+    backgroundColor: "white",
+
+    paddingHorizontal: 16,
+
     paddingVertical: 10,
-    borderRadius: 8,
+
+    borderRadius: 24,
+
+    flexDirection: "row",
+
+    alignItems: "center",
+
+    shadowColor: "#000",
+
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+
+    shadowOpacity: 0.15,
+
+    shadowRadius: 4,
+
+    elevation: 3,
   },
-  retryButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
+
+  loadingText: {
+    marginLeft: 8,
+
+    fontSize: 14,
+
+    color: "#333",
+
+    fontWeight: "500",
+  },
+
+  locationButton: {
+    position: "absolute",
+
+    bottom: 32,
+
+    right: 16,
+
+    backgroundColor: "white",
+
+    width: 48,
+
+    height: 48,
+
+    borderRadius: 24,
+
+    justifyContent: "center",
+
+    alignItems: "center",
+
+    shadowColor: "#000",
+
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+
+    shadowOpacity: 0.25,
+
+    shadowRadius: 3.84,
+
+    elevation: 5,
+
+    zIndex: 20,
   },
 });

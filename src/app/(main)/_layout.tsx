@@ -1,26 +1,31 @@
+// app/_layout.tsx
 import MenuInferior from "@/components/MenuInferior";
 import SideMenu from "@/components/SideMenu";
 import { useAuth } from "@/context/AuthProvider";
+import { UiProvider, useUi } from "@/context/UiContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Slot, useRouter, useSegments } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
+
 import {
-    Animated,
-    Dimensions,
-    Image,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  Dimensions,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
-export default function MainLayout() {
-  const { usuario } = useAuth();
+// Componente interno que usa o UiContext
+function MainLayoutContent() {
+  const { user } = useAuth();
+  const { isModalVisible } = useUi();
   const [showSideMenu, setShowSideMenu] = useState(false);
   const drawerWidth = Math.round(Dimensions.get("window").width * 0.78);
   const translateX = useRef(new Animated.Value(-drawerWidth)).current;
 
-  React.useEffect(() => {
+  useEffect(() => {
     Animated.timing(translateX, {
       toValue: showSideMenu ? 0 : -drawerWidth,
       duration: 220,
@@ -28,9 +33,9 @@ export default function MainLayout() {
     }).start();
   }, [showSideMenu, drawerWidth, translateX]);
 
-  const closeMenu = React.useCallback(() => {
+  const closeMenu = () => {
     setShowSideMenu(false);
-  }, []);
+  };
 
   const handleMenuOpen = () => {
     setShowSideMenu(true);
@@ -67,34 +72,43 @@ export default function MainLayout() {
       router.push("/(payment)/pay");
       return;
     }
-
-    // Adicione outras rotas aqui no inferior
   };
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerFloating}>
-        <View style={styles.headerContent}>
-          <View style={styles.userInfo}>
-            <Pressable onPress={handleMenuOpen} style={styles.avatarContainer}>
-              <View style={styles.avatarPlaceholder}>
-                <Image
-                  source={{ uri: "https://i.pravatar.cc/150?img=2" }}
-                  style={styles.avatarBadge}
-                />
-              </View>
-              <View style={styles.notificationDot} />
-            </Pressable>
-            <Text style={styles.greetingText}>
-              Olá, {usuario?.nome?.split(" ")[0] || "Usuário"}!
-            </Text>
-          </View>
+      {/* Header condicional - só aparece se NÃO houver modal visível */}
+      {!isModalVisible && (
+        <View style={styles.headerFloating}>
+          <View style={styles.headerContent}>
+            <View style={styles.userInfo}>
+              <Pressable onPress={handleMenuOpen} style={styles.avatarContainer}>
+                {user?.foto ? (
+                  <Image
+                    source={{
+                      uri: user.foto,
+                    }}
+                    style={styles.avatar}
+                  />
+                ) : (
+                  <View style={styles.avatar}>
+                    <Ionicons name="person-circle" size={40} color="#c4c4c4" />
+                  </View>
+                )}
 
-          <Pressable style={styles.scanButton}>
-            <Ionicons name="scan-outline" size={28} color="#000" />
-          </Pressable>
+                <View style={styles.notificationDot} />
+              </Pressable>
+
+              <Text style={styles.greetingText}>
+                Olá, {user?.name?.split(" ")[0] || "Usuário"}!
+              </Text>
+            </View>
+
+            <Pressable style={styles.scanButton}>
+              <Ionicons name="scan-outline" size={28} color="#000" />
+            </Pressable>
+          </View>
         </View>
-      </View>
+      )}
 
       {showSideMenu && (
         <Pressable
@@ -116,8 +130,18 @@ export default function MainLayout() {
   );
 }
 
+// Componente principal
+export default function RootLayout() {
+  return (
+    <UiProvider>
+      <MainLayoutContent />
+    </UiProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
+
   headerFloating: {
     position: "absolute",
     top: 0,
@@ -134,52 +158,60 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 3.84,
   },
+
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
+
   userInfo: {
     flexDirection: "row",
     alignItems: "center",
   },
+
   avatarContainer: {
     width: 48,
     height: 48,
-    borderRadius: 24,
-    backgroundColor: "#FFF",
-    justifyContent: "center",
-    alignItems: "center",
     marginRight: 12,
-  },
-  avatarPlaceholder: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 24,
-    backgroundColor: "#BDC3C7",
     justifyContent: "center",
     alignItems: "center",
-    overflow: "hidden",
+    position: "relative",
   },
+
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F2F2F2",
+  },
+
   notificationDot: {
     position: "absolute",
-    top: 2,
-    right: 2,
+    top: 0.5,
+    right: 0.5,
     width: 13,
     height: 13,
     borderRadius: 6.5,
     backgroundColor: "#FF3B30",
     borderWidth: 2,
-    borderColor: "#FFD700",
+    borderColor: "#fff",
+    zIndex: 2,
   },
+
   greetingText: {
     fontSize: 22,
     fontWeight: "bold",
     color: "#000",
   },
+
   scanButton: {
     padding: 8,
   },
+
   backdrop: {
     position: "absolute",
     top: 0,
@@ -188,13 +220,5 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(0,0,0,0.28)",
     zIndex: 18,
-  },
-  avatarBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#f8f8f8",
-    borderWidth: 1,
-    borderColor: "#eee",
   },
 });

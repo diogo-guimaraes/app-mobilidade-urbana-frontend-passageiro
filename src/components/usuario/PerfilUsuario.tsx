@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -19,7 +20,7 @@ import ModalSelos from "./ModalSelos";
 import NotasAgradecimentos from "./NotasAgradecimentos";
 import VerificacoesUsuario from "./VerificacoesUsuario";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -45,6 +46,7 @@ export default function PerfilUsuario({
   const [showDetalhesComentario, setShowDetalhesComentarioSelecionado] =
     useState(false);
   const [showDicasAvaliacao, setShowDicasAvaliacao] = useState(false);
+  const { user } = useAuth();
 
   // Dados Mockados para as novas seções
   const avaliacoesPositivas = [
@@ -231,11 +233,23 @@ export default function PerfilUsuario({
           >
             {/* USER INFO */}
             <View style={styles.profileSection}>
-              <Image
-                source={{ uri: "https://i.pravatar.cc/150?img=12" }}
-                style={styles.mainAvatar}
-              />
-              <Text style={styles.userName}>Diogo</Text>
+              {user?.foto ? (
+                <Image
+                  source={{
+                    uri: user.foto,
+                  }}
+                  style={styles.avatar}
+                />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Ionicons
+                    name="person-circle-outline"
+                    size={110}
+                    color="#c4c4c4"
+                  />
+                </View>
+              )}
+              <Text style={styles.userName}>{user?.name.split(" ")[0]}</Text>
               <TouchableOpacity style={styles.publicProfileBtn}>
                 <Text style={styles.publicProfileText}>Ver perfil público</Text>
               </TouchableOpacity>
@@ -471,11 +485,13 @@ const styles = StyleSheet.create({
   },
   scrollContainer: { flex: 1 },
   profileSection: { alignItems: "center", marginTop: 25 },
-  mainAvatar: {
+
+  avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "#f0f0f0",
+    borderWidth: 3,
+    borderColor: "#f0f0f0",
   },
   userName: { fontSize: 24, fontWeight: "800", color: "#111", marginTop: 15 },
   publicProfileBtn: {
@@ -637,5 +653,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     fontWeight: "500",
+  },
+  avatarWrapper: {
+    position: "relative",
+    marginBottom: 15,
+  },
+  avatarPlaceholder: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f3f3f3",
   },
 });
