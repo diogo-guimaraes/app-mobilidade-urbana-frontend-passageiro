@@ -5,9 +5,9 @@ import * as Location from "expo-location";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
 import MapView, {
-  Callout,
   Marker,
   Region,
   UserLocationChangeEvent,
@@ -509,6 +509,8 @@ export default function Map({
         {/* 🔥 MARKERS COM NOVO DESIGN CORRIGIDO */}
         {itinerario.map((item, index) => {
           const isOrigem = index === 0;
+          const isDestino =
+            index === itinerario.length - 1 && itinerario.length > 1;
 
           return (
             <Marker
@@ -524,21 +526,37 @@ export default function Map({
                 <View style={styles.originMarker}>
                   <View style={styles.originMarkerInner} />
                 </View>
+              ) : isDestino ? (
+                /* 🔥 DESTINO (Apenas a Bandeira SVG) */
+                <View style={styles.svgContainer}>
+                  <Svg width="32" height="32" viewBox="0 0 24 24">
+                    {/* Haste da bandeira (Cinza escuro) */}
+                    <Path d="M5 2h2v20H5z" fill="#333" />
+
+                    {/* Quadrados Laranjas (#F97316) */}
+                    <Path
+                      d="M7 4h3.75v3.33H7Zm7.5 0h3.75v3.33h-3.75Zm-3.75 3.33h3.75v3.33h-3.75Zm7.5 0H22v3.33h-3.75ZM7 10.66h3.75V14H7Zm7.5 0h3.75V14h-3.75Z"
+                      fill="#fff"
+                    />
+
+                    {/* Quadrados Pretos/Contrastantes (Usando #111827 do seu tema anterior para consistência) */}
+                    <Path
+                      d="M10.75 4h3.75v3.33h-3.75Zm7.5 0H22v3.33h-3.75V4ZM7 7.33h3.75v3.33H7Zm7.5 0h3.75v3.33h-3.75Zm-3.75 3.33h3.75V14h-3.75Zm7.5 0H22V14h-3.75Z"
+                      fill="#111827"
+                    />
+                  </Svg>
+                </View>
               ) : (
                 /* 🔥 NOVO DESIGN DE PARADA CORRIGIDO - Bolinha com borda amarelada */
                 <View style={styles.stopWrapper}>
+                  <View style={styles.speechBubble}>
+                    <Text style={styles.speechBubbleText}>Parada {index}</Text>
+                    <View style={styles.speechBubbleArrow} />
+                  </View>
                   {/* Bolinha com borda branca/amarelada */}
                   <View style={styles.stopCircle}>
                     <View style={styles.stopNumber} />
                   </View>
-
-                  {/* Balão de texto - AGORA COMO CALLOUT para não cortar */}
-                  <Callout tooltip={true} style={styles.calloutContainer}>
-                    <View style={styles.speechBubble}>
-                      <Text style={styles.speechBubbleText}>{item.name}</Text>
-                      <View style={styles.speechBubbleArrow} />
-                    </View>
-                  </Callout>
                 </View>
               )}
             </Marker>
@@ -620,6 +638,13 @@ const styles = StyleSheet.create({
 
     backgroundColor: "#111827",
   },
+  svgContainer: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 4,
+  },
 
   // 🔥 NOVO DESIGN CORRIGIDO - Bolinha com borda amarelada
   stopWrapper: {
@@ -665,8 +690,9 @@ const styles = StyleSheet.create({
   speechBubble: {
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: 4,
+    paddingVertical: 3,
+    marginBottom: 4,
     position: "relative",
     shadowColor: "#000",
     shadowOffset: {
@@ -675,13 +701,13 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 5,
+    elevation: 6,
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
 
   speechBubbleText: {
-    fontSize: 13,
+    fontSize: 10,
     color: "#1F2937",
     fontWeight: "600",
     textAlign: "center",
@@ -689,14 +715,14 @@ const styles = StyleSheet.create({
 
   speechBubbleArrow: {
     position: "absolute",
-    bottom: -8,
-    left: "50%",
-    marginLeft: -8,
+    bottom: -7,
+    left: "0.5%",
+    marginLeft: 0,
     width: 0,
     height: 0,
-    borderLeftWidth: 8,
+    borderLeftWidth: 12,
     borderRightWidth: 8,
-    borderTopWidth: 8,
+    borderTopWidth: 12,
     borderStyle: "solid",
     borderLeftColor: "transparent",
     borderRightColor: "transparent",
