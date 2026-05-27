@@ -32,15 +32,26 @@ export interface EnderecoItem {
 
 interface props {
   visible: boolean;
+
   onClose: () => void;
-  onAdicionarParada?: () => void;
-  duration?: number;
-  onShowBuscarEndereco?: (visible: boolean) => void;
 
   // 🔥 NOVO
+  onConfirmar?: () => void;
+
+  onAdicionarParada?: () => void;
+
+  duration?: number;
+
+  onShowBuscarEndereco?: (
+    visible: boolean,
+  ) => void;
+
   itinerario: EnderecoItem[];
+
   setItinerario: React.Dispatch<
-    React.SetStateAction<EnderecoItem[]>
+    React.SetStateAction<
+      EnderecoItem[]
+    >
   >;
 
   onMapPaddingChange?: (
@@ -52,10 +63,13 @@ export default function ViagemComParada({
   onMapPaddingChange,
   visible,
   onClose,
+
+  // 🔥 NOVO
+  onConfirmar,
+
   onAdicionarParada,
   onShowBuscarEndereco,
 
-  // 🔥 NOVO
   itinerario,
   setItinerario,
 }: props) {
@@ -70,60 +84,89 @@ export default function ViagemComParada({
   const [
     inputSelecionadoIndex,
     setInputSelecionadoIndex,
-  ] = useState<number | null>(
-    null,
-  );
+  ] = useState<
+    number | null
+  >(null);
 
   const bottomSheetRef =
     useRef<BottomSheet>(null);
 
-  const snapPoints = useMemo(() => {
-    const baseHeight = 40;
+  const snapPoints =
+    useMemo(() => {
+      const baseHeight = 40;
 
-    const additionalHeight =
-      (itinerario.length - 2) * 5;
+      const additionalHeight =
+        (itinerario.length - 2) *
+        5;
 
-    const totalHeight = Math.min(
-      baseHeight + additionalHeight,
-      85,
+      const totalHeight =
+        Math.min(
+          baseHeight +
+          additionalHeight,
+          85,
+        );
+
+      return [`${totalHeight}%`];
+    }, [itinerario.length]);
+
+  const podeConfirmar =
+    itinerario.some(
+      (
+        item,
+        index,
+      ) =>
+        index !== 0 &&
+        item.name.trim() !== "",
     );
-
-    return [`${totalHeight}%`];
-  }, [itinerario.length]);
 
   const reorganizarOrders = (
     lista: EnderecoItem[],
   ) => {
-    return lista.map((item, index) => ({
-      ...item,
-      order: index,
-    }));
+    return lista.map(
+      (
+        item,
+        index,
+      ) => ({
+        ...item,
+        order: index,
+      }),
+    );
   };
 
   const handleSheetStateChange =
-    useCallback((index: number) => {
-      if (index === -1) {
-        setShowFolhaBuscarEndereco(
-          false,
-        );
-      }
-    }, []);
+    useCallback(
+      (
+        index: number,
+      ) => {
+        if (index === -1) {
+          setShowFolhaBuscarEndereco(
+            false,
+          );
+        }
+      },
+      [],
+    );
 
   const handleInputClick = (
     index: number,
   ) => {
-    setInputSelecionadoIndex(index);
+    setInputSelecionadoIndex(
+      index,
+    );
 
     setShowFolhaBuscarEndereco(
       true,
     );
-    onShowBuscarEndereco?.(true);
+
+    onShowBuscarEndereco?.(
+      true,
+    );
   };
 
-  // 🔥 PRINCIPAL MUDANÇA:
-  // agora altera o itinerário vindo do HOME
   const handleSelecionarEndereco =
-    (endereco: EnderecoItem) => {
+    (
+      endereco: EnderecoItem,
+    ) => {
       if (
         inputSelecionadoIndex ===
         null
@@ -131,42 +174,123 @@ export default function ViagemComParada({
         return;
       }
 
-      setItinerario((prev) => {
-        let novaLista = prev.map(
-          (item, index) =>
-            index ===
-              inputSelecionadoIndex
-              ? {
-                ...item,
-                ...endereco,
-                order: index,
-              }
-              : item,
-        );
+      setItinerario(
+        (prev) => {
+          let novaLista =
+            prev.map(
+              (
+                item,
+                index,
+              ) =>
+                index ===
+                  inputSelecionadoIndex
+                  ? {
+                    ...item,
+                    ...endereco,
+                    order:
+                      index,
+                  }
+                  : item,
+            );
 
-        const ultimoItem =
-          novaLista[
-          novaLista.length - 1
-          ];
+          const ultimoItem =
+            novaLista[
+            novaLista.length -
+            1
+            ];
 
-        const possuiInputVazio =
-          novaLista.some(
-            (item) => !item.name,
+          const possuiInputVazio =
+            novaLista.some(
+              (item) =>
+                !item.name,
+            );
+
+          // 🔥 mantém sempre um input vazio
+          if (
+            ultimoItem.name &&
+            !possuiInputVazio &&
+            novaLista.length <
+            MAX_PARADAS + 1
+          ) {
+            novaLista.push({
+              name: "",
+              formattedAddress:
+                "",
+              latitude: 0,
+              longitude: 0,
+              distancia:
+                "0km",
+              order: 0,
+            });
+          }
+
+          return reorganizarOrders(
+            novaLista,
+          );
+        },
+      );
+
+      setShowFolhaBuscarEndereco(
+        false,
+      );
+
+      onShowBuscarEndereco?.(
+        false,
+      );
+    };
+
+  const removerParada = (
+    index: number,
+  ) => {
+    if (index === 0)
+      return;
+
+    setItinerario(
+      (prev) => {
+        let novaLista =
+          prev.filter(
+            (
+              _,
+              i,
+            ) => i !== index,
           );
 
-        // 🔥 mantém sempre um input vazio
+        // garante mínimo
         if (
-          ultimoItem.name &&
-          !possuiInputVazio &&
-          novaLista.length <
-          MAX_PARADAS + 1
+          novaLista.length === 1
         ) {
           novaLista.push({
             name: "",
-            formattedAddress: "",
+            formattedAddress:
+              "",
             latitude: 0,
             longitude: 0,
-            distancia: "0km",
+            distancia:
+              "0km",
+            order: 1,
+          });
+        }
+
+        const possuiInputVazio =
+          novaLista.some(
+            (item) =>
+              !item.name,
+          );
+
+        // 🔥 mantém placeholder
+        if (
+          novaLista.length <
+          MAX_PARADAS + 1 &&
+          !possuiInputVazio
+        ) {
+          novaLista.push({
+            name: "",
+            formattedAddress:
+              "",
+            latitude: 0,
+            longitude: 0,
+            distancia:
+              "0km",
             order: 0,
           });
         }
@@ -174,73 +298,23 @@ export default function ViagemComParada({
         return reorganizarOrders(
           novaLista,
         );
-      });
-
-      setShowFolhaBuscarEndereco(
-        false,
-      );
-      onShowBuscarEndereco?.(false);
-    };
-
-  const removerParada = (
-    index: number,
-  ) => {
-    if (index === 0) return;
-
-    setItinerario((prev) => {
-      let novaLista = prev.filter(
-        (_, i) => i !== index,
-      );
-
-      // garante mínimo
-      if (novaLista.length === 1) {
-        novaLista.push({
-          name: "",
-          formattedAddress: "",
-          latitude: 0,
-          longitude: 0,
-          distancia: "0km",
-          order: 1,
-        });
-      }
-
-      const possuiInputVazio =
-        novaLista.some(
-          (item) => !item.name,
-        );
-
-      // 🔥 mantém placeholder
-      if (
-        novaLista.length <
-        MAX_PARADAS + 1 &&
-        !possuiInputVazio
-      ) {
-        novaLista.push({
-          name: "",
-          formattedAddress: "",
-          latitude: 0,
-          longitude: 0,
-          distancia: "0km",
-          order: 0,
-        });
-      }
-
-      return reorganizarOrders(
-        novaLista,
-      );
-    });
-  };
-
-  const handleConfirmar = () => {
-    console.log(
-      "Rota confirmada:",
-      itinerario,
+      },
     );
   };
 
+  // 🔥 NOVO
+  const handleConfirmar =
+    () => {
+      if (!podeConfirmar)
+        return;
+
+      onConfirmar?.();
+    };
+
   useEffect(() => {
     const padding =
-      360 + itinerario.length * 45;
+      360 +
+      itinerario.length * 45;
 
     onMapPaddingChange?.(
       padding,
@@ -248,15 +322,16 @@ export default function ViagemComParada({
   }, [itinerario.length]);
 
   useEffect(() => {
-    const onBackPress = () => {
-      if (visible) {
-        onClose();
+    const onBackPress =
+      () => {
+        if (visible) {
+          onClose();
 
-        return true;
-      }
+          return true;
+        }
 
-      return false;
-    };
+        return false;
+      };
 
     const subscription =
       BackHandler.addEventListener(
@@ -269,7 +344,7 @@ export default function ViagemComParada({
   }, [visible, onClose]);
 
   // 🔥 IMPORTANTE:
-  // não reseta mais o itinerário
+  // não reseta mais itinerário
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
@@ -286,7 +361,9 @@ export default function ViagemComParada({
 
   const handleSheetChange =
     useCallback(
-      (index: number) => {
+      (
+        index: number,
+      ) => {
         if (index === -1) {
           onClose();
         }
@@ -294,7 +371,8 @@ export default function ViagemComParada({
       [onClose],
     );
 
-  if (!isMounted) return null;
+  if (!isMounted)
+    return null;
 
   return (
     <View
@@ -306,7 +384,9 @@ export default function ViagemComParada({
     >
       <BottomSheet
         ref={bottomSheetRef}
-        snapPoints={snapPoints}
+        snapPoints={
+          snapPoints
+        }
         enableDynamicSizing={
           false
         }
@@ -331,18 +411,31 @@ export default function ViagemComParada({
             styles.contentContainer
           }
         >
-          <View style={styles.containerTitle}>
-            <Text style={styles.title}>
-              Adicionar paradas
+          <View
+            style={
+              styles.containerTitle
+            }
+          >
+            <Text
+              style={
+                styles.title
+              }
+            >
+              Adicionar
+              paradas
             </Text>
           </View>
+
           <View
             style={
               styles.searchContainer
             }
           >
             {itinerario.map(
-              (item, index) => {
+              (
+                item,
+                index,
+              ) => {
                 const isOrigem =
                   index === 0;
 
@@ -390,7 +483,9 @@ export default function ViagemComParada({
                           >
                             <Ionicons
                               name="add"
-                              size={18}
+                              size={
+                                18
+                              }
                               color="#FFF"
                             />
                           </View>
@@ -411,7 +506,9 @@ export default function ViagemComParada({
                                   : null,
                               ]}
                             >
-                              {index}
+                              {
+                                index
+                              }
                             </Text>
                           </View>
                         )}
@@ -480,7 +577,9 @@ export default function ViagemComParada({
                             >
                               <Ionicons
                                 name="close"
-                                size={20}
+                                size={
+                                  20
+                                }
                                 color="#777"
                               />
                             </TouchableOpacity>
@@ -499,18 +598,27 @@ export default function ViagemComParada({
             }
           >
             <TouchableOpacity
-              style={
-                styles.confirmButton
-              }
+              style={[
+                styles.confirmButton,
+                !podeConfirmar &&
+                styles.confirmButtonDisabled,
+              ]}
               onPress={
                 handleConfirmar
               }
-              activeOpacity={0.8}
+              activeOpacity={
+                0.8
+              }
+              disabled={
+                !podeConfirmar
+              }
             >
               <Text
-                style={
-                  styles.confirmButtonText
-                }
+                style={[
+                  styles.confirmButtonText,
+                  !podeConfirmar &&
+                  styles.confirmButtonTextDisabled,
+                ]}
               >
                 Confirmar
               </Text>
@@ -527,6 +635,7 @@ export default function ViagemComParada({
           setShowFolhaBuscarEndereco(
             false,
           );
+
           onShowBuscarEndereco?.(
             false,
           );
@@ -539,197 +648,243 @@ export default function ViagemComParada({
           handleSelecionarEndereco
         }
       />
-    </View >
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  containerTitle: {
-    alignItems: "center",
-  },
-  bottomSheetBackground: {
-    backgroundColor: "#FFF",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
+const styles =
+  StyleSheet.create({
+    containerTitle: {
+      alignItems: "center",
+    },
 
-  handleIndicator: {
-    backgroundColor: "#DDD",
-    width: 40,
-    height: 4,
-  },
+    bottomSheetBackground:
+    {
+      backgroundColor:
+        "#FFF",
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+    },
 
-  contentContainer: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 8,
-  },
+    handleIndicator: {
+      backgroundColor:
+        "#DDD",
+      width: 40,
+      height: 4,
+    },
 
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
+    contentContainer: {
+      flex: 1,
+      paddingHorizontal: 24,
+      paddingTop: 8,
+    },
 
-  backButton: {
-    marginTop: 10,
-  },
+    header: {
+      flexDirection: "row",
+      justifyContent:
+        "space-between",
+      alignItems:
+        "flex-start",
+    },
 
-  title: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#000",
-    marginBottom: 6,
-  },
+    backButton: {
+      marginTop: 10,
+    },
 
-  searchContainer: {
-    flexDirection: "column",
-    marginBottom: 24,
-    paddingHorizontal: 16,
-  },
+    title: {
+      fontSize: 20,
+      fontWeight: "700",
+      color: "#000",
+      marginBottom: 6,
+    },
 
-  rowContainer: {
-    flexDirection: "row",
-    alignItems: "stretch",
-  },
+    searchContainer: {
+      flexDirection:
+        "column",
+      marginBottom: 24,
+      paddingHorizontal: 16,
+    },
 
-  lineContainer: {
-    alignItems: "center",
-    marginRight: 14,
-    width: 24,
-    position: "relative",
-  },
+    rowContainer: {
+      flexDirection: "row",
+      alignItems:
+        "stretch",
+    },
 
-  markerWrapper: {
-    width: 24,
-    height: 56,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 2,
-  },
+    lineContainer: {
+      alignItems: "center",
+      marginRight: 14,
+      width: 24,
+      position: "relative",
+    },
 
-  startOuterCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "#666",
-    backgroundColor: "#FFF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+    markerWrapper: {
+      width: 24,
+      height: 56,
+      justifyContent:
+        "center",
+      alignItems:
+        "center",
+      zIndex: 2,
+    },
 
-  startInnerCircle: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#111",
-  },
+    startOuterCircle: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor:
+        "#666",
+      backgroundColor:
+        "#FFF",
+      justifyContent:
+        "center",
+      alignItems:
+        "center",
+    },
 
-  numberBox: {
-    width: 20,
-    height: 20,
-    backgroundColor: "#E0E0E0",
-    borderRadius: 3,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+    startInnerCircle: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor:
+        "#111",
+    },
 
-  numberText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#333",
-  },
+    numberBox: {
+      width: 20,
+      height: 20,
+      backgroundColor:
+        "#E0E0E0",
+      borderRadius: 3,
+      justifyContent:
+        "center",
+      alignItems:
+        "center",
+    },
 
-  lastNumberBoxHighlight: {
-    backgroundColor: "#FF5500",
-  },
+    numberText: {
+      fontSize: 12,
+      fontWeight: "700",
+      color: "#333",
+    },
 
-  lastNumberTextHighlight: {
-    color: "#FFF",
-  },
+    lastNumberBoxHighlight:
+    {
+      backgroundColor:
+        "#FF5500",
+    },
 
-  verticalLine: {
-    position: "absolute",
-    width: 2,
-    top: 38,
-    bottom: -18,
-    backgroundColor: "#DDD",
-    zIndex: 1,
-  },
+    lastNumberTextHighlight:
+    {
+      color: "#FFF",
+    },
 
-  searchInput: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    minHeight: 56,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ECECEC",
-  },
+    verticalLine: {
+      position:
+        "absolute",
+      width: 2,
+      top: 38,
+      bottom: -18,
+      backgroundColor:
+        "#DDD",
+      zIndex: 1,
+    },
 
-  searchInputDestination: {
-    borderBottomColor: "#FFD7BF",
-  },
+    searchInput: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems:
+        "center",
+      minHeight: 56,
+      borderBottomWidth: 1,
+      borderBottomColor:
+        "#ECECEC",
+    },
 
-  inputTouchable: {
-    flex: 1,
-    paddingVertical: 12,
-  },
+    searchInputDestination:
+    {
+      borderBottomColor:
+        "#FFD7BF",
+    },
 
-  inputText: {
-    fontSize: 17,
-    color: "#111",
-    fontWeight: "500",
-  },
+    inputTouchable: {
+      flex: 1,
+      paddingVertical: 12,
+    },
 
-  placeholderText: {
-    color: "#999",
-    fontWeight: "400",
-  },
+    inputText: {
+      fontSize: 17,
+      color: "#111",
+      fontWeight: "500",
+    },
 
-  addButtonInline: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#F5F5F5",
-    justifyContent: "center",
-    alignItems: "center",
-    marginLeft: 8,
-  },
+    placeholderText: {
+      color: "#999",
+      fontWeight: "400",
+    },
 
-  removeButtonInline: {
-    padding: 4,
-    marginLeft: 2,
-  },
+    addButtonInline: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor:
+        "#F5F5F5",
+      justifyContent:
+        "center",
+      alignItems:
+        "center",
+      marginLeft: 8,
+    },
 
-  actionButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+    removeButtonInline: {
+      padding: 4,
+      marginLeft: 2,
+    },
 
-  actionButton: {
-    marginRight: 4,
-    padding: 4,
-  },
+    actionButtons: {
+      flexDirection: "row",
+      alignItems:
+        "center",
+    },
 
-  buttonContainer: {
-    marginTop: 24,
-    marginBottom: 32,
-    paddingHorizontal: 16,
-  },
+    actionButton: {
+      marginRight: 4,
+      padding: 4,
+    },
 
-  confirmButton: {
-    backgroundColor: "#FFD200",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 16,
-    borderRadius: 12,
-  },
+    buttonContainer: {
+      marginTop: 24,
+      marginBottom: 32,
+      paddingHorizontal: 16,
+    },
 
-  confirmButtonText: {
-    color: "#000",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-});
+    confirmButton: {
+      backgroundColor:
+        "#FFD200",
+      flexDirection: "row",
+      alignItems:
+        "center",
+      justifyContent:
+        "center",
+      paddingVertical: 16,
+      borderRadius: 12,
+    },
+
+    confirmButtonDisabled:
+    {
+      backgroundColor:
+        "#f0f0f0",
+    },
+
+    confirmButtonText: {
+      color: "#000",
+      fontSize: 18,
+      fontWeight: "700",
+    },
+
+    confirmButtonTextDisabled:
+    {
+      color: "#999",
+    },
+  });
