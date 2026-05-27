@@ -246,6 +246,15 @@ export default function FolhaEscolherOferta({
     ].includes(item.titulo);
   };
 
+  const deveRenderizarInfo = (item: CategoriaItem) => {
+    return [
+      "Negocia",
+      "Pop",
+      "Moto Negocia",
+      "Entrega Moto",
+    ].includes(item.titulo);
+  };
+
   const renderItem = useCallback(
     ({ item }: { item: CategoriaItem }) => {
       const selecionado = categoriaSelecionada === item.id;
@@ -291,13 +300,15 @@ export default function FolhaEscolherOferta({
                   </>
                 )}
 
-                <View style={styles.infoDot}>
-                  <Ionicons
-                    name="information"
-                    size={10}
-                    color="#666"
-                  />
-                </View>
+                {deveRenderizarInfo(item) && (
+                  <View style={styles.infoDot}>
+                    <Ionicons
+                      name="information"
+                      size={10}
+                      color="#666"
+                    />
+                  </View>
+                )}
               </View>
 
               {!!item.subtitulo && (
