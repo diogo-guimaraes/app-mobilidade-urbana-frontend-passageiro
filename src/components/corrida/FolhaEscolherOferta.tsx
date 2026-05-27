@@ -117,7 +117,6 @@ export default function FolhaEscolherOferta({
     return itemAtivo ? `R$${itemAtivo.preco}` : "R$0,00";
   }, [categoriaSelecionada, categorias]);
 
-  // 🔹 Removido o "Size =" que estava quebrando o código aqui
   const nomeSelecionadoExibicao = useMemo(() => {
     const itemAtivo = categorias.find((cat) => cat.id === categoriaSelecionada);
     return itemAtivo ? itemAtivo.titulo : "Solicitar";
@@ -129,6 +128,16 @@ export default function FolhaEscolherOferta({
     },
     [onSheetChange],
   );
+
+  // Método para itens negociáveis
+  const handleNegociacaoClick = (item: CategoriaItem, acao: string) => {
+    console.log('chegou aqui', {
+      item: item.titulo,
+      preco: item.preco,
+      tipo: item.tipo,
+      acao: acao
+    });
+  };
 
   const renderIcone = (tipo: string) => {
     switch (tipo) {
@@ -177,31 +186,73 @@ export default function FolhaEscolherOferta({
     }
   };
 
-  const renderRightIcon = (item: CategoriaItem) => {
-    if (item.iconeDireita === "check") {
+  // Renderiza o componente de negociação com botões - e + com fundo individual
+  const renderNegociacao = (item: CategoriaItem) => {
+    return (
+      <View style={styles.negociacaoContainer}>
+        <TouchableOpacity
+          style={styles.negociacaoButton}
+          onPress={() => handleNegociacaoClick(item, 'decrement')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.negociacaoButtonText}>−</Text>
+        </TouchableOpacity>
+        <Text style={styles.negociacaoValor}>R${item.preco}</Text>
+        <TouchableOpacity
+          style={styles.negociacaoButton}
+          onPress={() => handleNegociacaoClick(item, 'increment')}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.negociacaoButtonText}>+</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  // Renderiza o checkbox quadrado
+  const renderCheckbox = (selecionado: boolean) => {
+    if (selecionado) {
       return (
-        <View style={styles.checkSelecionado}>
-          <Ionicons name="checkmark" size={18} color="#fff" />
+        <View style={styles.checkboxSelecionado}>
+          <Ionicons name="checkmark" size={16} color="#fff" />
         </View>
       );
     }
+    return <View style={styles.checkboxDesmarcado} />;
+  };
 
+  const renderRightIcon = (item: CategoriaItem, selecionado: boolean) => {
+    // Itens negociáveis não tem checkbox
+    if (item.negociavel) {
+      return null;
+    }
+
+    // Entrega Moto tem ícone de seta
     if (item.iconeDireita === "arrow") {
       return <Ionicons name="arrow-forward" size={22} color="#1f1f1f" />;
     }
 
-    return <View style={styles.radioDesmarcado} />;
+    // Para os demais itens, mostrar checkbox quadrado
+    return renderCheckbox(selecionado);
   };
 
   const renderItem = useCallback(
     ({ item }: { item: CategoriaItem }) => {
       const selecionado = categoriaSelecionada === item.id;
+      const isNegociavel = item.negociavel === true;
 
       return (
         <TouchableOpacity
           activeOpacity={0.8}
           style={styles.itemContainer}
-          onPress={() => setCategoriaSelecionada(item.id)}
+          onPress={() => {
+            // Se for negociável, não seleciona o item, apenas chama o método
+            if (isNegociavel) {
+              handleNegociacaoClick(item, 'selecionar');
+            } else {
+              setCategoriaSelecionada(item.id);
+            }
+          }}
         >
           <View style={styles.leftContainer}>
             {renderIcone(item.tipo)}
@@ -229,17 +280,17 @@ export default function FolhaEscolherOferta({
           </View>
 
           <View style={styles.rightContainer}>
-            <Text style={styles.preco}>
-              {item.titulo === "Táxi" ? "aprox. " : ""}
-              R${item.preco}
-            </Text>
-
-            {selecionado ? (
-              <View style={styles.checkSelecionado}>
-                <Ionicons name="checkmark" size={18} color="#fff" />
-              </View>
+            {/* Para itens negociáveis, mostra o componente de negociação */}
+            {isNegociavel ? (
+              renderNegociacao(item)
             ) : (
-              renderRightIcon(item)
+              <>
+                <Text style={styles.preco}>
+                  {item.titulo === "Táxi" ? "aprox. " : ""}
+                  R${item.preco}
+                </Text>
+                {renderRightIcon(item, selecionado)}
+              </>
             )}
           </View>
         </TouchableOpacity>
@@ -268,26 +319,6 @@ export default function FolhaEscolherOferta({
           backgroundColor: "#fff",
         }}
       >
-        <View
-          style={{
-            paddingHorizontal: 24,
-            paddingVertical: 10,
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <TouchableOpacity
-            onPress={onClose}
-            style={{ marginRight: 14, padding: 4 }}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color="#1f1f1f" />
-          </TouchableOpacity>
-          <Text style={{ fontSize: 16, fontWeight: "600", color: "#1f1f1f" }}>
-            Confirmar Rota
-          </Text>
-        </View>
-
         <BottomSheetFlatList
           data={categorias}
           keyExtractor={(item: CategoriaItem) => item.id}
@@ -406,18 +437,54 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
 
-  radioDesmarcado: {
-    width: 24,
-    height: 24,
-    borderRadius: 999,
-    borderWidth: 2,
-    borderColor: "#d1d5db",
+  // Estilos para o componente de negociação com botões individuais
+  negociacaoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 8,
   },
 
-  checkSelecionado: {
-    width: 24,
-    height: 24,
-    borderRadius: 999,
+  negociacaoButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F5F5F5",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+
+  negociacaoButtonText: {
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#111",
+  },
+
+  negociacaoValor: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111",
+    marginHorizontal: 12,
+  },
+
+  // Estilos para checkbox quadrado
+  checkboxDesmarcado: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: "#d1d5db",
+    backgroundColor: "#fff",
+  },
+
+  checkboxSelecionado: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
     backgroundColor: "#111",
     alignItems: "center",
     justifyContent: "center",
