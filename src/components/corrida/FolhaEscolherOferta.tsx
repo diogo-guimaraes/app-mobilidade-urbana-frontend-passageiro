@@ -373,7 +373,6 @@ export default function FolhaEscolherOferta({
                     <View style={styles.mastercardCircle1} />
                     <View style={styles.mastercardCircle2} />
                   </View>
-
                   <Text style={styles.cartaoTexto}>3048</Text>
                 </View>
 
@@ -596,15 +595,15 @@ const styles = StyleSheet.create({
   },
 
   valorFooter: {
-    fontSize: 36,
-    fontWeight: "800",
+    fontSize: 20,
+    fontWeight: "700",
     color: "#111",
   },
 
   botaoSolicitar: {
     backgroundColor: "#f5d400",
     width: 190,
-    height: 78,
+    height: 60,
     borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
