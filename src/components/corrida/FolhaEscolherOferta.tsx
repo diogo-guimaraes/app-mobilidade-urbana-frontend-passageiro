@@ -11,6 +11,15 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+interface EnderecoItem {
+  name: string;
+  formattedAddress: string;
+  latitude: number;
+  longitude: number;
+  distancia: string;
+  order: number;
+}
+
 interface EnderecoObjeto {
   name: string;
   formattedAddress: string;
@@ -24,6 +33,7 @@ interface Props {
   partida: EnderecoObjeto | null;
   destino: EnderecoObjeto | null;
   onClose: () => void;
+    itinerario?: EnderecoItem[];
 }
 
 interface CategoriaItem {
@@ -43,6 +53,8 @@ export default function FolhaEscolherOferta({
   partida,
   destino,
   onClose,
+  itinerario = [],
+
 }: Props) {
   const insets = useSafeAreaInsets(); // <-- Adicione esta linha
   const sheetRef = useRef<BottomSheet | null>(null);
@@ -140,6 +152,7 @@ export default function FolhaEscolherOferta({
 
   // Método para itens negociáveis
   const handleNegociacaoClick = (item: CategoriaItem, acao: string) => {
+    console.log(itinerario, 'itinerario')
     console.log("chegou aqui", {
       item: item.titulo,
       preco: item.preco,

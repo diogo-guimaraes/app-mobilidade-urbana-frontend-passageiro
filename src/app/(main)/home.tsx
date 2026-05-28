@@ -439,6 +439,9 @@ export default function Home() {
       {/* 🔥 FolhaEscolherOferta */}
       {showFolhaEscolherOferta && (
         <FolhaEscolherOferta
+        itinerario={
+          itinerarioMapa
+        }
           onSheetChange={
             handleSheetStateChange
           }
