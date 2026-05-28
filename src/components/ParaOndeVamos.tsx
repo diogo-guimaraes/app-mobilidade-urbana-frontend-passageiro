@@ -29,7 +29,7 @@ interface props {
   onAdicionarParada?: () => void;
 }
 
-interface EnderecoItem {
+interface InterfaceEndereco {
   name: string;
   formattedAddress: string;
   latitude: number;
@@ -38,7 +38,7 @@ interface EnderecoItem {
   order?: number;
 }
 
-const InputsIntinearioInicial: EnderecoItem[] = [
+const InputsIntinearioInicial: InterfaceEndereco[] = [
   {
     name: "",
     formattedAddress: "",
@@ -57,32 +57,7 @@ const InputsIntinearioInicial: EnderecoItem[] = [
   },
 ];
 
-const enderecosPadrao: EnderecoItem[] = [
-  {
-    name: "Rua Portuguesa, 6244",
-    formattedAddress:
-      "Rua Portuguesa, 6244 - Conjunto Jamari, Porto Velho - RO, 76812-612, Brasil",
-    latitude: -8.7601,
-    longitude: -63.9002,
-    distancia: "5.4km",
-  },
-  {
-    name: "Rua Jobu Miró, 3287",
-    formattedAddress:
-      "Rua Jobu Miró, 3287 - Flodoaldo Pontes Pinto, Porto Velho - RO, 76820-608, Brasil",
-    latitude: -8.7523,
-    longitude: -63.8891,
-    distancia: "3.2km",
-  },
-  {
-    name: "Rua Brasília, 2930",
-    formattedAddress:
-      "Rua Brasília, 2930 - São Cristóvão, Porto Velho - RO, 76804-070, Brasil",
-    latitude: -8.7488,
-    longitude: -63.8734,
-    distancia: "7km",
-  },
-];
+const enderecosPadrao: InterfaceEndereco[] = [];
 
 export default function ParaOndevamos({
   visible,
@@ -95,11 +70,11 @@ export default function ParaOndevamos({
   const skeletonOpacity = useRef(new Animated.Value(0.4)).current;
 
   const [isMounted, setIsMounted] = useState(visible);
-  const [listaEnderecos, setListaEnderecos] = useState<EnderecoItem[]>([]);
-  const [historicoCache, setHistoricoCache] = useState<EnderecoItem[]>([]);
+  const [listaEnderecos, setListaEnderecos] = useState<InterfaceEndereco[]>([]);
+  const [historicoCache, setHistoricoCache] = useState<InterfaceEndereco[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [inputsIntinerario, setInputsIntinerario] = useState<EnderecoItem[]>(
+  const [inputsIntinerario, setInputsIntinerario] = useState<InterfaceEndereco[]>(
     InputsIntinearioInicial,
   );
 
@@ -167,7 +142,7 @@ export default function ParaOndevamos({
     }
   };
 
-  const salvarEnderecoNoCache = async (novoEndereco: EnderecoItem) => {
+  const salvarEnderecoNoCache = async (novoEndereco: InterfaceEndereco) => {
     try {
       const historicoFiltrado = historicoCache.filter(
         (item) => item.formattedAddress !== novoEndereco.formattedAddress,
@@ -189,7 +164,7 @@ export default function ParaOndevamos({
   };
 
   const removerEnderecoDoCache = async (
-    enderecoParaRemover: EnderecoItem,
+    enderecoParaRemover: InterfaceEndereco,
   ) => {
     try {
       const historicoAtualizado = historicoCache.filter(
@@ -290,7 +265,7 @@ export default function ParaOndevamos({
     return () => clearTimeout(delayDebounceFn);
   }, [inputsIntinerario, inputSelecionado]);
 
-  const handleSelecionarEndereco = async (item: EnderecoItem) => {
+  const handleSelecionarEndereco = async (item: InterfaceEndereco) => {
     setInputsIntinerario((prev) =>
       prev.map((input, index) =>
         index === inputSelecionado
