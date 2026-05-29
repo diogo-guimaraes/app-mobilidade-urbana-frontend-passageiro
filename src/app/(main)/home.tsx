@@ -177,6 +177,19 @@ export default function Home() {
 
   // 🔥 abre ParaOndeVamos
   const handleAbrirParaOndeVamos = useCallback(() => {
+    // 🔥 Garante que o destino comece sempre zerado/vazio ao abrir
+    setItinerario((prev) => [
+      prev[0], // Mantém o local de partida/origem atual
+      {
+        name: "",
+        formattedAddress: "",
+        latitude: 0,
+        longitude: 0,
+        distancia: "0km",
+        order: 1,
+      },
+    ]);
+
     setShowParaOndeVamos(true);
   }, []);
 
