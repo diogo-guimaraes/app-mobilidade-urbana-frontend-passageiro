@@ -126,7 +126,7 @@ export default function FolhaEscolherOferta({
   const [categoriaSelecionada, setCategoriaSelecionada] = useState<string>("");
   const animatedValue = useRef(new Animated.Value(0)).current;
 
-  const snapPoints = useMemo(() => ["30%", "70%", "96%"], []);
+  const snapPoints = useMemo(() => ["30%", "70%", "94.5%"], []);
 
   // Simulação de requisição
   const fetchOfertas = useCallback(async () => {
