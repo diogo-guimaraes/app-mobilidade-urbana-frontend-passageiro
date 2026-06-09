@@ -1,6 +1,6 @@
 import { InterfaceEndereco } from "@/app/(main)/home";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import React, {
   useCallback,
   useEffect,
@@ -266,6 +266,18 @@ export default function FolhaEscolherOferta({
     });
   };
 
+  const renderBackdrop = useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        {...props}
+        opacity={0.5} // Intensidade do fundo escuro (ajuste como preferir)
+        appearsOnIndex={2} // Começa a aparecer a partir do index 1 (70%)
+        disappearsOnIndex={1} // Some completamente no index 0 (30%)
+      />
+    ),
+    []
+  );
+
   const renderIcone = (tipo: string) => {
     switch (tipo) {
       case "carro":
@@ -491,6 +503,7 @@ export default function FolhaEscolherOferta({
         overDragResistanceFactor={13}
         enablePanDownToClose={false}
         style={{ zIndex: 10, elevation: 10 }}
+        backdropComponent={renderBackdrop} // <--- Adicionado aqui
         handleIndicatorStyle={{
           backgroundColor: "#d1d5db",
           width: 42,
