@@ -5,17 +5,15 @@ import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
-  Dimensions,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 
 import { api } from "../../Services/api";
-
-const { height } = Dimensions.get("window");
 
 interface Props {
   visible: boolean;
@@ -30,6 +28,7 @@ export default function AlterarFoto({
   headerHeight,
   onOpenCamera,
 }: Props) {
+  const { height } = useWindowDimensions();
   const slideAnim = useRef(new Animated.Value(height)).current;
 
   const overlayOpacity = useRef(new Animated.Value(0)).current;
@@ -103,16 +102,11 @@ export default function AlterarFoto({
 
       await uploadImagem(asset);
     } catch (error: any) {
-      Alert.alert(
-        "Erro",
-        "Não foi possível selecionar a imagem.",
-      );
+      Alert.alert("Erro", "Não foi possível selecionar a imagem.");
     }
   }
 
-  async function uploadImagem(
-    asset: ImagePicker.ImagePickerAsset,
-  ) {
+  async function uploadImagem(asset: ImagePicker.ImagePickerAsset) {
     if (!user?.id) return;
 
     try {
@@ -143,10 +137,7 @@ export default function AlterarFoto({
 
       onClose();
 
-      Alert.alert(
-        "Sucesso",
-        "Imagem atualizada com sucesso!",
-      );
+      Alert.alert("Sucesso", "Imagem atualizada com sucesso!");
     } catch (error: any) {
       console.log(error);
 
@@ -184,51 +175,31 @@ export default function AlterarFoto({
         ]}
       >
         <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={onClose}
-            style={styles.closeButton}
-          >
-            <Ionicons
-              name="close"
-              size={24}
-              color="#999"
-            />
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Ionicons name="close" size={24} color="#999" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.body}>
-          <Text style={styles.title}>
-            Foto de perfil
-          </Text>
+          <Text style={styles.title}>Foto de perfil</Text>
 
           <Text style={styles.subtitle}>
-            Carregar uma foto verdadeira sua pode
-            ajudar você a conseguir uma corrida mais
-            rápido. Agradecemos por ajudar a construir
-            uma comunidade mais segura conosco!
+            Carregar uma foto verdadeira sua pode ajudar você a conseguir uma
+            corrida mais rápido. Agradecemos por ajudar a construir uma
+            comunidade mais segura conosco!
           </Text>
         </View>
 
         <View style={styles.footer}>
-          <TouchableOpacity
-            onPress={onOpenCamera}
-            style={styles.button}
-          >
-            <Text style={styles.buttonText}>
-              Tirar foto
-            </Text>
+          <TouchableOpacity onPress={onOpenCamera} style={styles.button}>
+            <Text style={styles.buttonText}>Tirar foto</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={selecionarImagem}
-            style={[
-              styles.button,
-              { marginTop: 12 },
-            ]}
+            style={[styles.button, { marginTop: 12 }]}
           >
-            <Text style={styles.buttonText}>
-              Selecionar da galeria
-            </Text>
+            <Text style={styles.buttonText}>Selecionar da galeria</Text>
           </TouchableOpacity>
         </View>
       </Animated.View>
@@ -248,14 +219,14 @@ const styles = StyleSheet.create({
     paddingBottom: 40, // Espaçamento inferior para dispositivos sem home bar
   },
   headerRow: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "flex-end",
     paddingHorizontal: 20,
     paddingTop: 20,
   },
   closeButton: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
     borderRadius: 20,
     padding: 4,
   },

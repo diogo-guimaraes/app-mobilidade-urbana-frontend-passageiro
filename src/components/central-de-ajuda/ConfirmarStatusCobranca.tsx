@@ -3,18 +3,16 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import SolicitacaoEnviada from "./SolicitacaoEnviada";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -27,6 +25,7 @@ export default function ConfirmarStatusCobranca({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);

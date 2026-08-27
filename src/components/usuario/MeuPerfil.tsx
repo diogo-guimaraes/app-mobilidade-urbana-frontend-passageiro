@@ -5,13 +5,13 @@ import {
   ActivityIndicator,
   Animated,
   BackHandler,
-  Dimensions,
   Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import AlterarEmail from "./AlterarEmail";
@@ -22,8 +22,6 @@ import CameraFotoPerfil from "./CameraFotoPerfil";
 import DocumentosPendentes from "./DocumentosPendentes";
 import GestaoDispositivos from "./GestaoDispositivos";
 
-const { width } = Dimensions.get("window");
-
 interface props {
   visible: boolean;
   onClose: () => void;
@@ -31,6 +29,7 @@ interface props {
 }
 
 export default function MeuPefil({ visible, onClose, duration = 200 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);

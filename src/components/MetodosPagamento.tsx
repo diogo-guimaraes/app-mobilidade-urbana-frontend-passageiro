@@ -1,19 +1,21 @@
 import AdicionarCartao from "@/components/AdicionarCartao";
-import { FontAwesome, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  FontAwesome,
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  useWindowDimensions,
+  View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -26,6 +28,7 @@ export default function MetodosPagamento({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -45,7 +48,10 @@ export default function MetodosPagamento({
       }
       return false;
     };
-    const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onBackPress,
+    );
     return () => subscription.remove();
   }, [visible, onClose]);
 
@@ -113,7 +119,6 @@ export default function MetodosPagamento({
           </View>
 
           <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-
             {/* SEÇÃO 99PAY */}
             <View style={styles.pay99Card}>
               <View style={styles.pay99Header}>
@@ -151,11 +156,20 @@ export default function MetodosPagamento({
 
               <View style={styles.divider} />
 
-              <TouchableOpacity onPress={() => setShowAdicionarCartao(true)} style={styles.methodItem}>
+              <TouchableOpacity
+                onPress={() => setShowAdicionarCartao(true)}
+                style={styles.methodItem}
+              >
                 <View style={styles.iconContainer}>
-                  <MaterialCommunityIcons name="credit-card-plus-outline" size={24} color="#666" />
+                  <MaterialCommunityIcons
+                    name="credit-card-plus-outline"
+                    size={24}
+                    color="#666"
+                  />
                 </View>
-                <Text style={styles.methodMainText}>Ad. cartão crédito/débito</Text>
+                <Text style={styles.methodMainText}>
+                  Ad. cartão crédito/débito
+                </Text>
                 <Ionicons name="chevron-forward" size={18} color="#CCC" />
               </TouchableOpacity>
             </View>
@@ -166,11 +180,15 @@ export default function MetodosPagamento({
                 style={styles.methodItem}
                 onPress={() => {
                   setSelectedMethod("money");
-                  onClose()
+                  onClose();
                 }}
               >
                 <View style={styles.iconContainer}>
-                  <MaterialCommunityIcons name="cash" size={24} color="#f5a623" />
+                  <MaterialCommunityIcons
+                    name="cash"
+                    size={24}
+                    color="#f5a623"
+                  />
                 </View>
                 <Text style={styles.methodMainText}>Dinheiro</Text>
                 <RadioButton active={selectedMethod === "money"} />
@@ -180,13 +198,17 @@ export default function MetodosPagamento({
 
               <TouchableOpacity
                 style={styles.methodItem}
-                 onPress={() => {
+                onPress={() => {
                   setSelectedMethod("machine");
-                  onClose()
+                  onClose();
                 }}
               >
                 <View style={styles.iconContainer}>
-                  <MaterialCommunityIcons name="cellphone-nfc" size={24} color="#f5a623" />
+                  <MaterialCommunityIcons
+                    name="cellphone-nfc"
+                    size={24}
+                    color="#f5a623"
+                  />
                 </View>
                 <Text style={styles.methodMainText}>Maquininha de cartão</Text>
                 <RadioButton active={selectedMethod === "machine"} />
@@ -198,20 +220,25 @@ export default function MetodosPagamento({
                 style={styles.methodItem}
                 onPress={() => {
                   setSelectedMethod("pix");
-                  onClose()
+                  onClose();
                 }}
               >
                 <View style={styles.iconContainer}>
-                  <MaterialCommunityIcons name="cellphone-nfc" size={24} color="#00bdae" />
+                  <MaterialCommunityIcons
+                    name="cellphone-nfc"
+                    size={24}
+                    color="#00bdae"
+                  />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.methodMainText}>Pix (pré-pago)</Text>
-                  <Text style={styles.subtextInfo}>Para esta opção, é necessário pagar antecipadamente</Text>
+                  <Text style={styles.subtextInfo}>
+                    Para esta opção, é necessário pagar antecipadamente
+                  </Text>
                 </View>
                 <RadioButton active={selectedMethod === "pix"} />
               </TouchableOpacity>
             </View>
-
           </ScrollView>
         </Animated.View>
       </View>

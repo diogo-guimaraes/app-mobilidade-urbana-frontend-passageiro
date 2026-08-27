@@ -6,18 +6,16 @@ import {
   ActivityIndicator,
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { api } from "../Services/api";
 import { useAuth } from "../context/AuthProvider";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -30,6 +28,7 @@ export default function CodigoVerificacao({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -49,14 +48,12 @@ export default function CodigoVerificacao({
 
   // INPUT INVISÍVEL
   const hiddenInputRef = useRef<TextInput>(null);
-  
-   useEffect(() => {
+
+  useEffect(() => {
     if (user && !loading) {
       router.replace("/home");
     }
   }, [user, loading]);
-
-
 
   // Função que busca código no backend e alimenta os inputs
   const receberCodigo = async () => {
@@ -102,13 +99,10 @@ export default function CodigoVerificacao({
       setTimeout(async () => {
         try {
           // verifica código
-          const responseVerificar = await api.post(
-            "auth/verificar-codigo",
-            {
-              telefone,
-              codigo,
-            },
-          );
+          const responseVerificar = await api.post("auth/verificar-codigo", {
+            telefone,
+            codigo,
+          });
 
           // console.log(
           //   responseVerificar.data,
@@ -123,20 +117,14 @@ export default function CodigoVerificacao({
             }
           */
 
-          const { user, token } =
-            responseVerificar.data;
+          const { user, token } = responseVerificar.data;
 
           // autentica usuário no app
           await loginComToken(user, token);
 
-          console.log(
-            "Usuário autenticado com sucesso",
-          );
+          console.log("Usuário autenticado com sucesso");
         } catch (error: any) {
-          console.log(
-            "Erro ao verificar código:",
-            error,
-          );
+          console.log("Erro ao verificar código:", error);
 
           setHasError(true);
 
@@ -344,9 +332,7 @@ export default function CodigoVerificacao({
               style={styles.testClickableContainer}
               activeOpacity={0.7}
             >
-              <Text style={styles.testClickableText}>
-                Receber código
-              </Text>
+              <Text style={styles.testClickableText}>Receber código</Text>
             </TouchableOpacity>
 
             {/* Inputs */}
@@ -427,8 +413,7 @@ export default function CodigoVerificacao({
                 <Text
                   style={[
                     styles.resendButtonText,
-                    countdown > 0 &&
-                    styles.resendButtonTextDisabled,
+                    countdown > 0 && styles.resendButtonTextDisabled,
                   ]}
                 >
                   {countdown > 0

@@ -3,17 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -26,6 +24,7 @@ export default function AdicionarMetodoResgateConta({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -39,7 +38,7 @@ export default function AdicionarMetodoResgateConta({
   const [conta, setConta] = useState("1646");
   const [contaDigito, setContaDigito] = useState("0");
   const [tipoConta, setTipoConta] = useState<"corrente" | "poupanca">(
-    "poupanca"
+    "poupanca",
   );
   const [smsCode, setSmsCode] = useState("");
 
@@ -64,7 +63,7 @@ export default function AdicionarMetodoResgateConta({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);

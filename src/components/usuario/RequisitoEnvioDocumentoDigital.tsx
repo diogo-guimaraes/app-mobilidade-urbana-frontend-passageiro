@@ -3,17 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -26,6 +24,7 @@ export default function RequisitoEnvioDocumentoFisico({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -40,7 +39,7 @@ export default function RequisitoEnvioDocumentoFisico({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible]);
@@ -157,9 +156,7 @@ export default function RequisitoEnvioDocumentoFisico({
           <Text style={styles.link}>Clique aqui para acessar o site</Text>
 
           {/* ERROS */}
-          <Text style={styles.sectionTitle}>
-            Erros comuns a serem evitados
-          </Text>
+          <Text style={styles.sectionTitle}>Erros comuns a serem evitados</Text>
 
           <View style={styles.grid}>
             {errors.map((item, index) => (

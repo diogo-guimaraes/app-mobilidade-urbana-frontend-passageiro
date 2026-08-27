@@ -3,17 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  useWindowDimensions,
+  View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -26,6 +24,7 @@ export default function DetalhesItem({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -54,7 +53,10 @@ export default function DetalhesItem({
       }
       return false;
     };
-    const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onBackPress,
+    );
     return () => subscription.remove();
   }, [visible, onClose]);
 
@@ -124,18 +126,24 @@ export default function DetalhesItem({
                 onPress={() => setCategoria(item.label)}
                 style={[
                   styles.chip,
-                  categoria === item.label ? styles.chipActive : styles.chipInactive,
+                  categoria === item.label
+                    ? styles.chipActive
+                    : styles.chipInactive,
                 ]}
               >
-                <FontAwesome5 
-                  name={item.icon} 
-                  size={14} 
-                  color={categoria === item.label ? "#FFF" : "#666"} 
+                <FontAwesome5
+                  name={item.icon}
+                  size={14}
+                  color={categoria === item.label ? "#FFF" : "#666"}
                 />
-                <Text style={[
-                  styles.chipText,
-                  categoria === item.label ? styles.textActive : styles.textInactive
-                ]}>
+                <Text
+                  style={[
+                    styles.chipText,
+                    categoria === item.label
+                      ? styles.textActive
+                      : styles.textInactive,
+                  ]}
+                >
                   {item.label}
                 </Text>
               </TouchableOpacity>
@@ -150,7 +158,9 @@ export default function DetalhesItem({
           <Text style={styles.charCounter}>0/50</Text>
 
           {/* VALOR DO ITEM */}
-          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Valor do item</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 20 }]}>
+            Valor do item
+          </Text>
           <View style={styles.valueInputContainer}>
             <Text style={styles.currencyPrefix}>R$</Text>
             <TextInput
@@ -167,7 +177,9 @@ export default function DetalhesItem({
           </Text>
 
           {/* OBSERVAÇÕES */}
-          <Text style={[styles.sectionTitle, { marginTop: 25 }]}>Observações da entrega</Text>
+          <Text style={[styles.sectionTitle, { marginTop: 25 }]}>
+            Observações da entrega
+          </Text>
           <TextInput
             style={styles.textArea}
             placeholder="Adicione uma descrição ou observações"

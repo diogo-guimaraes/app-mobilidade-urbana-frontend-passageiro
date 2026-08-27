@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Image,
   Pressable,
   ScrollView,
@@ -12,10 +11,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
-
-const { width, height } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -28,6 +26,7 @@ export default function InformacoesDestinario({
   onClose,
   duration = 200,
 }: props) {
+  const { width, height } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 

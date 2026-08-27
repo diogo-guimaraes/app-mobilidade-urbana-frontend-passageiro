@@ -1,16 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
-  Dimensions,
   Image,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
-
-const { height } = Dimensions.get("window");
 
 interface AvaliacaoPositiva {
   id: string;
@@ -32,6 +30,7 @@ export default function ModalSelos({
   headerHeight,
   data,
 }: Props) {
+  const { height } = useWindowDimensions();
   const slideAnim = useRef(new Animated.Value(height)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -96,7 +95,10 @@ export default function ModalSelos({
 
       {/* Modal */}
       <Animated.View
-        style={[styles.modal, { transform: [{ translateY: slideAnim }] }]}
+        style={[
+          styles.modal,
+          { height: height * 0.55, transform: [{ translateY: slideAnim }] },
+        ]}
       >
         <View style={styles.body}>
           <View style={styles.avatarSection}>
@@ -126,7 +128,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: height * 0.55, // define altura do modal (IMPORTANTE)
     backgroundColor: "#FFF",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,

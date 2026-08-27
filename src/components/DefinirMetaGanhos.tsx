@@ -3,16 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -25,6 +23,7 @@ export default function DefinirMetaGanhos({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -40,7 +39,7 @@ export default function DefinirMetaGanhos({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -139,18 +138,20 @@ export default function DefinirMetaGanhos({
 
         {/* FOOTER BUTTON */}
         <View style={styles.footer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
-                styles.mainButton, 
-                { backgroundColor: metaValue ? '#111' : '#F3F3F3' }
+              styles.mainButton,
+              { backgroundColor: metaValue ? "#111" : "#F3F3F3" },
             ]}
             disabled={!metaValue}
           >
-            <Text style={[
+            <Text
+              style={[
                 styles.mainButtonText,
-                { color: metaValue ? '#FFF' : '#AAA' }
-            ]}>
-                Inserir meta de ganhos
+                { color: metaValue ? "#FFF" : "#AAA" },
+              ]}
+            >
+              Inserir meta de ganhos
             </Text>
           </TouchableOpacity>
         </View>

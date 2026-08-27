@@ -3,17 +3,15 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   FlatList,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import SelecaoMotivoAjuda from "./SelecaoMotivoAjuda";
-
-const { width } = Dimensions.get("window");
 
 interface RideHistory {
   id: string;
@@ -125,6 +123,7 @@ export default function ListaSelecaoCorrida({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
