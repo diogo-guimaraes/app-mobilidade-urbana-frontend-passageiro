@@ -23,3 +23,23 @@ api.interceptors.request.use(
     return Promise.reject(error);
   },
 );
+
+// Chamado pelo AuthProvider assim que monta, pra permitir deslogar
+// automaticamente quando qualquer requisição voltar 401 (token expirado/inválido).
+type UnauthorizedHandler = () => void;
+let onUnauthorized: UnauthorizedHandler | null = null;
+
+export const setUnauthorizedHandler = (handler: UnauthorizedHandler) => {
+  onUnauthorized = handler;
+};
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      onUnauthorized?.();
+    }
+
+    return Promise.reject(error);
+  },
+);

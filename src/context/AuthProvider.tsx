@@ -8,15 +8,14 @@ import React, {
   useState,
 } from "react";
 
+import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 
-import { api } from "../Services/api";
+import { api, setUnauthorizedHandler } from "../Services/api";
 
 // =========================
 // INTERFACES
 // =========================
-
-
 
 interface Usuario {
   id: string;
@@ -54,19 +53,13 @@ interface AuthContextType {
 
   login: (email: string, password: string) => Promise<void>;
 
-  loginComToken: (
-    user: Usuario,
-    token: string,
-  ) => Promise<void>;
-
+  loginComToken: (user: Usuario, token: string) => Promise<void>;
 
   logout: () => Promise<void>;
 
   register: (dados: DadosCadastro) => Promise<void>;
 
-  atualizarFotoUsuario: (
-    dados: AtualizarFotoPayload,
-  ) => Promise<void>;
+  atualizarFotoUsuario: (dados: AtualizarFotoPayload) => Promise<void>;
 }
 
 // =========================
@@ -78,20 +71,15 @@ const AuthContext = createContext<AuthContextType>({
 
   loading: true,
 
-  login: async (email: string, password: string) => { },
+  login: async (email: string, password: string) => {},
 
-  loginComToken: async (
-    user: Usuario,
-    token: string,
-  ) => { },
+  loginComToken: async (user: Usuario, token: string) => {},
 
-  logout: async () => { },
+  logout: async () => {},
 
-  register: async (dados: DadosCadastro) => { },
+  register: async (dados: DadosCadastro) => {},
 
-  atualizarFotoUsuario: async (
-    dados: AtualizarFotoPayload,
-  ) => { },
+  atualizarFotoUsuario: async (dados: AtualizarFotoPayload) => {},
 });
 
 // =========================
@@ -150,15 +138,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       await SecureStore.setItemAsync("token", token);
     } catch (error: any) {
-      console.error("Erro ao fazer login:", error);
-
-      console.log("Mensagem:", error?.message);
-
-      console.log("Código:", error?.code);
-
-      console.log("Response:", error?.response?.data);
-
-      console.log("Status:", error?.response?.status);
+      if (__DEV__) {
+        console.error(
+          "Erro ao fazer login:",
+          error?.response?.status,
+          error?.response?.data ?? error?.message,
+        );
+      }
 
       throw error;
     } finally {
@@ -166,29 +152,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const loginComToken = async (
-    userData: Usuario,
-    token: string,
-  ) => {
+  const loginComToken = async (userData: Usuario, token: string) => {
     try {
       setLoading(true);
-      console.log(userData , 'userData')
       setUser(userData);
 
-      await SecureStore.setItemAsync(
-        "user",
-        JSON.stringify(userData),
-      );
+      await SecureStore.setItemAsync("user", JSON.stringify(userData));
 
-      await SecureStore.setItemAsync(
-        "token",
-        token,
-      );
+      await SecureStore.setItemAsync("token", token);
     } catch (error) {
-      console.error(
-        "Erro ao autenticar com token:",
-        error,
-      );
+      console.error("Erro ao autenticar com token:", error);
 
       throw error;
     } finally {
@@ -212,6 +185,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Desloga automaticamente e volta pro login quando qualquer
+  // requisição à API retornar 401 (token expirado/inválido).
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      logout();
+
+      router.replace("/login");
+    });
+  }, []);
+
   // =========================
   // REGISTER
   // =========================
@@ -220,14 +203,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
 
-      console.log("Enviando cadastro:", dadosCadastro);
-
       const response = await api.post<AuthResponse>(
         "/auth/register",
         dadosCadastro,
       );
-
-      console.log("Resposta da API:", response.data);
 
       const { user, token } = response.data;
 
@@ -237,15 +216,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       await SecureStore.setItemAsync("token", token);
     } catch (error: any) {
-      console.error("Erro ao registrar:", error);
-
-      console.log("Mensagem:", error?.message);
-
-      console.log("Código:", error?.code);
-
-      console.log("Response:", error?.response?.data);
-
-      console.log("Status:", error?.response?.status);
+      if (__DEV__) {
+        console.error(
+          "Erro ao registrar:",
+          error?.response?.status,
+          error?.response?.data ?? error?.message,
+        );
+      }
 
       throw error;
     } finally {
@@ -271,10 +248,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setUser(usuarioAtualizado);
 
-    await SecureStore.setItemAsync(
-      "user",
-      JSON.stringify(usuarioAtualizado),
-    );
+    await SecureStore.setItemAsync("user", JSON.stringify(usuarioAtualizado));
   };
 
   // =========================
