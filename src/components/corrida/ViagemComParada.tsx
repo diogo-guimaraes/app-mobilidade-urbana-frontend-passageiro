@@ -46,7 +46,7 @@ export default function ViagemComParada({
   onClose,
 
   // 🔥 NOVO
-  onConfirmar, 
+  onConfirmar,
   onShowBuscarEndereco,
 
   itinerario,
@@ -73,7 +73,7 @@ export default function ViagemComParada({
   }, [itinerario.length]);
 
   const podeConfirmar = itinerario.some(
-    (item, index) => index !== 0 && item.name.trim() !== "",
+    (item, index) => index !== 0 && (item.name ?? "").trim() !== "",
   );
 
   const reorganizarOrders = (lista: InterfaceEndereco[]) => {

@@ -20,7 +20,12 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyD5zpgaaorpSiBVtbvN0OaqewA802dZzZ8"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -48,7 +53,8 @@
           "locationAlwaysPermission": "Permitir $(PRODUCT_NAME) usar sua localização.",
           "locationWhenInUsePermission": "Permitir $(PRODUCT_NAME) usar sua localização."
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,

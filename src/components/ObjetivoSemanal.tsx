@@ -3,16 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import DefinirMetaGanhos from "./DefinirMetaGanhos";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -25,6 +23,7 @@ export default function ObjetivoSemanal({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -44,7 +43,7 @@ export default function ObjetivoSemanal({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -82,7 +81,15 @@ export default function ObjetivoSemanal({
 
   if (!isMounted) return null;
 
-  const FeatureItem = ({ icon, title, subtitle }: { icon: any; title: string; subtitle: string }) => (
+  const FeatureItem = ({
+    icon,
+    title,
+    subtitle,
+  }: {
+    icon: any;
+    title: string;
+    subtitle: string;
+  }) => (
     <TouchableOpacity style={styles.featureRow}>
       <View style={styles.featureIconContainer}>
         <Ionicons name={icon} size={24} color="#111" />
@@ -131,7 +138,10 @@ export default function ObjetivoSemanal({
             <View style={styles.goalCard}>
               <View style={styles.goalHeader}>
                 <Text style={styles.goalMainTitle}>Objetivo semanal</Text>
-                <TouchableOpacity onPress={mostrarDefinirMetaGanhos} style={styles.editButton}>
+                <TouchableOpacity
+                  onPress={mostrarDefinirMetaGanhos}
+                  style={styles.editButton}
+                >
                   <Ionicons name="pencil" size={14} color="#111" />
                   <Text style={styles.editButtonText}>Editar</Text>
                 </TouchableOpacity>
@@ -153,10 +163,12 @@ export default function ObjetivoSemanal({
                 </View>
 
                 <View style={styles.progressBarBg}>
-                  <View style={[styles.progressBarFill, { width: '18%' }]} />
+                  <View style={[styles.progressBarFill, { width: "18%" }]} />
                 </View>
 
-                <Text style={styles.continueText}>Continue aumentando seus ganhos</Text>
+                <Text style={styles.continueText}>
+                  Continue aumentando seus ganhos
+                </Text>
               </View>
             </View>
 

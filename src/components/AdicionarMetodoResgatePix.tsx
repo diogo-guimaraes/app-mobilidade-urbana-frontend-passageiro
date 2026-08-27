@@ -3,18 +3,16 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Keyboard,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import MetodoResgateAdicionado from "./MetodoResgateAdicionado";
-
-const { width, height } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -27,6 +25,7 @@ export default function AdicionarMetodoResgate({
   onClose,
   duration = 200,
 }: props) {
+  const { width, height } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const slideConfirm = useRef(new Animated.Value(height)).current;
@@ -79,7 +78,7 @@ export default function AdicionarMetodoResgate({
 
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, showConfirm, visibleMetodoResgateAdicionado, onClose]);

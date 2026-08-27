@@ -9,9 +9,8 @@ export default function Index() {
   // Enquanto está carregando, mostra splash
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-black">
-        <Splash
-        />
+      <View className="flex-1 items-center justify-center bg-black">
+        <Splash />
       </View>
     );
   }

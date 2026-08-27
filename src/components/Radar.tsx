@@ -3,16 +3,14 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Easing,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -119,6 +117,7 @@ export default function DestinationDrawer({
   onClose,
   duration = 300,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
@@ -137,7 +136,7 @@ export default function DestinationDrawer({
 
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
 
     return () => subscription.remove();
@@ -222,7 +221,9 @@ export default function DestinationDrawer({
         {/* Conteúdo adicional (opções de corrida, etc.) viria aqui */}
         <View style={styles.contentContainer}>
           <Text style={styles.title}>Toque para selecionar uma</Text>
-          <Text style={styles.subtitle}>1 corrida(s) nas opções de corridas</Text>
+          <Text style={styles.subtitle}>
+            1 corrida(s) nas opções de corridas
+          </Text>
           <TouchableOpacity style={styles.button}>
             <Text style={styles.buttonText}>Nova</Text>
           </TouchableOpacity>

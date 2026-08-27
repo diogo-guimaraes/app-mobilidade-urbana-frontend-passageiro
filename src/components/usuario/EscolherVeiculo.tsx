@@ -3,17 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Image,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import EnviarDocumentoVeiculo from "./EnviarDocumentoVeiculo";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -26,6 +24,7 @@ export default function EscolherVeiculo({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -36,20 +35,17 @@ export default function EscolherVeiculo({
     {
       id: "carro",
       label: "Carro",
-      imagem:
-        "https://cdn-icons-png.flaticon.com/512/744/744465.png",
+      imagem: "https://cdn-icons-png.flaticon.com/512/744/744465.png",
     },
     {
       id: "moto",
       label: "Moto",
-      imagem:
-        "https://cdn-icons-png.flaticon.com/512/1986/1986937.png",
+      imagem: "https://cdn-icons-png.flaticon.com/512/1986/1986937.png",
     },
     {
       id: "bicicleta",
       label: "Bicicleta",
-      imagem:
-        "https://cdn-icons-png.flaticon.com/512/2972/2972185.png",
+      imagem: "https://cdn-icons-png.flaticon.com/512/2972/2972185.png",
     },
   ];
 
@@ -63,7 +59,7 @@ export default function EscolherVeiculo({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -113,12 +109,7 @@ export default function EscolherVeiculo({
       >
         <Image source={{ uri: item.imagem }} style={styles.image} />
         <Text style={styles.label}>{item.label}</Text>
-        <View
-          style={[
-            styles.radio,
-            isSelected && styles.radioSelected,
-          ]}
-        >
+        <View style={[styles.radio, isSelected && styles.radioSelected]}>
           {isSelected && <View style={styles.radioInner} />}
         </View>
       </TouchableOpacity>
@@ -127,50 +118,53 @@ export default function EscolherVeiculo({
 
   return (
     <>
-    <View style={[StyleSheet.absoluteFill, { zIndex: 30 }]}>
-      {/* Overlay */}
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
-        <Animated.View
-          style={[
-            StyleSheet.absoluteFill,
-            { backgroundColor: "rgba(0,0,0,0.25)", opacity: overlayOpacity },
-          ]}
-        />
-      </Pressable>
+      <View style={[StyleSheet.absoluteFill, { zIndex: 30 }]}>
+        {/* Overlay */}
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
+          <Animated.View
+            style={[
+              StyleSheet.absoluteFill,
+              { backgroundColor: "rgba(0,0,0,0.25)", opacity: overlayOpacity },
+            ]}
+          />
+        </Pressable>
 
-      {/* Drawer */}
-      <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
-        {/* HEADER */}
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <TouchableOpacity onPress={onClose}>
-              <Ionicons name="arrow-back-outline" size={26} color="#111" />
-            </TouchableOpacity>
+        {/* Drawer */}
+        <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
+          {/* HEADER */}
+          <View style={styles.header}>
+            <View style={styles.headerContent}>
+              <TouchableOpacity onPress={onClose}>
+                <Ionicons name="arrow-back-outline" size={26} color="#111" />
+              </TouchableOpacity>
 
-            <Text style={styles.headerTitle}>Veículo</Text>
+              <Text style={styles.headerTitle}>Veículo</Text>
 
-            <View style={{ width: 26 }} />
+              <View style={{ width: 26 }} />
+            </View>
           </View>
-        </View>
 
-        {/* BODY */}
-        <View style={styles.body}>
-          <Text style={styles.title}>
-            Qual tipo de veículo gostaria de adicionar?
-          </Text>
+          {/* BODY */}
+          <View style={styles.body}>
+            <Text style={styles.title}>
+              Qual tipo de veículo gostaria de adicionar?
+            </Text>
 
-          {opcoes.map(renderItem)}
-        </View>
+            {opcoes.map(renderItem)}
+          </View>
 
-        {/* FOOTER */}
-        <View style={styles.footer}>
-          <TouchableOpacity onPress={() => setShowEnviarDocumento(true)} style={styles.button}>
-            <Text style={styles.buttonText}>Confirmar</Text>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
-    </View>
-     <EnviarDocumentoVeiculo
+          {/* FOOTER */}
+          <View style={styles.footer}>
+            <TouchableOpacity
+              onPress={() => setShowEnviarDocumento(true)}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>Confirmar</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </View>
+      <EnviarDocumentoVeiculo
         visible={showEnviarDocumento}
         onClose={() => setShowEnviarDocumento(false)}
       />

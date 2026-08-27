@@ -3,20 +3,18 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import ConvidarMotorista from "./ConvidarMotorista";
 import HistoricoCorridas from "./HistoricoCorridas";
 import MetodosResgate from "./MetodoResgate";
 import MeuSaldo from "./MeuSaldo";
-const { width } = Dimensions.get("window");
-
 interface props {
   visible: boolean;
   onClose: () => void;
@@ -28,6 +26,7 @@ export default function CentralGanhos({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);

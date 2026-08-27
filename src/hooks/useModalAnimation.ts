@@ -1,8 +1,6 @@
 // hooks/useModalAnimation.ts
 import { useEffect, useRef } from "react";
-import { Animated, Dimensions } from "react-native";
-
-const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+import { Animated, useWindowDimensions } from "react-native";
 
 export interface ModalAnimationConfig {
   duration?: number;
@@ -12,8 +10,9 @@ export interface ModalAnimationConfig {
 
 export function useModalAnimation(
   visible: boolean,
-  config: ModalAnimationConfig = {}
+  config: ModalAnimationConfig = {},
 ) {
+  const { height: SCREEN_HEIGHT } = useWindowDimensions();
   const {
     duration = 400,
     overlayDuration = 400,
@@ -51,7 +50,7 @@ export function useModalAnimation(
         }),
       ]).start();
     }
-  }, [visible, overlayOpacity, duration, overlayDuration, slideAnim  ]);
+  }, [visible, overlayOpacity, duration, overlayDuration, slideAnim]);
 
   // 🔹 Corrigido: aguarda animação terminar antes de fechar
   const closeAnimation = (onClose: () => void) => {

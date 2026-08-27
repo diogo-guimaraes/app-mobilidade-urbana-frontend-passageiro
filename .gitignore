@@ -43,3 +43,6 @@ app-example
 /ios
 /android
 .env*
+
+# testes locais do Maestro (não versionados)
+/.maestro

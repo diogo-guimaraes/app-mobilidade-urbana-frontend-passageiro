@@ -59,7 +59,7 @@ export default function FolhaInferior({
     ({ item, index }: { item: any; index: number }) => (
       <TouchableOpacity>
         <View
-          className={`flex-row items-start p-4 w-full ${
+          className={`w-full flex-row items-start p-4 ${
             index !== data.length - 1 ? "border-b border-gray-200" : ""
           }`}
         >
@@ -87,7 +87,7 @@ export default function FolhaInferior({
   );
 
   return (
-    <View className="flex-1 pt-12 px-4">
+    <View className="flex-1 px-4 pt-12">
       <BottomSheet
         ref={sheetRef}
         snapPoints={snapPoints}

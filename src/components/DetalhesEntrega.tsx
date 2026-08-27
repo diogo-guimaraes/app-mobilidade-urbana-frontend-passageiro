@@ -1,5 +1,3 @@
-
-
 import DetalhesItem from "@/components/DetalhesItem";
 import MetodosPagamento from "@/components/MetodosPagamento";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -7,17 +5,15 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  useWindowDimensions,
+  View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -30,10 +26,11 @@ export default function DetalhesEntrega({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
-  const [veiculo, setVeiculo] = useState<'moto' | 'carro'>('moto');
+  const [veiculo, setVeiculo] = useState<"moto" | "carro">("moto");
   const [showDetalhesItem, setShowDetalhesItem] = useState(false);
   const [showMetodosPagamento, setShowMetodosPagamento] = useState(false);
 
@@ -55,7 +52,7 @@ export default function DetalhesEntrega({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -122,15 +119,17 @@ export default function DetalhesEntrega({
             <View style={styles.card}>
               <View style={styles.routeContainer}>
                 <View style={styles.routeLineContainer}>
-                  <View style={[styles.dot, { borderColor: '#00C4A1' }]} />
+                  <View style={[styles.dot, { borderColor: "#00C4A1" }]} />
                   <View style={styles.line} />
-                  <View style={[styles.dot, { borderColor: '#FF7A00' }]} />
+                  <View style={[styles.dot, { borderColor: "#FF7A00" }]} />
                 </View>
                 <View style={styles.routeTextContainer}>
                   <View style={styles.locationItem}>
                     <View style={{ flex: 1 }}>
                       <Text style={styles.locationTitle}>Ac. Publico, 603</Text>
-                      <Text style={styles.locationSubtitle}>Diogo • 69981400661</Text>
+                      <Text style={styles.locationSubtitle}>
+                        Diogo • 69981400661
+                      </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color="#CCC" />
                   </View>
@@ -139,8 +138,12 @@ export default function DetalhesEntrega({
 
                   <View style={styles.locationItem}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.locationTitle}>Avenida Bosque Mamoré - casa</Text>
-                      <Text style={styles.locationSubtitle}>Deivison • +5569992198545</Text>
+                      <Text style={styles.locationTitle}>
+                        Avenida Bosque Mamoré - casa
+                      </Text>
+                      <Text style={styles.locationSubtitle}>
+                        Deivison • +5569992198545
+                      </Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color="#CCC" />
                   </View>
@@ -149,12 +152,21 @@ export default function DetalhesEntrega({
             </View>
 
             {/* INSERIR DETALHES */}
-            <TouchableOpacity onPress={() => setShowDetalhesItem(true)} style={[styles.card, styles.rowBetween, { paddingVertical: 18 }]}>
+            <TouchableOpacity
+              onPress={() => setShowDetalhesItem(true)}
+              style={[styles.card, styles.rowBetween, { paddingVertical: 18 }]}
+            >
               <View style={styles.row}>
-                <MaterialCommunityIcons name="package-variant" size={22} color="#666" />
+                <MaterialCommunityIcons
+                  name="package-variant"
+                  size={22}
+                  color="#666"
+                />
                 <View style={{ marginLeft: 12 }}>
                   <Text style={styles.infoTitle}>Inserir detalhes do item</Text>
-                  <Text style={styles.infoSubtitle}>Adicionar uma observação na entrega</Text>
+                  <Text style={styles.infoSubtitle}>
+                    Adicionar uma observação na entrega
+                  </Text>
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#CCC" />
@@ -163,14 +175,27 @@ export default function DetalhesEntrega({
             {/* SELEÇÃO DE VEÍCULO */}
             <View style={styles.card}>
               <TouchableOpacity
-                style={[styles.vehicleItem, veiculo === 'moto' && styles.vehicleActive]}
-                onPress={() => setVeiculo('moto')}
+                style={[
+                  styles.vehicleItem,
+                  veiculo === "moto" && styles.vehicleActive,
+                ]}
+                onPress={() => setVeiculo("moto")}
               >
-                <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/3194/3194510.png' }} style={styles.vehicleImg} />
+                <Image
+                  source={{
+                    uri: "https://cdn-icons-png.flaticon.com/512/3194/3194510.png",
+                  }}
+                  style={styles.vehicleImg}
+                />
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <View style={styles.row}>
                     <Text style={styles.vehicleTitle}>Entrega Moto</Text>
-                    <Ionicons name="information-circle" size={16} color="#CCC" style={{ marginLeft: 4 }} />
+                    <Ionicons
+                      name="information-circle"
+                      size={16}
+                      color="#CCC"
+                      style={{ marginLeft: 4 }}
+                    />
                   </View>
                   <Text style={styles.vehicleSubtitle}>12:28 • 7 min</Text>
                   <Text style={styles.vehicleSubtitle}>40x44x38cm • 10kg</Text>
@@ -178,26 +203,48 @@ export default function DetalhesEntrega({
                 <View style={styles.priceContainer}>
                   <Text style={styles.priceText}>R$3,36</Text>
                   <View style={styles.promoBadge}>
-                    <MaterialCommunityIcons name="ticket-percent" size={14} color="#00C4A1" />
+                    <MaterialCommunityIcons
+                      name="ticket-percent"
+                      size={14}
+                      color="#00C4A1"
+                    />
                     <Text style={styles.promoText}>R$4,20</Text>
                   </View>
                 </View>
-                <View style={[styles.radio, veiculo === 'moto' && styles.radioActive]}>
-                  {veiculo === 'moto' && <View style={styles.radioInner} />}
+                <View
+                  style={[
+                    styles.radio,
+                    veiculo === "moto" && styles.radioActive,
+                  ]}
+                >
+                  {veiculo === "moto" && <View style={styles.radioInner} />}
                 </View>
               </TouchableOpacity>
 
               <View style={styles.divider} />
 
               <TouchableOpacity
-                style={[styles.vehicleItem, veiculo === 'carro' && styles.vehicleActive]}
-                onPress={() => setVeiculo('carro')}
+                style={[
+                  styles.vehicleItem,
+                  veiculo === "carro" && styles.vehicleActive,
+                ]}
+                onPress={() => setVeiculo("carro")}
               >
-                <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/743/743822.png' }} style={styles.vehicleImg} />
+                <Image
+                  source={{
+                    uri: "https://cdn-icons-png.flaticon.com/512/743/743822.png",
+                  }}
+                  style={styles.vehicleImg}
+                />
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <View style={styles.row}>
                     <Text style={styles.vehicleTitle}>Entrega Carro</Text>
-                    <Ionicons name="information-circle" size={16} color="#CCC" style={{ marginLeft: 4 }} />
+                    <Ionicons
+                      name="information-circle"
+                      size={16}
+                      color="#CCC"
+                      style={{ marginLeft: 4 }}
+                    />
                   </View>
                   <Text style={styles.vehicleSubtitle}>12:28 • 5 min</Text>
                   <Text style={styles.vehicleSubtitle}>100x70x60cm • 30kg</Text>
@@ -205,8 +252,13 @@ export default function DetalhesEntrega({
                 <View style={styles.priceContainer}>
                   <Text style={styles.priceText}>R$6,30</Text>
                 </View>
-                <View style={[styles.radio, veiculo === 'carro' && styles.radioActive]}>
-                  {veiculo === 'carro' && <View style={styles.radioInner} />}
+                <View
+                  style={[
+                    styles.radio,
+                    veiculo === "carro" && styles.radioActive,
+                  ]}
+                >
+                  {veiculo === "carro" && <View style={styles.radioInner} />}
                 </View>
               </TouchableOpacity>
             </View>
@@ -216,7 +268,12 @@ export default function DetalhesEntrega({
               <View style={[styles.rowBetween, { marginBottom: 15 }]}>
                 <View style={styles.row}>
                   <Text style={styles.infoTitle}>Verificar com PIN</Text>
-                  <Ionicons name="information-circle" size={16} color="#CCC" style={{ marginLeft: 4 }} />
+                  <Ionicons
+                    name="information-circle"
+                    size={16}
+                    color="#CCC"
+                    style={{ marginLeft: 4 }}
+                  />
                 </View>
               </View>
 
@@ -236,12 +293,24 @@ export default function DetalhesEntrega({
             <TouchableOpacity onPress={() => setShowMetodosPagamento(true)}>
               <View style={styles.paymentInfo}>
                 <View style={styles.row}>
-                  <Image source={{ uri: 'https://cdn-icons-png.flaticon.com/512/196/196561.png' }} style={styles.cardBrand} />
+                  <Image
+                    source={{
+                      uri: "https://cdn-icons-png.flaticon.com/512/196/196561.png",
+                    }}
+                    style={styles.cardBrand}
+                  />
                   <Text style={styles.cardNumber}>3048</Text>
                 </View>
                 <View style={styles.row}>
                   <Text style={styles.balanceText}>Saldo disponível: </Text>
-                  <Text style={[styles.balanceText, { color: '#00C4A1', fontWeight: 'bold' }]}>R$0,30</Text>
+                  <Text
+                    style={[
+                      styles.balanceText,
+                      { color: "#00C4A1", fontWeight: "bold" },
+                    ]}
+                  >
+                    R$0,30
+                  </Text>
                   <Ionicons name="chevron-forward" size={14} color="#CCC" />
                 </View>
               </View>
@@ -250,7 +319,12 @@ export default function DetalhesEntrega({
               <View>
                 <View style={styles.row}>
                   <Text style={styles.finalPrice}>R$3,36</Text>
-                  <Ionicons name="information-circle" size={16} color="#CCC" style={{ marginLeft: 4 }} />
+                  <Ionicons
+                    name="information-circle"
+                    size={16}
+                    color="#CCC"
+                    style={{ marginLeft: 4 }}
+                  />
                 </View>
                 <View style={styles.footerPromoBadge}>
                   <Text style={styles.footerPromoText}>Até -R$0.84</Text>
@@ -271,7 +345,6 @@ export default function DetalhesEntrega({
         visible={showMetodosPagamento}
         onClose={() => setShowMetodosPagamento(false)}
       />
-
     </>
   );
 }
@@ -306,76 +379,122 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 12,
     padding: 16,
     marginTop: 12,
   },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  row: { flexDirection: "row", alignItems: "center" },
+  rowBetween: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
 
   // Rota
-  routeContainer: { flexDirection: 'row' },
-  routeLineContainer: { alignItems: 'center', width: 20, marginRight: 12, paddingVertical: 5 },
-  dot: { width: 10, height: 10, borderRadius: 5, borderWidth: 2, backgroundColor: '#FFF' },
-  line: { width: 1, flex: 1, backgroundColor: '#EEE', marginVertical: 4 },
+  routeContainer: { flexDirection: "row" },
+  routeLineContainer: {
+    alignItems: "center",
+    width: 20,
+    marginRight: 12,
+    paddingVertical: 5,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
+    backgroundColor: "#FFF",
+  },
+  line: { width: 1, flex: 1, backgroundColor: "#EEE", marginVertical: 4 },
   routeTextContainer: { flex: 1 },
-  locationItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 4 },
-  locationTitle: { fontSize: 15, fontWeight: '600', color: '#111' },
-  locationSubtitle: { fontSize: 13, color: '#999', marginTop: 2 },
-  routeDivider: { height: 1, backgroundColor: '#F8F8F8', marginVertical: 12 },
+  locationItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 4,
+  },
+  locationTitle: { fontSize: 15, fontWeight: "600", color: "#111" },
+  locationSubtitle: { fontSize: 13, color: "#999", marginTop: 2 },
+  routeDivider: { height: 1, backgroundColor: "#F8F8F8", marginVertical: 12 },
 
   // Info
-  infoTitle: { fontSize: 15, fontWeight: 'bold', color: '#111' },
-  infoSubtitle: { fontSize: 12, color: '#AAA' },
+  infoTitle: { fontSize: 15, fontWeight: "bold", color: "#111" },
+  infoSubtitle: { fontSize: 12, color: "#AAA" },
 
   // Veículos
-  vehicleItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10 },
+  vehicleItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+  },
   vehicleActive: { opacity: 1 },
-  vehicleImg: { width: 45, height: 45, resizeMode: 'contain' },
-  vehicleTitle: { fontSize: 15, fontWeight: 'bold' },
-  vehicleSubtitle: { fontSize: 12, color: '#999' },
-  priceContainer: { alignItems: 'flex-end', marginRight: 12 },
-  priceText: { fontSize: 16, fontWeight: 'bold' },
-  promoBadge: { flexDirection: 'row', alignItems: 'center' },
-  promoText: { fontSize: 12, color: '#CCC', textDecorationLine: 'line-through', marginLeft: 2 },
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#DDD', justifyContent: 'center', alignItems: 'center' },
-  radioActive: { borderColor: '#111' },
-  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#111' },
-  divider: { height: 1, backgroundColor: '#F8F8F8', marginVertical: 10 },
+  vehicleImg: { width: 45, height: 45, resizeMode: "contain" },
+  vehicleTitle: { fontSize: 15, fontWeight: "bold" },
+  vehicleSubtitle: { fontSize: 12, color: "#999" },
+  priceContainer: { alignItems: "flex-end", marginRight: 12 },
+  priceText: { fontSize: 16, fontWeight: "bold" },
+  promoBadge: { flexDirection: "row", alignItems: "center" },
+  promoText: {
+    fontSize: 12,
+    color: "#CCC",
+    textDecorationLine: "line-through",
+    marginLeft: 2,
+  },
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: "#DDD",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  radioActive: { borderColor: "#111" },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#111",
+  },
+  divider: { height: 1, backgroundColor: "#F8F8F8", marginVertical: 10 },
 
   // Checkbox
-  checkboxLabel: { fontSize: 15, color: '#555' },
+  checkboxLabel: { fontSize: 15, color: "#555" },
 
   // Footer
   footer: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     padding: 16,
     paddingBottom: 30,
     borderTopWidth: 1,
-    borderTopColor: '#EEE',
+    borderTopColor: "#EEE",
   },
   paymentInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 15,
   },
-  cardBrand: { width: 24, height: 15, resizeMode: 'contain' },
-  cardNumber: { fontSize: 14, color: '#333', marginLeft: 8 },
-  balanceText: { fontSize: 12, color: '#999' },
+  cardBrand: { width: 24, height: 15, resizeMode: "contain" },
+  cardNumber: { fontSize: 14, color: "#333", marginLeft: 8 },
+  balanceText: { fontSize: 12, color: "#999" },
   actionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  finalPrice: { fontSize: 22, fontWeight: 'bold' },
-  footerPromoBadge: { backgroundColor: '#00C4A1', paddingHorizontal: 6, borderRadius: 4, marginTop: 2 },
-  footerPromoText: { color: '#FFF', fontSize: 11, fontWeight: 'bold' },
+  finalPrice: { fontSize: 22, fontWeight: "bold" },
+  footerPromoBadge: {
+    backgroundColor: "#00C4A1",
+    paddingHorizontal: 6,
+    borderRadius: 4,
+    marginTop: 2,
+  },
+  footerPromoText: { color: "#FFF", fontSize: 11, fontWeight: "bold" },
   btnConfirm: {
-    backgroundColor: '#FFD100',
+    backgroundColor: "#FFD100",
     paddingVertical: 14,
     paddingHorizontal: 45,
     borderRadius: 12,
   },
-  btnConfirmText: { fontSize: 18, fontWeight: 'bold', color: '#111' },
+  btnConfirmText: { fontSize: 18, fontWeight: "bold", color: "#111" },
 });

@@ -1,5 +1,5 @@
 // context/UiContext.tsx
-import React, { createContext, ReactNode, useContext, useState } from 'react';
+import React, { createContext, ReactNode, useContext, useState } from "react";
 
 interface UiContextProps {
   isModalVisible: boolean;
@@ -25,7 +25,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
 export function useUi() {
   const context = useContext(UiContext);
   if (context === undefined) {
-    throw new Error('useUi must be used within a UiProvider');
+    throw new Error("useUi must be used within a UiProvider");
   }
   return context;
 }

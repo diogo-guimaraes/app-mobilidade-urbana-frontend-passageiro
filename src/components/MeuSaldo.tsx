@@ -3,19 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import DefinirMetodoResgate from "./DefinirMetodoResgate";
 import SacarSaldo from "./SacarSaldo";
 import SaqueStatus from "./SaqueStatus";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -24,6 +22,7 @@ interface props {
 }
 
 export default function MeuSaldo({ visible, onClose, duration = 200 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -57,7 +56,7 @@ export default function MeuSaldo({ visible, onClose, duration = 200 }: props) {
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);

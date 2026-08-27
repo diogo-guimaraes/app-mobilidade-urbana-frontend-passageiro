@@ -3,13 +3,13 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   FlatList,
   ListRenderItem,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import ConfigurarSolicitacoes from "./ConfigurarSolicitacoes";
@@ -17,8 +17,6 @@ import DefinirDestino from "./DefinirDestino";
 import MetodosPagamento from "./MetodosPagamento";
 import PreferenciasNavegacao from "./PreferenciasNavegacao";
 import PreferenciasSomVoz from "./PreferenciasSomVoz";
-
-const { width } = Dimensions.get("window");
 
 // 👉 DEFINIÇÃO DA INTERFACE PARA O ITEM DE ENDEREÇO
 interface AddressItem {
@@ -63,6 +61,7 @@ export default function Preferencias({
   onDisconnect,
   buscandoCorrida,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);

@@ -17,8 +17,10 @@ export default function Entregas() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<"Enviar" | "Receber">("Enviar");
-  const [showInformacoesRemetente, setShowInformacoesRemetente] = useState(false);
-  const [showInformacoesDestinario, setShowInformacoesDestinario] = useState(false);
+  const [showInformacoesRemetente, setShowInformacoesRemetente] =
+    useState(false);
+  const [showInformacoesDestinario, setShowInformacoesDestinario] =
+    useState(false);
 
   return (
     <>
@@ -115,7 +117,9 @@ export default function Entregas() {
                 >
                   Receber
                 </Text>
-                {activeTab === "Receber" && <View style={styles.tabIndicator} />}
+                {activeTab === "Receber" && (
+                  <View style={styles.tabIndicator} />
+                )}
               </TouchableOpacity>
             </View>
 
@@ -123,20 +127,31 @@ export default function Entregas() {
             <View style={styles.dynamicContent}>
               {activeTab === "Enviar" ? (
                 <>
-                  <TouchableOpacity onPress={() => setShowInformacoesRemetente(true)}>
+                  <TouchableOpacity
+                    onPress={() => setShowInformacoesRemetente(true)}
+                  >
                     <View style={styles.addressRow}>
                       <View style={[styles.dot, styles.dotTeal]} />
                       <View style={styles.addressInfo}>
                         <Text style={styles.addressTitle} numberOfLines={1}>
                           Rua Brasília, 2930 - Pen6 Marketing
                         </Text>
-                        <Text style={styles.addressSub}>Diogo • 69981400661</Text>
+                        <Text style={styles.addressSub}>
+                          Diogo • 69981400661
+                        </Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={20} color="#E0E0E0" />
+                      <Ionicons
+                        name="chevron-forward"
+                        size={20}
+                        color="#E0E0E0"
+                      />
                     </View>
                   </TouchableOpacity>
 
-                  <TouchableOpacity onPress={() => setShowInformacoesDestinario(true)} style={styles.inputButton}>
+                  <TouchableOpacity
+                    onPress={() => setShowInformacoesDestinario(true)}
+                    style={styles.inputButton}
+                  >
                     <View style={[styles.dot, styles.dotOrange]} />
                     <Text style={styles.inputButtonText}>Entregar para</Text>
                   </TouchableOpacity>
@@ -150,16 +165,24 @@ export default function Entregas() {
                     <View style={[styles.dot, styles.dotTeal]} />
                     <Text style={styles.inputButtonText}>Enviar de</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => setShowInformacoesDestinario(true)}>
+                  <TouchableOpacity
+                    onPress={() => setShowInformacoesDestinario(true)}
+                  >
                     <View style={styles.addressRow}>
                       <View style={[styles.dot, styles.dotOrange]} />
                       <View style={styles.addressInfo}>
                         <Text style={styles.addressTitle} numberOfLines={1}>
                           Rua Brasília, 2930 - Pen6 Marketing
                         </Text>
-                        <Text style={styles.addressSub}>Diogo • 69981400661</Text>
+                        <Text style={styles.addressSub}>
+                          Diogo • 69981400661
+                        </Text>
                       </View>
-                      <Ionicons name="chevron-forward" size={20} color="#E0E0E0" />
+                      <Ionicons
+                        name="chevron-forward"
+                        size={20}
+                        color="#E0E0E0"
+                      />
                     </View>
                   </TouchableOpacity>
                 </>

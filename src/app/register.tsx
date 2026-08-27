@@ -21,6 +21,7 @@ export default function Cadastro() {
 
   // step 1
   const [email, setEmail] = useState("");
+  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   // step 2
   const [codigo, setCodigo] = useState("");
@@ -38,11 +39,29 @@ export default function Cadastro() {
   // step 6
   const [concordo, setConcordo] = useState(false);
 
+  const [erroCadastro, setErroCadastro] = useState("");
+
   // verificar se código tem 4 dígitos
   const codigoValido = codigo.length === 4;
 
+  // valida se a data preenchida existe de verdade (dia/mês dentro do range e o mês tem esse dia)
+  const dataNascimentoValida = (valor: string) => {
+    if (valor.length !== 10) return false;
+
+    const [dia, mes, ano] = valor.split("/").map(Number);
+
+    if (!dia || !mes || !ano) return false;
+    if (mes < 1 || mes > 12) return false;
+
+    const diasNoMes = new Date(ano, mes, 0).getDate();
+
+    if (dia < 1 || dia > diasNoMes) return false;
+
+    return ano >= 1900 && ano <= new Date().getFullYear();
+  };
+
   // validação step 5
-  const step5Valido = cpf.length === 14 && dataNascimento.length === 10;
+  const step5Valido = cpf.length === 14 && dataNascimentoValida(dataNascimento);
 
   // máscara CPF
   const formatarCPF = (value: string) => {
@@ -65,29 +84,37 @@ export default function Cadastro() {
       .slice(0, 10);
   };
 
-  const finalizarCadastro = () => {
-    if (concordo) {
-      // remove máscara do CPF
-      const cpfTratado = cpf.replace(/\D/g, "");
+  const finalizarCadastro = async () => {
+    if (!concordo) return;
 
-      // converte 21/11/1992 => 1992-11-21
-      const [dia, mes, ano] = dataNascimento.split("/");
+    setErroCadastro("");
 
-      const dataNascimentoTratada = `${ano}-${mes}-${dia}`;
+    // remove máscara do CPF
+    const cpfTratado = cpf.replace(/\D/g, "");
 
-      const usuario = {
-        email: email,
-        password: senha,
-        name: name,
-        cpf: cpfTratado,
-        data_nascimento: dataNascimentoTratada,
-      };
+    // converte 21/11/1992 => 1992-11-21
+    const [dia, mes, ano] = dataNascimento.split("/");
 
-      console.log(usuario, "usuariousuario");
+    const dataNascimentoTratada = `${ano}-${mes}-${dia}`;
 
-      register(usuario);
+    const usuario = {
+      email: email,
+      password: senha,
+      name: name,
+      cpf: cpfTratado,
+      data_nascimento: dataNascimentoTratada,
+    };
+
+    try {
+      await register(usuario);
 
       router.replace("/home");
+    } catch (error: any) {
+      const mensagem =
+        error?.response?.data?.message ??
+        "Não foi possível concluir o cadastro. Tente novamente.";
+
+      setErroCadastro(mensagem);
     }
   };
 
@@ -109,9 +136,7 @@ export default function Cadastro() {
           <Text style={styles.logoText}>99</Text>
 
           <View style={[styles.badgeContainer, { marginTop: 20 }]}>
-            <Text style={styles.badgeText}>
-              Crie sua conta gratuitamente
-            </Text>
+            <Text style={styles.badgeText}>Crie sua conta gratuitamente</Text>
           </View>
         </View>
 
@@ -136,15 +161,17 @@ export default function Cadastro() {
               <TouchableOpacity
                 style={[
                   styles.nextButton,
-                  email ? styles.nextButtonActive : styles.nextButtonDisabled,
+                  emailValido
+                    ? styles.nextButtonActive
+                    : styles.nextButtonDisabled,
                 ]}
                 onPress={() => setStep(2)}
-                disabled={!email}
+                disabled={!emailValido}
               >
                 <Text
                   style={[
                     styles.nextButtonText,
-                    !email && styles.nextButtonTextDisabled,
+                    !emailValido && styles.nextButtonTextDisabled,
                   ]}
                 >
                   Continuar
@@ -463,6 +490,10 @@ export default function Cadastro() {
                 </Text>
               </TouchableOpacity>
 
+              {erroCadastro ? (
+                <Text style={styles.erroText}>{erroCadastro}</Text>
+              ) : null}
+
               <View style={styles.rowBetween}>
                 <TouchableOpacity
                   style={styles.roundedButton}
@@ -696,6 +727,12 @@ const styles = StyleSheet.create({
     color: "#666",
     lineHeight: 22,
     marginBottom: 30,
+  },
+
+  erroText: {
+    fontSize: 13,
+    color: "#D32F2F",
+    marginBottom: 20,
   },
 
   link: {

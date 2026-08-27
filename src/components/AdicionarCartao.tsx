@@ -3,16 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  useWindowDimensions,
+  View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -25,6 +23,7 @@ export default function AdicionarCartao({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -42,7 +41,10 @@ export default function AdicionarCartao({
       }
       return false;
     };
-    const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onBackPress,
+    );
     return () => subscription.remove();
   }, [visible, onClose]);
 
@@ -107,7 +109,12 @@ export default function AdicionarCartao({
           {/* NÚMERO DO CARTÃO */}
           <Text style={styles.label}>Número do cartão</Text>
           <View style={styles.inputContainer}>
-            <MaterialCommunityIcons name="credit-card-outline" size={22} color="#999" style={styles.inputIconLeft} />
+            <MaterialCommunityIcons
+              name="credit-card-outline"
+              size={22}
+              color="#999"
+              style={styles.inputIconLeft}
+            />
             <TextInput
               style={styles.input}
               placeholder="Cartão de crédito / déb"
@@ -159,15 +166,22 @@ export default function AdicionarCartao({
 
         {/* FOOTER */}
         <View style={styles.footer}>
-          <TouchableOpacity 
-            style={[styles.btnAdd, { opacity: (cardNumber && expiry && cvv) ? 1 : 0.4 }]} 
+          <TouchableOpacity
+            style={[
+              styles.btnAdd,
+              { opacity: cardNumber && expiry && cvv ? 1 : 0.4 },
+            ]}
             disabled={!(cardNumber && expiry && cvv)}
           >
             <Text style={styles.btnAddText}>Adicionar</Text>
           </TouchableOpacity>
 
           <View style={styles.securityRow}>
-            <MaterialCommunityIcons name="shield-check" size={16} color="#999" />
+            <MaterialCommunityIcons
+              name="shield-check"
+              size={16}
+              color="#999"
+            />
             <Text style={styles.securityText}>
               As informações do seu cartão serão armazenadas com segurança
             </Text>

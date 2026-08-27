@@ -3,16 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Image,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -25,6 +23,7 @@ export default function ConvidarMotorista({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
@@ -35,7 +34,7 @@ export default function ConvidarMotorista({
 
   // 🔥 CONTADOR REAL (16 dias)
   const targetDate = useRef(
-    new Date().getTime() + 16 * 24 * 60 * 60 * 1000
+    new Date().getTime() + 16 * 24 * 60 * 60 * 1000,
   ).current;
 
   const [timeLeft, setTimeLeft] = useState(targetDate - Date.now());
@@ -51,7 +50,7 @@ export default function ConvidarMotorista({
 
   const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
   const hours = Math.floor(
-    (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
   );
   const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
@@ -66,7 +65,7 @@ export default function ConvidarMotorista({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -157,7 +156,7 @@ export default function ConvidarMotorista({
           scrollEventThrottle={16}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
+            { useNativeDriver: false },
           )}
         >
           {/* PLACEHOLDER DA IMAGEM SUPERIOR */}
@@ -186,11 +185,11 @@ export default function ConvidarMotorista({
             <View style={styles.rewardsList}>
               {renderRewardItem(
                 "Para cada novo motorista com veículo, você ganhará",
-                "R$500"
+                "R$500",
               )}
               {renderRewardItem(
                 "Para cada novo motorista sem veículo, você ganhará",
-                "R$500"
+                "R$500",
               )}
             </View>
 

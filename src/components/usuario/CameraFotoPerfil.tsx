@@ -6,36 +6,30 @@ import {
   ActivityIndicator,
   Alert,
   BackHandler,
-  Dimensions,
   Image,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 
 import { api } from "../../Services/api";
-
-const { width, height } = Dimensions.get("window");
 
 interface Props {
   visible: boolean;
   onClose: () => void;
 }
 
-export default function CameraFotoPerfil({
-  visible,
-  onClose,
-}: Props) {
+export default function CameraFotoPerfil({ visible, onClose }: Props) {
+  const { width, height } = useWindowDimensions();
   const cameraRef = useRef<any>(null);
 
   const [permission, requestPermission] = useCameraPermissions();
 
   const [type, setType] = useState<CameraType>("front");
 
-  const [fotoCapturada, setFotoCapturada] = useState<string | null>(
-    null,
-  );
+  const [fotoCapturada, setFotoCapturada] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -74,10 +68,7 @@ export default function CameraFotoPerfil({
       const response = await requestPermission();
 
       if (!response.granted) {
-        Alert.alert(
-          "Permissão necessária",
-          "Precisamos de acesso à câmera.",
-        );
+        Alert.alert("Permissão necessária", "Precisamos de acesso à câmera.");
 
         return false;
       }
@@ -101,10 +92,7 @@ export default function CameraFotoPerfil({
 
       setFotoCapturada(foto.uri);
     } catch (error) {
-      Alert.alert(
-        "Erro",
-        "Não foi possível capturar a foto.",
-      );
+      Alert.alert("Erro", "Não foi possível capturar a foto.");
     }
   }
 
@@ -139,17 +127,13 @@ export default function CameraFotoPerfil({
         foto_thumbnail: dadosUsuario.foto_thumbnail,
       });
 
-      Alert.alert(
-        "Sucesso",
-        "Imagem atualizada com sucesso!",
-      );
+      Alert.alert("Sucesso", "Imagem atualizada com sucesso!");
 
       onClose();
     } catch (error: any) {
       Alert.alert(
         "Erro",
-        error?.response?.data?.message ||
-        "Não foi possível enviar a foto.",
+        error?.response?.data?.message || "Não foi possível enviar a foto.",
       );
     } finally {
       setLoading(false);
@@ -161,9 +145,7 @@ export default function CameraFotoPerfil({
   }
 
   function alternarCamera() {
-    setType((current) =>
-      current === "back" ? "front" : "back",
-    );
+    setType((current) => (current === "back" ? "front" : "back"));
   }
 
   if (!permission) {
@@ -178,49 +160,40 @@ export default function CameraFotoPerfil({
     <View style={styles.container}>
       {!fotoCapturada ? (
         <>
-          <CameraView
-            ref={cameraRef}
-            style={styles.camera}
-            facing={type}
-          />
+          <CameraView ref={cameraRef} style={styles.camera} facing={type} />
 
           {/* TOPO */}
           <View style={styles.topContainer}>
-            <TouchableOpacity
-              style={styles.topButton}
-              onPress={onClose}
-            >
-              <Ionicons
-                name="chevron-back"
-                size={28}
-                color="#FFF"
-              />
+            <TouchableOpacity style={styles.topButton} onPress={onClose}>
+              <Ionicons name="chevron-back" size={28} color="#FFF" />
             </TouchableOpacity>
           </View>
 
           {/* TEXTO */}
           <View style={styles.textContainer}>
             <Text style={styles.text}>
-              Para garantir o seu perfil Premium,
-              tente manter seu rosto visível.
+              Para garantir o seu perfil Premium, tente manter seu rosto
+              visível.
             </Text>
           </View>
 
           {/* CÍRCULO GUIA */}
-          <View style={styles.faceGuide} />
+          <View
+            style={[
+              styles.faceGuide,
+              {
+                top: height * 0.2,
+                width: width * 0.72,
+                height: width * 0.9,
+              },
+            ]}
+          />
 
           {/* BOTTOM */}
           <View style={styles.bottomContainer}>
-            <TouchableOpacity
-              style={styles.captureButton}
-              onPress={tirarFoto}
-            >
+            <TouchableOpacity style={styles.captureButton} onPress={tirarFoto}>
               <View style={styles.captureButtonInner}>
-                <Ionicons
-                  name="camera"
-                  size={30}
-                  color="#FFF"
-                />
+                <Ionicons name="camera" size={30} color="#FFF" />
               </View>
             </TouchableOpacity>
 
@@ -228,45 +201,31 @@ export default function CameraFotoPerfil({
               style={styles.switchButton}
               onPress={alternarCamera}
             >
-              <Ionicons
-                name="camera-reverse-outline"
-                size={28}
-                color="#FFF"
-              />
+              <Ionicons name="camera-reverse-outline" size={28} color="#FFF" />
             </TouchableOpacity>
           </View>
         </>
       ) : (
         <>
-          <Image
-            source={{ uri: fotoCapturada }}
-            style={styles.preview}
-          />
+          <Image source={{ uri: fotoCapturada }} style={styles.preview} />
 
           <View style={styles.previewOverlay}>
             <TouchableOpacity
               style={styles.previewButton}
               onPress={refazerFoto}
             >
-              <Text style={styles.previewButtonText}>
-                Refazer
-              </Text>
+              <Text style={styles.previewButtonText}>Refazer</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.previewButton,
-                styles.confirmButton,
-              ]}
+              style={[styles.previewButton, styles.confirmButton]}
               onPress={uploadImagem}
               disabled={loading}
             >
               {loading ? (
                 <ActivityIndicator color="#FFF" />
               ) : (
-                <Text style={styles.previewButtonText}>
-                  Usar foto
-                </Text>
+                <Text style={styles.previewButtonText}>Usar foto</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -322,10 +281,7 @@ const styles = StyleSheet.create({
 
   faceGuide: {
     position: "absolute",
-    top: height * 0.2,
     alignSelf: "center",
-    width: width * 0.72,
-    height: width * 0.9,
     borderRadius: 999,
     borderWidth: 3,
     borderColor: "rgba(255,255,255,0.7)",

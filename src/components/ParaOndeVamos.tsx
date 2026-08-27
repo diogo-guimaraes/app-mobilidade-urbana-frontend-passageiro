@@ -7,7 +7,6 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Keyboard,
   Pressable,
   ScrollView,
@@ -15,10 +14,10 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { api } from "../Services/api";
-const { width } = Dimensions.get("window");
 const CACHE_HISTORICO_KEY = "@historico_enderecos";
 
 interface props {
@@ -43,6 +42,7 @@ export default function ParaOndeVamos({
   setItinerario,
   onSucesso,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const skeletonOpacity = useRef(new Animated.Value(0.4)).current;
@@ -61,10 +61,10 @@ export default function ParaOndeVamos({
 
   const handleAdicionarParada = () => {
     Keyboard.dismiss();
-      onClose();
-      if (onAdicionarParada) {
-        onAdicionarParada();
-      }
+    onClose();
+    if (onAdicionarParada) {
+      onAdicionarParada();
+    }
   };
 
   // Animação do Skeleton
@@ -101,7 +101,15 @@ export default function ParaOndeVamos({
     try {
       const cachedData = await AsyncStorage.getItem(CACHE_HISTORICO_KEY);
       if (cachedData) {
-        setHistoricoCache(JSON.parse(cachedData));
+        const historico: InterfaceEndereco[] = JSON.parse(cachedData);
+
+        setHistoricoCache(
+          historico.map((item) => ({
+            ...item,
+            name: item.name ?? "",
+            formattedAddress: item.formattedAddress ?? "",
+          })),
+        );
       } else {
         setHistoricoCache(enderecosPadrao);
         await AsyncStorage.setItem(
@@ -167,7 +175,12 @@ export default function ParaOndeVamos({
       });
 
       if (response.data) {
-        const { name, formattedAddress, latitude, longitude } = response.data;
+        const {
+          name = "",
+          formattedAddress = "",
+          latitude,
+          longitude,
+        } = response.data;
         const novoEnderecoObjeto = {
           name,
           formattedAddress,
@@ -178,6 +191,8 @@ export default function ParaOndeVamos({
         setListaEnderecos([novoEnderecoObjeto]);
       }
     } catch (error) {
+      setListaEnderecos([]);
+
       console.log("Erro ao buscar endereço no backend:", error);
     } finally {
       setLoading(false);
@@ -212,13 +227,13 @@ export default function ParaOndeVamos({
       prev.map((input, index) =>
         index === inputSelecionado
           ? {
-            ...input,
-            name: item.name,
-            formattedAddress: item.formattedAddress,
-            latitude: item.latitude,
-            longitude: item.longitude,
-            order: index,
-          }
+              ...input,
+              name: item.name,
+              formattedAddress: item.formattedAddress,
+              latitude: item.latitude,
+              longitude: item.longitude,
+              order: index,
+            }
           : input,
       ),
     );
@@ -467,92 +482,82 @@ export default function ParaOndeVamos({
           <View style={styles.list}>
             {loading
               ? Array.from({ length: 4 }).map((_, i) => (
-                <Animated.View
-                  key={i}
-                  style={[styles.listItem, { opacity: skeletonOpacity }]}
-                >
-                  <View
-                    style={[
-                      styles.listIconContainer,
-                      { backgroundColor: "#EBEBEB" },
-                    ]}
-                  />
-                  <View style={styles.listContent}>
-                    <View
-                      style={{
-                        width: "60%",
-                        height: 14,
-                        backgroundColor: "#EBEBEB",
-                        borderRadius: 4,
-                        marginBottom: 8,
-                      }}
-                    />
-                    <View
-                      style={{
-                        width: "90%",
-                        height: 10,
-                        backgroundColor: "#EBEBEB",
-                        borderRadius: 4,
-                      }}
-                    />
-                  </View>
-                </Animated.View>
-              ))
-              : listaExibicao.map((endereco, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.listItem}
-                  onPress={() => handleSelecionarEndereco(endereco)}
-                >
-                  <TouchableOpacity
-                    style={styles.listIconContainer}
-                    onPress={() => removerEnderecoDoCache(endereco)}
+                  <Animated.View
+                    key={i}
+                    style={[styles.listItem, { opacity: skeletonOpacity }]}
                   >
-                    <Ionicons name="close" size={14} color="#111" />
-                  </TouchableOpacity>
+                    <View
+                      style={[
+                        styles.listIconContainer,
+                        { backgroundColor: "#EBEBEB" },
+                      ]}
+                    />
+                    <View style={styles.listContent}>
+                      <View
+                        style={{
+                          width: "60%",
+                          height: 14,
+                          backgroundColor: "#EBEBEB",
+                          borderRadius: 4,
+                          marginBottom: 8,
+                        }}
+                      />
+                      <View
+                        style={{
+                          width: "90%",
+                          height: 10,
+                          backgroundColor: "#EBEBEB",
+                          borderRadius: 4,
+                        }}
+                      />
+                    </View>
+                  </Animated.View>
+                ))
+              : listaExibicao.map((endereco, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.listItem}
+                    onPress={() => handleSelecionarEndereco(endereco)}
+                  >
+                    <TouchableOpacity
+                      style={styles.listIconContainer}
+                      onPress={() => removerEnderecoDoCache(endereco)}
+                    >
+                      <Ionicons name="close" size={14} color="#111" />
+                    </TouchableOpacity>
 
-                  <View style={styles.listContent}>
-                    <Text style={styles.listText}>{endereco.name}</Text>
-                    <Text style={styles.listSubText}>
-                      {endereco.formattedAddress}
+                    <View style={styles.listContent}>
+                      <Text style={styles.listText}>{endereco.name}</Text>
+                      <Text style={styles.listSubText}>
+                        {endereco.formattedAddress}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.distanceText}>
+                      {endereco.distancia}
                     </Text>
-                  </View>
-
-                  <Text style={styles.distanceText}>
-                    {endereco.distancia}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                  </TouchableOpacity>
+                ))}
           </View>
 
           {/* FOOTER */}
           <View style={styles.footerButtonsContainer}>
             <TouchableOpacity style={styles.footerButton}>
               <View
-                style={[
-                  styles.listIconContainer,
-                  styles.footerIconContainer,
-                ]}
+                style={[styles.listIconContainer, styles.footerIconContainer]}
               >
                 <Ionicons name="map" size={16} color="#111" />
               </View>
-              <Text style={styles.footerButtonText}>
-                Definir local no mapa
-              </Text>
+              <Text style={styles.footerButtonText}>Definir local no mapa</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.footerButton}>
               <View
-                style={[
-                  styles.listIconContainer,
-                  styles.footerIconContainer,
-                ]}
+                style={[styles.listIconContainer, styles.footerIconContainer]}
               >
                 <Ionicons name="add" size={18} color="#111" />
               </View>
-              <Text style={styles.footerButtonText}>
-                Inserir mais tarde
-              </Text>
+              <Text style={styles.footerButtonText}>Inserir mais tarde</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
