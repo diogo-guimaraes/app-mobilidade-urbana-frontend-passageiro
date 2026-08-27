@@ -30,7 +30,7 @@ const PulseOverlay = () => {
   useEffect(() => {
     // Duração mais rápida para simular a urgência da chamada
     const DURATION = 2100;
-    const DELAY = DURATION / 3.5; //se quisar aplicar 
+    const DELAY = DURATION / 3.5; //se quisar aplicar
 
     // Função para criar o loop de pulso com atraso
     const createPulse = (animatedValue: Animated.Value, delay: number) => {
@@ -50,7 +50,7 @@ const PulseOverlay = () => {
             duration: 0,
             useNativeDriver: false,
           }),
-        ])
+        ]),
       );
     };
 
@@ -121,7 +121,7 @@ const pulseStyles = StyleSheet.create({
 export default function RecebendoChamadas({
   onAceitar,
   onRecusar,
-  valor = 8.20,
+  valor = 8.2,
 }: RecebendoChamadaProps) {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const progress = useRef(new Animated.Value(1)).current;
@@ -150,7 +150,7 @@ export default function RecebendoChamadas({
       try {
         const { sound } = await Audio.Sound.createAsync(
           require("../../assets/TOQUE-CHAMADA.mp3"),
-          { shouldPlay: true }
+          { shouldPlay: true },
         );
 
         currentSound = sound;
@@ -176,8 +176,8 @@ export default function RecebendoChamadas({
               if (s) {
                 const st = await s.getStatusAsync();
                 if (st.isLoaded) {
-                  await s.stopAsync().catch(() => { });
-                  await s.unloadAsync().catch(() => { });
+                  await s.stopAsync().catch(() => {});
+                  await s.unloadAsync().catch(() => {});
                 }
               }
             } catch (e) {
@@ -206,8 +206,8 @@ export default function RecebendoChamadas({
           if (currentSound) {
             const status = await currentSound.getStatusAsync();
             if (status.isLoaded) {
-              await currentSound.stopAsync().catch(() => { });
-              await currentSound.unloadAsync().catch(() => { });
+              await currentSound.stopAsync().catch(() => {});
+              await currentSound.unloadAsync().catch(() => {});
             }
           }
         } catch (e) {
@@ -239,8 +239,8 @@ export default function RecebendoChamadas({
     try {
       const status = await sound.getStatusAsync();
       if (status.isLoaded) {
-        await sound.stopAsync().catch(() => { });
-        await sound.unloadAsync().catch(() => { });
+        await sound.stopAsync().catch(() => {});
+        await sound.unloadAsync().catch(() => {});
       }
     } catch (e) {
       // swallow
@@ -263,8 +263,8 @@ export default function RecebendoChamadas({
       try {
         const status = await sound.getStatusAsync();
         if (status.isLoaded) {
-          await sound.stopAsync().catch(() => { });
-          await sound.unloadAsync().catch(() => { });
+          await sound.stopAsync().catch(() => {});
+          await sound.unloadAsync().catch(() => {});
         }
       } catch (e) {
         // swallow
@@ -328,9 +328,7 @@ export default function RecebendoChamadas({
 
           {/* Corridas */}
           <View style={styles.infoItem}>
-            <Text
-              className="font-bold"
-              style={styles.infoText}>
+            <Text className="font-bold" style={styles.infoText}>
               615 corridas
             </Text>
           </View>
@@ -352,16 +350,11 @@ export default function RecebendoChamadas({
 
           {/* Endereço de partida (linha abaixo do tempo) */}
           <View style={styles.infoRow}>
-            <Ionicons
-              name="arrow-down-outline"
-              size={18}
-              color="white"
-            />
+            <Ionicons name="arrow-down-outline" size={18} color="white" />
             <Text className="ml-3" style={styles.infoText}>
               {enderecoPartida}
             </Text>
           </View>
-
 
           {/* espaço entre os dois blocos de tempo/endereço */}
           <View style={{ height: 2 }} />
@@ -376,9 +369,7 @@ export default function RecebendoChamadas({
               {(Math.random() * 5 + 4).toFixed(1)}km)
             </Text>
           </View>
-          <Text
-            className="ml-8"
-            style={styles.infoText}>
+          <Text className="ml-8" style={styles.infoText}>
             {enderecoDestino}
           </Text>
         </View>
@@ -403,7 +394,7 @@ export default function RecebendoChamadas({
             // Aqui você pode atualizar o estado ou chamar outra ação
           }}
         />
-      
+
         <TouchableOpacity
           style={styles.recusarBtn}
           onPress={() => {

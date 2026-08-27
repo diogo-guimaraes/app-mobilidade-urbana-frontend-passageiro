@@ -27,7 +27,7 @@ const GanhoDiario = ({ visible, setVisible }: GanhoDiarioProps) => {
 
   const { slideAnim, overlayOpacity, closeAnimation } = useModalAnimation(
     modalRenderizado,
-    { slideFrom: "top", duration: 200, overlayDuration: 300 }
+    { slideFrom: "top", duration: 200, overlayDuration: 300 },
   );
   const [dialogHistoricoCorridaVisible, setDialogHistoricoCorrida] =
     useState(false);
@@ -140,7 +140,7 @@ const GanhoDiario = ({ visible, setVisible }: GanhoDiarioProps) => {
       {/* ✨ Estrutura do Modal/Backdrop */}
       {modalRenderizado && (
         <View
-          className="absolute w-full h-full"
+          className="absolute h-full w-full"
           style={[styles.modalWrapper]}
           pointerEvents={visible ? "auto" : "none"}
         >
@@ -162,7 +162,7 @@ const GanhoDiario = ({ visible, setVisible }: GanhoDiarioProps) => {
             >
               <View
                 style={styles.card}
-                className="bg-gray-200 shadow-slate-200 shadow-md rounded-2xl mt-28"
+                className="mt-28 rounded-2xl bg-gray-200 shadow-md shadow-slate-200"
               >
                 {/* Card 1 - Painel */}
                 <View>

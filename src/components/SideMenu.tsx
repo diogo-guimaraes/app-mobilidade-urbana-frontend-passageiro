@@ -258,25 +258,23 @@ export default function SideMenu({
                 style={styles.avatar}
               /> */}
               <View style={styles.avatarWrapper}>
-                  {user?.foto ? (
-                    <Image
-                      source={{
-                        uri: user.foto,
-                      }}
-                      style={styles.avatar}
+                {user?.foto ? (
+                  <Image
+                    source={{
+                      uri: user.foto,
+                    }}
+                    style={styles.avatar}
+                  />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Ionicons
+                      name="person-circle-outline"
+                      size={110}
+                      color="#c4c4c4"
                     />
-                  ) : (
-                    <View style={styles.avatarPlaceholder}>
-                      <Ionicons
-                        name="person-circle-outline"
-                        size={110}
-                        color="#c4c4c4"
-                      />
-                    </View>
-                  )}
-
-                  
-                </View>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
 
             <View style={styles.nameRow}>
@@ -338,7 +336,7 @@ const styles = StyleSheet.create({
   //   borderRadius: 42.5,
   //   marginBottom: 15,
   // },
-    avatar: {
+  avatar: {
     width: 100,
     height: 100,
     borderRadius: 50,
