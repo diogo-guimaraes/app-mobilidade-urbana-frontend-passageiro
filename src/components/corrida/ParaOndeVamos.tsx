@@ -23,8 +23,61 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { api } from "../Services/api";
+import { api } from "@/Services/api";
 const CACHE_HISTORICO_KEY = "@historico_enderecos";
+
+// Cache local (persiste entre sessões do app) de buscas de endereço já
+// feitas — evita bater na API de novo pro mesmo texto buscado antes.
+const CACHE_BUSCA_KEY = "@cache_busca_enderecos";
+const CACHE_BUSCA_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+const CACHE_BUSCA_MAX_ENTRADAS = 50;
+
+interface ResultadoBuscaCacheado {
+  resultado: {
+    name: string;
+    formattedAddress: string;
+    latitude: number;
+    longitude: number;
+  };
+  timestamp: number;
+}
+
+const normalizarTextoBusca = (texto: string) => texto.trim().toLowerCase();
+
+const lerCacheBusca = async (): Promise<
+  Record<string, ResultadoBuscaCacheado>
+> => {
+  try {
+    const raw = await AsyncStorage.getItem(CACHE_BUSCA_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (error) {
+    console.log("Erro ao ler cache de busca de endereço:", error);
+    return {};
+  }
+};
+
+const salvarNoCacheBusca = async (
+  texto: string,
+  resultado: ResultadoBuscaCacheado["resultado"],
+) => {
+  try {
+    const cache = await lerCacheBusca();
+
+    cache[normalizarTextoBusca(texto)] = { resultado, timestamp: Date.now() };
+
+    // mantém só as entradas mais recentes, pra não crescer sem limite
+    const maisRecentes = Object.entries(cache)
+      .sort((a, b) => b[1].timestamp - a[1].timestamp)
+      .slice(0, CACHE_BUSCA_MAX_ENTRADAS);
+
+    await AsyncStorage.setItem(
+      CACHE_BUSCA_KEY,
+      JSON.stringify(Object.fromEntries(maisRecentes)),
+    );
+  } catch (error) {
+    console.log("Erro ao salvar cache de busca de endereço:", error);
+  }
+};
 
 interface props {
   visible: boolean;
@@ -169,13 +222,26 @@ export default function ParaOndeVamos({
 
   // Requisição de busca na API
   const buscarEnderecoApi = async (texto: string) => {
-    if (!texto || texto.trim().length === 0) {
+    // menos de 3 caracteres quase nunca traz resultado útil — evita gastar
+    // requisição da Places API a cada tecla no início da digitação
+    if (!texto || texto.trim().length < 3) {
       setListaEnderecos([]);
       setLoading(false);
       return;
     }
 
     setLoading(true);
+
+    // já buscou esse texto antes (nessa sessão ou numa anterior)? reaproveita
+    // sem chamar a API de novo
+    const cache = await lerCacheBusca();
+    const cacheado = cache[normalizarTextoBusca(texto)];
+
+    if (cacheado && Date.now() - cacheado.timestamp < CACHE_BUSCA_TTL_MS) {
+      setListaEnderecos([{ ...cacheado.resultado, distancia: "--" }]);
+      setLoading(false);
+      return;
+    }
 
     try {
       const response = await api.get("/buscar-endereco", {
@@ -197,6 +263,13 @@ export default function ParaOndeVamos({
           distancia: "--",
         };
         setListaEnderecos([novoEnderecoObjeto]);
+
+        salvarNoCacheBusca(texto, {
+          name,
+          formattedAddress,
+          latitude,
+          longitude,
+        });
       }
     } catch (error) {
       setListaEnderecos([]);
