@@ -1,9 +1,10 @@
 // app/home.tsx
+import ConfirmarEndereco from "@/components/corrida/ConfirmarEndereco";
 import FolhaEscolherOferta from "@/components/corrida/FolhaEscolherOferta";
 import ViagemComParada from "@/components/corrida/ViagemComParada";
-import FolhaInferior from "@/components/FolhaInferior";
-import Map from "@/components/Map";
-import ParaOndeVamos from "@/components/ParaOndeVamos";
+import FolhaInferior from "@/components/corrida/FolhaInferior";
+import Map from "@/components/corrida/Map";
+import ParaOndeVamos from "@/components/corrida/ParaOndeVamos";
 
 import { useAuth } from "@/context/AuthProvider";
 import { useUi } from "@/context/UiContext";
@@ -75,6 +76,14 @@ export default function Home() {
 
   const [showViagemComParada, setShowViagemComParada] = useState(false);
 
+  // 🔥 passo de confirmação entre escolher endereço e ver preços
+  const [showConfirmarEndereco, setShowConfirmarEndereco] = useState(false);
+
+  // 🔥 pra "voltar" da confirmação saber pra qual tela reabrir
+  const [origemConfirmacao, setOrigemConfirmacao] = useState<
+    "para-onde-vamos" | "viagem-com-parada"
+  >("para-onde-vamos");
+
   const [showFolhaEscolherOferta, setShowFolhaEscolherOferta] = useState(false);
   const [showFolhaInferior, setShowFolhaInferior] = useState(true);
   const [progesseguirParaOferta, setProgesseguirParaOferta] = useState(false);
@@ -97,11 +106,15 @@ export default function Home() {
   // 🔥 sincroniza modal global
   useEffect(() => {
     setModalVisible(
-      showParaOndeVamos || showViagemComParada || showFolhaEscolherOferta,
+      showParaOndeVamos ||
+        showViagemComParada ||
+        showConfirmarEndereco ||
+        showFolhaEscolherOferta,
     );
   }, [
     showParaOndeVamos,
     showViagemComParada,
+    showConfirmarEndereco,
     showFolhaEscolherOferta,
     setModalVisible,
   ]);
@@ -109,12 +122,10 @@ export default function Home() {
   // 🔥 recentraliza mapa
   useEffect(() => {
     if (showViagemComParada && userInitialRegion.current) {
-      const offsetLatitude = 0.0064;
-
       setRegion({
         ...userInitialRegion.current,
 
-        latitude: userInitialRegion.current.latitude - offsetLatitude,
+        latitude: userInitialRegion.current.latitude,
 
         latitudeDelta: 0.01,
 
@@ -133,12 +144,10 @@ export default function Home() {
         longitudeDelta: 0.01,
       };
 
-      const offsetLatitude = 0.0064;
-
       const adjustedRegion: Region = {
         ...userRegion,
 
-        latitude: userRegion.latitude - offsetLatitude,
+        latitude: userRegion.latitude,
 
         latitudeDelta: 0.01,
 
@@ -227,12 +236,10 @@ export default function Home() {
 
     // 🔥 recentraliza usuário
     if (userInitialRegion.current) {
-      const offsetLatitude = 0.0064;
-
       setRegion({
         ...userInitialRegion.current,
 
-        latitude: userInitialRegion.current.latitude - offsetLatitude,
+        latitude: userInitialRegion.current.latitude,
 
         latitudeDelta: 0.01,
 
@@ -241,12 +248,39 @@ export default function Home() {
     }
   }, []);
 
-  // 🔥 voltar oferta → edição
+  // 🔥 voltar oferta → home (cancela a corrida, igual handleCancelarViagem —
+  // sem isso a rota ficava "fantasma" desenhada no mapa depois de voltar)
   const handleVoltarParaHome = useCallback(() => {
     setShowFolhaInferior(true);
     setProgesseguirParaOferta(false);
     setShowFolhaEscolherOferta(false);
-    console.log(showFolhaInferior, "showFolhaInferior");
+
+    // 🔥 limpa rota mantendo origem
+    setItinerario((prev) => [
+      prev[0],
+
+      {
+        name: "",
+        formattedAddress: "",
+        latitude: 0,
+        longitude: 0,
+        distancia: "0km",
+        order: 1,
+      },
+    ]);
+
+    // 🔥 recentraliza usuário
+    if (userInitialRegion.current) {
+      setRegion({
+        ...userInitialRegion.current,
+
+        latitude: userInitialRegion.current.latitude,
+
+        latitudeDelta: 0.01,
+
+        longitudeDelta: 0.01,
+      });
+    }
   }, []);
 
   // 🔥 lista operacional mapa
@@ -277,14 +311,36 @@ export default function Home() {
 
   return (
     <View style={styles.container}>
-      <Map
-        mapBottomPadding={mapBottomPadding}
-        region={region}
-        onRegionChange={setRegion}
-        onUserLocationFound={handleUserLocationFound}
-        bottomSheetIndex={bottomSheetIndex}
-        itinerario={itinerarioMapa}
-      />
+      {/* 🔥 mapa reduzido, em cartão com margem e cantos arredondados
+          (igual ao 99) + "Para onde vamos?" sempre visível por completo
+          abaixo, sem ser um sheet colapsável */}
+      <View style={styles.corpoPrincipal}>
+        <View
+          // 🔥 cartão pequeno só na home "parada"; assim que entra em
+          // qualquer etapa de planejar a corrida, o mapa volta a ocupar a
+          // tela toda (precisa de espaço de verdade pra rota/paradas)
+          style={
+            showFolhaInferior ? styles.mapaCardWrapper : styles.mapaTelaCheia
+          }
+          collapsable={false}
+        >
+          <Map
+            mapBottomPadding={mapBottomPadding}
+            region={region}
+            onRegionChange={setRegion}
+            onUserLocationFound={handleUserLocationFound}
+            bottomSheetIndex={bottomSheetIndex}
+            itinerario={itinerarioMapa}
+          />
+        </View>
+
+        {/* 🔥 FolhaInferior — painel estático, não colapsa mais */}
+        {showFolhaInferior && (
+          <View style={styles.folhaInferiorWrapper}>
+            <FolhaInferior onPressParaOndeVamos={handleAbrirParaOndeVamos} />
+          </View>
+        )}
+      </View>
 
       {/* 🔥 botão voltar */}
       {/* {(showViagemComParada || showFolhaEscolherOferta) &&
@@ -312,14 +368,6 @@ export default function Home() {
         </TouchableOpacity>
       )}
 
-      {/* 🔥 FolhaInferior */}
-      {showFolhaInferior && (
-        <FolhaInferior
-          onSheetChange={handleSheetStateChange}
-          onPressParaOndeVamos={handleAbrirParaOndeVamos}
-        />
-      )}
-
       {/* 🔥 ParaOndeVamos */}
       <ParaOndeVamos
         visible={showParaOndeVamos}
@@ -332,8 +380,9 @@ export default function Home() {
         itinerario={itinerario}
         setItinerario={setItinerario}
         onSucesso={() => {
+          setOrigemConfirmacao("para-onde-vamos");
           setShowFolhaInferior(false);
-          setShowFolhaEscolherOferta(true);
+          setShowConfirmarEndereco(true);
         }}
       />
 
@@ -344,12 +393,33 @@ export default function Home() {
         visible={showViagemComParada}
         onClose={handleCancelarViagem}
         onConfirmar={() => {
+          setOrigemConfirmacao("viagem-com-parada");
           setShowFolhaInferior(false);
           setShowViagemComParada(false);
-          setShowFolhaEscolherOferta(true);
+          setShowConfirmarEndereco(true);
         }}
         itinerario={itinerario}
         setItinerario={setItinerario}
+      />
+
+      {/* 🔥 ConfirmarEndereco — passo entre escolher o destino e ver preços */}
+      <ConfirmarEndereco
+        visible={showConfirmarEndereco}
+        origem={partida}
+        endereco={destino}
+        onVoltar={() => {
+          setShowConfirmarEndereco(false);
+
+          if (origemConfirmacao === "viagem-com-parada") {
+            setShowViagemComParada(true);
+          } else {
+            setShowParaOndeVamos(true);
+          }
+        }}
+        onConfirmar={() => {
+          setShowConfirmarEndereco(false);
+          setShowFolhaEscolherOferta(true);
+        }}
       />
 
       {/* 🔥 FolhaEscolherOferta */}
@@ -369,6 +439,49 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+
+  corpoPrincipal: {
+    flex: 1,
+    backgroundColor: "#FFF",
+  },
+
+  // 🔥 mapa vira um cartão com margem e cantos arredondados — não é mais
+  // edge-to-edge (igual ao 99), deixa de respiro logo abaixo do header.
+  // `collapsable={false}` (no View, ver JSX) é obrigatório: o RN às vezes
+  // "achata" (view flattening) esse wrapper por otimização, e aí o
+  // MapView nativo do Android ignora margem/borda arredondada do pai.
+  // 🔥 NOTA: margem lateral/superior (left/right/top) do cartão do mapa
+  // não está tendo efeito visual no dispositivo testado apesar de várias
+  // abordagens tentadas (margin, width explícito, position:absolute,
+  // renderToHardwareTextureAndroid) — o MapView nativo do Android parece
+  // ignorar esses eixos especificamente, mesmo quando a altura (via flex
+  // ou height explícito) é respeitada corretamente. Documentado em
+  // problemas-conhecidos.md. Mantido `left`/`right`/`top` no style porque
+  // não fazem mal e podem passar a funcionar com uma atualização da lib.
+  mapaCardWrapper: {
+    position: "absolute",
+    top: 100,
+    left: 16,
+    right: 16,
+    height: 320,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
+
+  // 🔥 durante o planejamento da corrida (ParaOndeVamos/ViagemComParada/
+  // FolhaEscolherOferta), o mapa volta a ocupar a tela toda
+  mapaTelaCheia: {
+    flex: 1,
+  },
+
+  // 🔥 o mapa agora é posicionado absoluto (ver mapaCardWrapper), então
+  // essa folha fica em fluxo normal por baixo dele — marginTop soma
+  // top+height+respiro do card do mapa pra não ficar por baixo dele
+  folhaInferiorWrapper: {
+    flex: 1,
+    marginTop: 432,
+    paddingBottom: 90,
   },
 
   loadingContainer: {
