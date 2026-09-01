@@ -12,7 +12,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import HistoricoCorridas from "./HistoricoCorridas";
+import HistoricoCorridas from "@/components/corrida/HistoricoCorridas";
 
 interface props {
   visible: boolean;

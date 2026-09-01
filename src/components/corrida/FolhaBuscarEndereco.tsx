@@ -1,4 +1,4 @@
-import DetalhesEntrega from "@/components/DetalhesEntrega";
+import DetalhesEntrega from "@/components/entrega/DetalhesEntrega";
 import { api } from "@/Services/api";
 import {
   Ionicons,

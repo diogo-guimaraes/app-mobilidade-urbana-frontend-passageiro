@@ -11,7 +11,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import HistoricoCorridasDetalhes from "./HistoricoCorridasDetalhes";
+import HistoricoCorridasDetalhes from "@/components/corrida/HistoricoCorridasDetalhes";
 
 interface RideHistory {
   id: string;

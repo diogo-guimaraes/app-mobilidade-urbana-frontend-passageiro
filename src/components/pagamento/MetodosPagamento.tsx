@@ -1,4 +1,4 @@
-import AdicionarCartao from "@/components/AdicionarCartao";
+import AdicionarCartao from "@/components/pagamento/AdicionarCartao";
 import {
   FontAwesome,
   Ionicons,

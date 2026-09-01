@@ -11,7 +11,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import DescricaoProblema from "./central-de-ajuda/DescricaoProblema";
+import DescricaoProblema from "./DescricaoProblema";
 
 interface props {
   visible: boolean;

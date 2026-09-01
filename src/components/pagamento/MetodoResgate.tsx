@@ -1,4 +1,4 @@
-import AdicionarMetodoResgatePix from "@/components/AdicionarMetodoResgatePix";
+import AdicionarMetodoResgatePix from "@/components/pagamento/AdicionarMetodoResgatePix";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -11,7 +11,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import InformacoesMetodoResgateConta from "./InformacoesMetodoResgateConta";
+import InformacoesMetodoResgateConta from "@/components/pagamento/InformacoesMetodoResgateConta";
 interface props {
   visible: boolean;
   onClose: () => void;

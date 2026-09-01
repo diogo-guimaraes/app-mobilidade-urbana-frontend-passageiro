@@ -10,7 +10,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import DefinirMetaGanhos from "./DefinirMetaGanhos";
+import DefinirMetaGanhos from "@/components/motorista/DefinirMetaGanhos";
 
 interface props {
   visible: boolean;

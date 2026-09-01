@@ -12,11 +12,11 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import ConfigurarSolicitacoes from "./ConfigurarSolicitacoes";
-import DefinirDestino from "./DefinirDestino";
-import MetodosPagamento from "./MetodosPagamento";
-import PreferenciasNavegacao from "./PreferenciasNavegacao";
-import PreferenciasSomVoz from "./PreferenciasSomVoz";
+import ConfigurarSolicitacoes from "@/components/motorista/ConfigurarSolicitacoes";
+import DefinirDestino from "@/components/corrida/DefinirDestino";
+import MetodosPagamento from "@/components/pagamento/MetodosPagamento";
+import PreferenciasNavegacao from "@/components/preferencias/PreferenciasNavegacao";
+import PreferenciasSomVoz from "@/components/preferencias/PreferenciasSomVoz";
 
 // 👉 DEFINIÇÃO DA INTERFACE PARA O ITEM DE ENDEREÇO
 interface AddressItem {

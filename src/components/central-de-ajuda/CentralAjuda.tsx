@@ -13,7 +13,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import ListaRevisarMinhaTarifa from "./ListaRevisarMinhaTarifa";
+import ListaRevisarMinhaTarifa from "@/components/central-de-ajuda/ListaRevisarMinhaTarifa";
 
 interface props {
   visible: boolean;

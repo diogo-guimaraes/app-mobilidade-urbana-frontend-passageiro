@@ -1,5 +1,5 @@
-import DetalhesItem from "@/components/DetalhesItem";
-import MetodosPagamento from "@/components/MetodosPagamento";
+import DetalhesItem from "@/components/entrega/DetalhesItem";
+import MetodosPagamento from "@/components/pagamento/MetodosPagamento";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
 import {

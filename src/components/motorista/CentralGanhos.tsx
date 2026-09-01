@@ -11,10 +11,10 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import ConvidarMotorista from "./ConvidarMotorista";
-import HistoricoCorridas from "./HistoricoCorridas";
-import MetodosResgate from "./MetodoResgate";
-import MeuSaldo from "./MeuSaldo";
+import ConvidarMotorista from "@/components/motorista/ConvidarMotorista";
+import HistoricoCorridas from "@/components/corrida/HistoricoCorridas";
+import MetodosResgate from "@/components/pagamento/MetodoResgate";
+import MeuSaldo from "@/components/pagamento/MeuSaldo";
 interface props {
   visible: boolean;
   onClose: () => void;

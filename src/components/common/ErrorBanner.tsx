@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { colors } from "../theme/colors";
+import { colors } from "@/theme/colors";
 
 interface Props {
   message: string;

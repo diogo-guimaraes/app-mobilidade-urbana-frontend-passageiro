@@ -12,7 +12,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import SaqueStatus from "./SaqueStatus";
+import SaqueStatus from "@/components/pagamento/SaqueStatus";
 
 interface props {
   visible: boolean;

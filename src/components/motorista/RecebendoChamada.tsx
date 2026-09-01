@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import NegociarChamada from "./NegociarChamada";
+import NegociarChamada from "@/components/motorista/NegociarChamada";
 
 interface RecebendoChamadaProps {
   onAceitar: () => void;
@@ -149,7 +149,7 @@ export default function RecebendoChamadas({
     const playSound = async () => {
       try {
         const { sound } = await Audio.Sound.createAsync(
-          require("../../assets/TOQUE-CHAMADA.mp3"),
+          require("../../../assets/TOQUE-CHAMADA.mp3"),
           { shouldPlay: true },
         );
 

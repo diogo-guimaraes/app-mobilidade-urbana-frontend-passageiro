@@ -2,9 +2,9 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Buscando from "./Buscando";
+import Buscando from "@/components/corrida/Buscando";
 
-import Preferencias from "./Preferencias";
+import Preferencias from "@/components/preferencias/Preferencias";
 
 interface props {
   setSolicitacoesCorrida: () => void;

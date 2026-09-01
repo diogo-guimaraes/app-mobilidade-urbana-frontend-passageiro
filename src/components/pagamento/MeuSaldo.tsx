@@ -11,9 +11,9 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import DefinirMetodoResgate from "./DefinirMetodoResgate";
-import SacarSaldo from "./SacarSaldo";
-import SaqueStatus from "./SaqueStatus";
+import DefinirMetodoResgate from "@/components/pagamento/DefinirMetodoResgate";
+import SacarSaldo from "@/components/pagamento/SacarSaldo";
+import SaqueStatus from "@/components/pagamento/SaqueStatus";
 
 interface props {
   visible: boolean;

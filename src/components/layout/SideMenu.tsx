@@ -13,14 +13,14 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import CentralAjuda from "./CentralAjuda";
-import CentralGanhos from "./CentralGanhos";
-import ConvidarMotorista from "./ConvidarMotorista";
-import HistoricoMensagens from "./HistoricoMensagens";
-import Preferencias from "./Preferencias";
-import HorasDirigindo from "./usuario/HorasDirigindo";
-import MeusVeiculos from "./usuario/MeusVeiculos";
-import PerfilUsuario from "./usuario/PerfilUsuario";
+import CentralAjuda from "@/components/central-de-ajuda/CentralAjuda";
+import CentralGanhos from "@/components/motorista/CentralGanhos";
+import ConvidarMotorista from "@/components/motorista/ConvidarMotorista";
+import HistoricoMensagens from "@/components/layout/HistoricoMensagens";
+import Preferencias from "@/components/preferencias/Preferencias";
+import HorasDirigindo from "@/components/usuario/HorasDirigindo";
+import MeusVeiculos from "@/components/usuario/MeusVeiculos";
+import PerfilUsuario from "@/components/usuario/PerfilUsuario";
 interface SideMenuProps {
   visible: boolean;
   onClose: () => void;

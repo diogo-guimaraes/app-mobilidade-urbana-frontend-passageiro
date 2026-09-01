@@ -10,11 +10,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import CentralGanhos from "./CentralGanhos";
-import HistoricoCorridas from "./HistoricoCorridas";
-import ModalGanhos from "./ModalGanhos";
-import ObjetivoSemanal from "./ObjetivoSemanal";
-import SeusGanhos from "./SeusGanhos";
+import CentralGanhos from "@/components/motorista/CentralGanhos";
+import HistoricoCorridas from "@/components/corrida/HistoricoCorridas";
+import ModalGanhos from "@/components/motorista/ModalGanhos";
+import ObjetivoSemanal from "@/components/motorista/ObjetivoSemanal";
+import SeusGanhos from "@/components/motorista/SeusGanhos";
 
 interface GanhoDiarioProps {
   visible: boolean;

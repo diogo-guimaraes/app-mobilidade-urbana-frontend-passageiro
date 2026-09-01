@@ -12,7 +12,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import MetodoResgateAdicionado from "./MetodoResgateAdicionado";
+import MetodoResgateAdicionado from "@/components/pagamento/MetodoResgateAdicionado";
 
 interface props {
   visible: boolean;

@@ -19,7 +19,7 @@ export default function MenuInferiorPassageiro({
   const tabs = [
     { key: "corrida", icon: "car-outline", label: "Corrida" },
     { key: "entrega", icon: "cube-outline", label: "Entrega" },
-    { key: "pay", icon: "cash-outline", label: "Pay" },
+    { key: "pay", icon: "cash-outline", label: "Pagar" },
   ];
 
   return (

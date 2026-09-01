@@ -1,4 +1,4 @@
-import FolhaBuscarEndereco from "@/components/FolhaBuscarEndereco";
+import FolhaBuscarEndereco from "@/components/corrida/FolhaBuscarEndereco";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -293,6 +293,10 @@ export default function InformacoesDestinario({
             visible={showEnderecoSheet}
             onClose={() => setShowEnderecoSheet(false)}
             onSheetChange={handleSheetStateChange}
+            servico="entrega"
+            onSelecionarEndereco={(item) =>
+              setEndereco(item.formattedAddress || item.name)
+            }
           />
         </View>
       )}

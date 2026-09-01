@@ -11,7 +11,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import RegistroMetodoResgateConta from "./RegistroMetodoResgateConta";
+import RegistroMetodoResgateConta from "@/components/pagamento/RegistroMetodoResgateConta";
 
 interface props {
   visible: boolean;

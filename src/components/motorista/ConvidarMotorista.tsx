@@ -162,7 +162,7 @@ export default function ConvidarMotorista({
           {/* PLACEHOLDER DA IMAGEM SUPERIOR */}
           <View style={styles.imageContainer}>
             <Image
-              source={require("../../assets/images/bg-convidar-motorista.png")}
+              source={require("../../../assets/images/bg-convidar-motorista.png")}
               style={styles.bannerImage}
             />
             <View style={styles.locationTag}>
