@@ -1,6 +1,6 @@
 // app/_layout.tsx
-import MenuInferior from "@/components/MenuInferior";
-import SideMenu from "@/components/SideMenu";
+import MenuInferior from "@/components/corrida/MenuInferior";
+import SideMenu from "@/components/layout/SideMenu";
 import { useAuth } from "@/context/AuthProvider";
 import { UiProvider, useUi } from "@/context/UiContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -112,18 +112,12 @@ function MainLayoutContent() {
                     <Ionicons name="person-circle" size={40} color="#c4c4c4" />
                   </View>
                 )}
-
-                <View style={styles.notificationDot} />
               </Pressable>
 
               <Text style={styles.greetingText}>
                 Olá, {user?.name?.split(" ")[0] || "Usuário"}!
               </Text>
             </View>
-
-            <Pressable style={styles.scanButton}>
-              <Ionicons name="scan-outline" size={28} color="#000" />
-            </Pressable>
           </View>
         </View>
       )}
@@ -216,15 +210,10 @@ const styles = StyleSheet.create({
 
   avatarContainer: {
     width: 48,
-
-    height: 48,
-
+    height: 20,
     marginRight: 12,
-
     justifyContent: "center",
-
     alignItems: "center",
-
     position: "relative",
   },
 
@@ -244,38 +233,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#F2F2F2",
   },
 
-  notificationDot: {
-    position: "absolute",
-
-    top: 0.5,
-
-    right: 0.5,
-
-    width: 13,
-
-    height: 13,
-
-    borderRadius: 6.5,
-
-    backgroundColor: "#FF3B30",
-
-    borderWidth: 2,
-
-    borderColor: "#fff",
-
-    zIndex: 2,
-  },
-
   greetingText: {
     fontSize: 22,
 
     fontWeight: "bold",
 
     color: "#000",
-  },
-
-  scanButton: {
-    padding: 8,
   },
 
   backdrop: {

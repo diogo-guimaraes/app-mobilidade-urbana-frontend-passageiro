@@ -14,12 +14,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import AppLogo from "../components/AppLogo";
-import CodigoVerificacao from "../components/CodigoVerificacao";
-import ErrorBanner from "../components/ErrorBanner";
+import AppLogo from "@/components/common/AppLogo";
+import CarrosAleatorios from "@/components/auth/CarrosAleatorios";
+import CodigoVerificacao from "@/components/auth/CodigoVerificacao";
+import ErrorBanner from "@/components/common/ErrorBanner";
 import GoogleIcon from "../components/icons/GoogleIcon";
 import { api } from "../Services/api";
-import { colors } from "../theme/colors";
 
 export default function Login() {
   const router = useRouter();
@@ -105,6 +105,7 @@ export default function Login() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
+        <CarrosAleatorios />
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Header com Logo */}
           <View style={styles.header}>
@@ -122,21 +123,21 @@ export default function Login() {
                   style={styles.flag}
                 />
                 <Text style={styles.countryCode}>+55</Text>
-                <Ionicons
-                  name="caret-down"
-                  size={12}
-                  color={colors.textSecondary}
-                />
+                <Ionicons name="caret-down" size={12} color="#666" />
               </View>
 
               <TextInput
                 style={styles.input}
                 placeholder="(69) 91234-5678"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor="#CCC"
                 keyboardType="phone-pad"
                 maxLength={13} // Limite de caracteres considerando a máscara (2+1+5+1+4)
                 value={phone}
                 onChangeText={formatPhone}
+                returnKeyType={isButtonEnabled ? "go" : "done"}
+                onSubmitEditing={() =>
+                  isButtonEnabled && verificarSeContaExiste()
+                }
               />
 
               {phone.length > 0 && (
@@ -144,14 +145,11 @@ export default function Login() {
                   onPress={() => setPhone("")}
                   style={styles.clearButton}
                 >
-                  <Ionicons
-                    name="close-circle"
-                    size={20}
-                    color={colors.textMuted}
-                  />
+                  <Ionicons name="close-circle" size={20} color="#CCC" />
                 </TouchableOpacity>
               )}
             </View>
+            <View style={styles.inputUnderline} />
 
             {/* Termos e Condições */}
             <TouchableOpacity
@@ -191,7 +189,7 @@ export default function Login() {
               disabled={!isButtonEnabled || loadingVerificarConta}
             >
               {loadingVerificarConta ? (
-                <ActivityIndicator color={colors.white} />
+                <ActivityIndicator color="black" />
               ) : (
                 <Text
                   style={[
@@ -219,7 +217,7 @@ export default function Login() {
               <FontAwesome5
                 name="envelope"
                 size={20}
-                color={colors.textSecondary}
+                color="grey"
                 style={styles.socialIcon}
               />
               <Text style={styles.socialButtonText}>Entrar com email</Text>
@@ -243,7 +241,7 @@ export default function Login() {
                 <FontAwesome5
                   name="apple"
                   size={20}
-                  color={colors.textSecondary}
+                  color="grey"
                   style={styles.socialIcon}
                 />
                 <Text style={styles.socialButtonText}>Continuar com Apple</Text>
@@ -259,7 +257,7 @@ export default function Login() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "#FFF",
   },
   scrollContent: {
     flexGrow: 1,
@@ -273,33 +271,28 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 30,
     marginTop: 36,
+    justifyContent: "center",
   },
   title: {
     fontSize: 22,
     fontWeight: "700",
     textAlign: "center",
-    marginBottom: 22,
-    color: colors.text,
+    marginBottom: 30,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    marginBottom: 18,
+    paddingVertical: 10,
   },
   countryPicker: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.background,
-    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#DDD",
+    borderRadius: 20,
     paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginRight: 12,
+    paddingVertical: 5,
+    marginRight: 15,
   },
   flag: {
     width: 20,
@@ -310,15 +303,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     marginRight: 5,
-    color: colors.text,
   },
   input: {
     flex: 1,
-    fontSize: 17,
-    color: colors.text,
-    fontWeight: "500",
-    paddingVertical: 10,
-    textAlign: "center",
+    fontSize: 18,
+    color: "#000",
+    fontWeight: "400",
+  },
+  inputUnderline: {
+    height: 1,
+    backgroundColor: "#FF5500",
+    width: "100%",
+    marginBottom: 25,
   },
   clearButton: {
     padding: 5,
@@ -326,78 +322,74 @@ const styles = StyleSheet.create({
   termsContainer: {
     flexDirection: "row",
     alignItems: "flex-start",
-    marginBottom: 18,
+    marginBottom: 30,
   },
   radioButton: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "#CCC",
     marginRight: 10,
     justifyContent: "center",
     alignItems: "center",
   },
   radioButtonActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: "#FF5500",
+    borderColor: "#FF5500",
   },
   termsText: {
     flex: 1,
     fontSize: 13,
-    color: colors.textSecondary,
+    color: "#666",
     lineHeight: 18,
   },
   linkText: {
     textDecorationLine: "underline",
-    color: colors.primary,
-    fontWeight: "600",
   },
   nextButton: {
-    height: 50,
-    borderRadius: 16,
+    height: 55,
+    borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 22,
+    marginBottom: 30,
   },
   nextButtonDisabled: {
-    backgroundColor: colors.disabledBg,
+    backgroundColor: "#F5F5F5",
   },
   nextButtonActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: "#FFD200",
   },
   nextButtonText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: colors.white,
+    color: "#000",
   },
   nextButtonTextDisabled: {
-    color: colors.disabledText,
+    color: "#CCC",
   },
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 20,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: "#EEE",
   },
   dividerText: {
     paddingHorizontal: 15,
-    color: colors.textMuted,
+    color: "#AAA",
   },
   socialButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    height: 48,
-    borderRadius: 16,
+    backgroundColor: "#F8F8F8",
+    height: 55,
+    borderRadius: 10,
     paddingHorizontal: 20,
-    marginBottom: 10,
+    marginBottom: 15,
   },
   socialIcon: {
     width: 20,
@@ -407,6 +399,6 @@ const styles = StyleSheet.create({
   socialButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: colors.text,
+    color: "#333",
   },
 });

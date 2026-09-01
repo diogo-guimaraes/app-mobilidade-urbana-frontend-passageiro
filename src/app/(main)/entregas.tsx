@@ -1,5 +1,5 @@
-import InformacoesDestinario from "@/components/InformacoesDestinario";
-import InformacoesRemetente from "@/components/InformacoesRemetente";
+import InformacoesDestinario from "@/components/entrega/InformacoesDestinario";
+import InformacoesRemetente from "@/components/entrega/InformacoesRemetente";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
