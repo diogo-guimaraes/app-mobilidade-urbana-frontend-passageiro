@@ -4,7 +4,10 @@
 import { FontAwesome5 } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text, View } from "react-native";
-import { colors } from "../theme/colors";
+
+// Cor própria do logo (aprovada como está) — não segue a paleta das telas,
+// que pode mudar independente disso.
+const LOGO_COLOR = "#000";
 
 interface Props {
   size?: number;
@@ -53,7 +56,7 @@ export default function AppLogo({ size = 48 }: Props) {
         <FontAwesome5
           name="car-side"
           size={carSize}
-          color={colors.primary}
+          color={LOGO_COLOR}
           style={styles.carEsquerda}
         />
       </Animated.View>
@@ -68,7 +71,7 @@ export default function AppLogo({ size = 48 }: Props) {
           transform: [{ translateX: translateDireita }, { scale: escala }],
         }}
       >
-        <FontAwesome5 name="car-side" size={carSize} color={colors.primary} />
+        <FontAwesome5 name="car-side" size={carSize} color={LOGO_COLOR} />
       </Animated.View>
     </View>
   );
@@ -81,7 +84,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontWeight: "900",
-    color: colors.primary,
+    color: LOGO_COLOR,
     marginHorizontal: 3,
   },
   carEsquerda: {
