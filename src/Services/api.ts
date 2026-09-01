@@ -36,7 +36,15 @@ export const setUnauthorizedHandler = (handler: UnauthorizedHandler) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error?.response?.status === 401) {
+    // 🔥 só desloga de verdade se a chamada que falhou ERA autenticada
+    // (mandava um Bearer token). Endpoints públicos também podem responder
+    // 401 por motivos que nada têm a ver com sessão — ex: código de
+    // verificação errado em `verificar-codigo`, senha errada em `login`.
+    // Sem essa checagem, QUALQUER 401 (mesmo de uma tela pública) derrubava
+    // a sessão de um usuário já logado em outra aba/tela.
+    const tinhaToken = Boolean(error?.config?.headers?.Authorization);
+
+    if (error?.response?.status === 401 && tinhaToken) {
       onUnauthorized?.();
     }
 
