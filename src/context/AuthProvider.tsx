@@ -39,6 +39,7 @@ interface DadosCadastro {
   cpf: string;
   data_nascimento: string;
   password: string;
+  telefone?: string;
 }
 
 interface AtualizarFotoPayload {
@@ -99,8 +100,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const restoreSession = async () => {
       try {
         const storedUser = await SecureStore.getItemAsync("user");
+        const storedToken = await SecureStore.getItemAsync("token");
 
-        if (storedUser) {
+        // só restaura se tiver os dois; usuário sem token não consegue
+        // autenticar nenhuma requisição
+        if (storedUser && storedToken) {
           const parsedUser = JSON.parse(storedUser);
 
           setUser(parsedUser);
@@ -173,15 +177,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // LOGOUT
   // =========================
 
+  // Limpa a sessão local sem chamar o backend (usado quando o token já é
+  // sabidamente inválido, ex: resposta 401 de qualquer requisição).
+  const limparSessaoLocal = async () => {
+    setUser(null);
+
+    await SecureStore.deleteItemAsync("user");
+
+    await SecureStore.deleteItemAsync("token");
+  };
+
   const logout = async () => {
     try {
-      setUser(null);
-
-      await SecureStore.deleteItemAsync("user");
-
-      await SecureStore.deleteItemAsync("token");
+      // invalida o token no backend antes de limpar localmente
+      await api.post("/auth/logout");
     } catch (error) {
-      console.error("Erro ao fazer logout:", error);
+      console.error("Erro ao invalidar token no backend:", error);
+    } finally {
+      await limparSessaoLocal();
     }
   };
 
@@ -189,7 +202,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // requisição à API retornar 401 (token expirado/inválido).
   useEffect(() => {
     setUnauthorizedHandler(() => {
-      logout();
+      // token já é inválido (401): só limpa localmente, não chama /auth/logout
+      limparSessaoLocal();
 
       router.replace("/login");
     });

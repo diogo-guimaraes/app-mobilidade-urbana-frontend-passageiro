@@ -15,21 +15,29 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
           <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
-          <Stack>
+          <Stack screenOptions={{ animation: "slide_from_right" }}>
             <Stack.Screen
               name="index"
               options={{
                 headerShown: false,
+                animation: "fade",
               }}
             />
             <Stack.Screen
               name="splash"
               options={{
                 headerShown: false,
+                animation: "fade",
               }}
             />
             <Stack.Screen
               name="login"
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="loginEmail"
               options={{
                 headerShown: false,
               }}
@@ -44,6 +52,7 @@ export default function RootLayout() {
               name="(main)"
               options={{
                 headerShown: false,
+                animation: "fade",
               }}
             />
           </Stack>
