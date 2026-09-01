@@ -17,8 +17,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import DraggableFlatList, {
+  RenderItemParams,
+} from "react-native-draggable-flatlist";
 
-import FolhaBuscarEndereco from "@/components/FolhaBuscarEndereco";
+import FolhaBuscarEndereco from "@/components/corrida/FolhaBuscarEndereco";
 
 const MAX_PARADAS = 4;
 interface props {
@@ -53,6 +56,10 @@ export default function ViagemComParada({
   setItinerario,
 }: props) {
   const [isMounted, setIsMounted] = useState(visible);
+
+  // 🔥 desliga o gesto de arrastar do BottomSheet enquanto uma parada está
+  // sendo arrastada — sem isso os dois gestos brigam entre si
+  const [arrastandoParada, setArrastandoParada] = useState(false);
 
   const [showFolhaBuscarEndereco, setShowFolhaBuscarEndereco] = useState(false);
 
@@ -140,6 +147,35 @@ export default function ViagemComParada({
 
     onShowBuscarEndereco?.(false);
   };
+
+  // 🔥 recebe a lista de paradas já na nova ordem (arrastar-e-soltar) e
+  // remonta o itinerário completo: origem primeiro, depois as paradas
+  // reordenadas, depois o slot vazio de "adicionar parada" (se existir)
+  const finalizarArraste = ({ data }: { data: InterfaceEndereco[] }) => {
+    setArrastandoParada(false);
+
+    setItinerario((prev) => {
+      const origem = prev[0];
+
+      const ultimoItem = prev[prev.length - 1];
+
+      const temPlaceholderVazio = prev.length > 1 && !ultimoItem.name;
+
+      const nova = [
+        origem,
+        ...data,
+        ...(temPlaceholderVazio ? [ultimoItem] : []),
+      ];
+
+      return reorganizarOrders(nova);
+    });
+  };
+
+  // 🔥 true quando não há mais slot vazio pra adicionar parada — já
+  // atingiu o limite de MAX_PARADAS
+  const limiteDeParadasAtingido =
+    itinerario.length >= MAX_PARADAS + 1 &&
+    itinerario.every((item) => item.name);
 
   const removerParada = (index: number) => {
     if (index === 0) return;
@@ -232,6 +268,110 @@ export default function ViagemComParada({
     [onClose],
   );
 
+  // 🔥 origem sempre fixa no topo; o slot vazio de "adicionar parada" (se
+  // existir) sempre fixo no fim; só o que sobra no meio é arrastável
+  const origem = itinerario[0];
+
+  const ultimoItemGeral = itinerario[itinerario.length - 1];
+
+  const temPlaceholderVazio = itinerario.length > 1 && !ultimoItemGeral.name;
+
+  const paradasReais = itinerario.slice(
+    1,
+    temPlaceholderVazio ? -1 : undefined,
+  );
+
+  const renderLinha = ({
+    item,
+    index,
+    isOrigem,
+    isDestino,
+    isUltimaLinha,
+    onIniciarArraste,
+  }: {
+    item: InterfaceEndereco;
+    index: number;
+    isOrigem: boolean;
+    isDestino: boolean;
+    isUltimaLinha: boolean;
+    onIniciarArraste?: () => void;
+  }) => (
+    <View style={styles.rowContainer}>
+      <View style={styles.lineContainer}>
+        <View style={styles.markerWrapper}>
+          {isOrigem ? (
+            <View style={styles.startOuterCircle}>
+              <View style={styles.startInnerCircle} />
+            </View>
+          ) : isDestino && !item.name ? (
+            <View style={[styles.numberBox, styles.lastNumberBoxHighlight]}>
+              <Ionicons name="add" size={18} color="#FFF" />
+            </View>
+          ) : (
+            <View
+              style={[
+                styles.numberBox,
+                isDestino ? styles.lastNumberBoxHighlight : null,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.numberText,
+                  isDestino ? styles.lastNumberTextHighlight : null,
+                ]}
+              >
+                {index}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {!isUltimaLinha && <View style={styles.verticalLine} />}
+      </View>
+
+      <View
+        style={[styles.searchInput, isDestino && styles.searchInputDestination]}
+      >
+        <TouchableOpacity
+          style={styles.inputTouchable}
+          onPress={() => handleInputClick(index)}
+          activeOpacity={0.7}
+        >
+          <Text
+            style={[styles.inputText, !item.name && styles.placeholderText]}
+            numberOfLines={1}
+          >
+            {item.name || "Adicionar parada"}
+          </Text>
+        </TouchableOpacity>
+
+        {!isOrigem && item.name && (
+          <View style={styles.actionButtons}>
+            {onIniciarArraste && (
+              <TouchableOpacity
+                // 🔥 onPressIn (não onLongPress) — arrasta assim que
+                // encosta na alcinha, sem precisar segurar
+                onPressIn={onIniciarArraste}
+                style={styles.reorderButtonInline}
+                hitSlop={8}
+              >
+                <Ionicons name="reorder-three" size={22} color="#999" />
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              onPress={() => removerParada(index)}
+              style={styles.removeButtonInline}
+              hitSlop={6}
+            >
+              <Ionicons name="close" size={20} color="#777" />
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+
   if (!isMounted) return null;
 
   return (
@@ -246,6 +386,10 @@ export default function ViagemComParada({
         onChange={handleSheetChange}
         overDragResistanceFactor={13}
         enablePanDownToClose={false}
+        // 🔥 desliga o gesto do sheet enquanto arrasta uma parada — os dois
+        // gestos de pan competindo faziam o sheet fechar/arrastar sozinho
+        enableContentPanningGesture={!arrastandoParada}
+        enableHandlePanningGesture={!arrastandoParada}
         backgroundStyle={styles.bottomSheetBackground}
         handleIndicatorStyle={styles.handleIndicator}
       >
@@ -255,86 +399,68 @@ export default function ViagemComParada({
           </View>
 
           <View style={styles.searchContainer}>
-            {itinerario.map((item, index) => {
-              const isOrigem = index === 0;
-
-              const isDestino = index === itinerario.length - 1;
-
-              return (
-                <View key={index} style={styles.rowContainer}>
-                  <View style={styles.lineContainer}>
-                    <View style={styles.markerWrapper}>
-                      {isOrigem ? (
-                        <View style={styles.startOuterCircle}>
-                          <View style={styles.startInnerCircle} />
-                        </View>
-                      ) : isDestino && !item.name ? (
-                        <View
-                          style={[
-                            styles.numberBox,
-                            styles.lastNumberBoxHighlight,
-                          ]}
-                        >
-                          <Ionicons name="add" size={18} color="#FFF" />
-                        </View>
-                      ) : (
-                        <View
-                          style={[
-                            styles.numberBox,
-                            isDestino ? styles.lastNumberBoxHighlight : null,
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              styles.numberText,
-                              isDestino ? styles.lastNumberTextHighlight : null,
-                            ]}
-                          >
-                            {index}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-
-                    {!isDestino && <View style={styles.verticalLine} />}
-                  </View>
-
-                  <View
-                    style={[
-                      styles.searchInput,
-                      isDestino && styles.searchInputDestination,
-                    ]}
-                  >
-                    <TouchableOpacity
-                      style={styles.inputTouchable}
-                      onPress={() => handleInputClick(index)}
-                      activeOpacity={0.7}
-                    >
-                      <Text
-                        style={[
-                          styles.inputText,
-                          !item.name && styles.placeholderText,
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {item.name || "Adicionar parada"}
-                      </Text>
-                    </TouchableOpacity>
-
-                    {!isOrigem && item.name && (
-                      <View style={styles.actionButtons}>
-                        <TouchableOpacity
-                          onPress={() => removerParada(index)}
-                          style={styles.removeButtonInline}
-                        >
-                          <Ionicons name="close" size={20} color="#777" />
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              );
+            {/* origem — fixa, nunca arrasta nem remove */}
+            {renderLinha({
+              item: origem,
+              index: 0,
+              isOrigem: true,
+              isDestino: false,
+              isUltimaLinha: paradasReais.length === 0 && !temPlaceholderVazio,
             })}
+
+            {/* paradas reais — arrastáveis pra reordenar */}
+            <DraggableFlatList
+              data={paradasReais}
+              keyExtractor={(item) =>
+                `${item.latitude}-${item.longitude}-${item.name}`
+              }
+              scrollEnabled={false}
+              activationDistance={12}
+              onDragBegin={() => setArrastandoParada(true)}
+              onDragEnd={finalizarArraste}
+              renderItem={({
+                item,
+                drag,
+                isActive,
+              }: RenderItemParams<InterfaceEndereco>) => {
+                const index = itinerario.indexOf(item);
+
+                // só a última linha realmente exibida vira "destino" (com
+                // destaque laranja) — se existe slot vazio no fim, é ele
+                // quem carrega o destaque, não a última parada preenchida
+                const isDestino =
+                  !temPlaceholderVazio && index === itinerario.length - 1;
+
+                return (
+                  <View style={isActive && styles.linhaArrastando}>
+                    {renderLinha({
+                      item,
+                      index,
+                      isOrigem: false,
+                      isDestino,
+                      isUltimaLinha: !temPlaceholderVazio && isDestino,
+                      onIniciarArraste: drag,
+                    })}
+                  </View>
+                );
+              }}
+            />
+
+            {/* slot vazio de "adicionar parada" — fixo no fim, não arrasta */}
+            {temPlaceholderVazio &&
+              renderLinha({
+                item: itinerario[itinerario.length - 1],
+                index: itinerario.length - 1,
+                isOrigem: false,
+                isDestino: true,
+                isUltimaLinha: true,
+              })}
+
+            {limiteDeParadasAtingido && (
+              <Text style={styles.limiteText}>
+                Limite de {MAX_PARADAS} paradas atingido
+              </Text>
+            )}
           </View>
 
           <View style={styles.buttonContainer}>
@@ -515,9 +641,25 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
 
+  reorderButtonInline: {
+    padding: 4,
+  },
+
+  linhaArrastando: {
+    opacity: 0.85,
+    backgroundColor: "#FAFAFA",
+  },
+
   actionButtons: {
     flexDirection: "row",
     alignItems: "center",
+  },
+
+  limiteText: {
+    fontSize: 13,
+    color: "#999",
+    textAlign: "center",
+    marginTop: 4,
   },
 
   buttonContainer: {
