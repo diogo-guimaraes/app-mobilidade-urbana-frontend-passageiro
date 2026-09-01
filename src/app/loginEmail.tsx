@@ -14,9 +14,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AppLogo from "../components/AppLogo";
-import ErrorBanner from "../components/ErrorBanner";
-import { colors } from "../theme/colors";
+import AppLogo from "@/components/common/AppLogo";
+import CarrosAleatorios from "@/components/auth/CarrosAleatorios";
+import ErrorBanner from "@/components/common/ErrorBanner";
 
 export default function LoginEmail() {
   const router = useRouter();
@@ -76,6 +76,7 @@ export default function LoginEmail() {
       />
 
       <SafeAreaView style={styles.container}>
+        <CarrosAleatorios />
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.keyboard}
@@ -87,16 +88,10 @@ export default function LoginEmail() {
                 onPress={() => router.back()}
                 style={styles.backButton}
               >
-                <Ionicons name="chevron-back" size={24} color={colors.text} />
+                <Ionicons name="chevron-back" size={24} color="black" />
               </TouchableOpacity>
 
               <AppLogo />
-
-              <View style={styles.badgeContainer}>
-                <Text style={styles.badgeText}>
-                  🔐 Acesse sua conta com segurança
-                </Text>
-              </View>
             </View>
 
             <View style={styles.content}>
@@ -108,15 +103,10 @@ export default function LoginEmail() {
                       Qual é o seu endereço de e-mail?
                     </Text>
 
-                    <View
-                      style={[
-                        styles.inputWrapper,
-                        erroEmail && styles.inputWrapperError,
-                      ]}
-                    >
+                    <View style={styles.inputWrapper}>
                       <TextInput
                         placeholder="nome@exemplo.com"
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor="#CCC"
                         style={styles.input}
                         value={email}
                         onChangeText={(text) => {
@@ -130,8 +120,17 @@ export default function LoginEmail() {
                         autoCapitalize="none"
                         autoCorrect={false}
                         editable={!loading}
+                        returnKeyType={email.trim() ? "go" : "done"}
+                        onSubmitEditing={() => email.trim() && handleAvancar()}
                       />
                     </View>
+
+                    <View
+                      style={[
+                        styles.inputUnderline,
+                        erroEmail && styles.inputUnderlineError,
+                      ]}
+                    />
 
                     {!!erroEmail && <ErrorBanner message={erroEmail} />}
                   </View>
@@ -141,11 +140,7 @@ export default function LoginEmail() {
                       style={styles.roundedButton}
                       onPress={() => router.back()}
                     >
-                      <Feather
-                        name="arrow-left"
-                        size={22}
-                        color={colors.text}
-                      />
+                      <Feather name="arrow-left" size={22} color="black" />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -170,9 +165,7 @@ export default function LoginEmail() {
                       <Feather
                         name="arrow-right"
                         size={18}
-                        color={
-                          email.trim() ? colors.white : colors.disabledText
-                        }
+                        color={email.trim() ? "black" : "#CCC"}
                       />
                     </TouchableOpacity>
                   </View>
@@ -187,15 +180,10 @@ export default function LoginEmail() {
 
                     <Text style={styles.highlightText}>{email}</Text>
 
-                    <View
-                      style={[
-                        styles.inputWrapper,
-                        erroLogin && styles.inputWrapperError,
-                      ]}
-                    >
+                    <View style={styles.inputWrapper}>
                       <TextInput
                         placeholder="Digite sua senha"
-                        placeholderTextColor={colors.textMuted}
+                        placeholderTextColor="#CCC"
                         secureTextEntry
                         style={styles.input}
                         value={senha}
@@ -208,8 +196,17 @@ export default function LoginEmail() {
                         }}
                         autoCapitalize="none"
                         editable={!loading}
+                        returnKeyType={senha ? "go" : "done"}
+                        onSubmitEditing={() => senha && handleLogin()}
                       />
                     </View>
+
+                    <View
+                      style={[
+                        styles.inputUnderline,
+                        erroLogin && styles.inputUnderlineError,
+                      ]}
+                    />
 
                     {!!erroLogin && <ErrorBanner message={erroLogin} />}
                   </View>
@@ -220,11 +217,7 @@ export default function LoginEmail() {
                       onPress={() => setStep(1)}
                       disabled={loading}
                     >
-                      <Feather
-                        name="arrow-left"
-                        size={22}
-                        color={colors.text}
-                      />
+                      <Feather name="arrow-left" size={22} color="black" />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -238,7 +231,7 @@ export default function LoginEmail() {
                       ]}
                     >
                       {loading ? (
-                        <ActivityIndicator color={colors.white} />
+                        <ActivityIndicator color="black" />
                       ) : (
                         <>
                           <Text
@@ -254,11 +247,7 @@ export default function LoginEmail() {
                           <Feather
                             name="arrow-right"
                             size={18}
-                            color={
-                              senha && !loading
-                                ? colors.white
-                                : colors.disabledText
-                            }
+                            color={senha && !loading ? "black" : "#CCC"}
                           />
                         </>
                       )}
@@ -277,7 +266,7 @@ export default function LoginEmail() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: "#FFF",
   },
 
   keyboard: {
@@ -300,20 +289,6 @@ const styles = StyleSheet.create({
     top: 36,
   },
 
-  badgeContainer: {
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginTop: 10,
-  },
-
-  badgeText: {
-    color: colors.primaryDark,
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
   content: {
     flex: 1,
     paddingHorizontal: 30,
@@ -329,7 +304,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: "700",
-    color: colors.text,
+    color: "#000",
     marginBottom: 24,
   },
 
@@ -337,30 +312,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 24,
-    color: colors.primary,
+    color: "#FF5500",
   },
 
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-
-  inputWrapperError: {
-    borderColor: colors.error,
+    paddingVertical: 10,
   },
 
   input: {
     flex: 1,
-    fontSize: 17,
-    color: colors.text,
-    fontWeight: "500",
-    paddingVertical: 10,
+    fontSize: 18,
+    color: "#000",
+    fontWeight: "400",
+  },
+
+  inputUnderline: {
+    height: 1,
+    backgroundColor: "#FF5500",
+    width: "100%",
+    marginBottom: 12,
+  },
+
+  inputUnderlineError: {
+    backgroundColor: "#ef4444",
   },
 
   footerButtons: {
@@ -374,7 +350,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: colors.disabledBg,
+    backgroundColor: "#F5F5F5",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -389,21 +365,21 @@ const styles = StyleSheet.create({
   },
 
   nextButtonDisabled: {
-    backgroundColor: colors.disabledBg,
+    backgroundColor: "#F5F5F5",
   },
 
   nextButtonActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: "#FFD200",
   },
 
   nextButtonText: {
     fontSize: 16,
     fontWeight: "700",
-    color: colors.white,
+    color: "#000",
     marginRight: 8,
   },
 
   nextButtonTextDisabled: {
-    color: colors.disabledText,
+    color: "#CCC",
   },
 });
