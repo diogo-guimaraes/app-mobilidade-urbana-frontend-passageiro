@@ -14,11 +14,11 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { api } from "../Services/api";
-import { useAuth } from "../context/AuthProvider";
-import { colors } from "../theme/colors";
-import AppLogo from "./AppLogo";
-import ErrorBanner from "./ErrorBanner";
+import { api } from "@/Services/api";
+import { useAuth } from "@/context/AuthProvider";
+import AppLogo from "@/components/common/AppLogo";
+import CarrosAleatorios from "@/components/auth/CarrosAleatorios";
+import ErrorBanner from "@/components/common/ErrorBanner";
 
 interface props {
   visible: boolean;
@@ -85,8 +85,18 @@ export default function CodigoVerificacao({
     }
   };
 
+  // 🔥 trava contra clique duplo: cada chamada gera um código NOVO e
+  // sobrescreve o anterior no cache — se o botão for tocado duas vezes, a
+  // primeira chamada acabava confirmando um código que já tinha sido
+  // substituído pela segunda, dando um 401 "de verdade"
+  const [recebendoCodigo, setRecebendoCodigo] = useState(false);
+
   // Botão de apoio (dev): busca o código gerado pelo backend e preenche sozinho
   const receberCodigo = async () => {
+    if (recebendoCodigo || isLoading) return;
+
+    setRecebendoCodigo(true);
+
     try {
       const response = await api.post("auth/enviar-codigo", { telefone });
 
@@ -117,10 +127,16 @@ export default function CodigoVerificacao({
         }, index * 180);
       });
 
-      // aguarda animação terminar antes de confirmar
-      setTimeout(() => verificarCodigo(codigo), 1000);
+      // aguarda animação terminar antes de confirmar — só libera o botão
+      // de novo depois que essa verificação realmente terminar, pra não
+      // deixar um segundo toque gerar outro código no meio do caminho
+      setTimeout(() => {
+        verificarCodigo(codigo).finally(() => setRecebendoCodigo(false));
+      }, 1000);
     } catch (error) {
       console.log("Erro ao receber código:", error);
+
+      setRecebendoCodigo(false);
     }
   };
 
@@ -201,6 +217,7 @@ export default function CodigoVerificacao({
       setCode(["", "", "", ""]);
       setHasError(false);
       setIsLoading(false);
+      setRecebendoCodigo(false);
     }
   }, [visible]);
 
@@ -260,10 +277,13 @@ export default function CodigoVerificacao({
             },
           ]}
         >
+          {/* 🔥 mesmo easter egg de fundo das outras telas de auth */}
+          <CarrosAleatorios />
+
           {/* HEADER */}
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose} style={styles.backButton}>
-              <Ionicons name="chevron-back" size={26} color={colors.text} />
+              <Ionicons name="chevron-back" size={26} color="#000" />
             </TouchableOpacity>
           </View>
 
@@ -299,10 +319,19 @@ export default function CodigoVerificacao({
             {/* Receber código */}
             <TouchableOpacity
               onPress={receberCodigo}
+              disabled={recebendoCodigo || isLoading}
               style={styles.testClickableContainer}
               activeOpacity={0.7}
             >
-              <Text style={styles.testClickableText}>Receber código</Text>
+              <Text
+                style={[
+                  styles.testClickableText,
+                  (recebendoCodigo || isLoading) &&
+                    styles.testClickableTextDisabled,
+                ]}
+              >
+                Receber código
+              </Text>
             </TouchableOpacity>
 
             {/* Inputs */}
@@ -327,7 +356,7 @@ export default function CodigoVerificacao({
                         style={[
                           styles.codeText,
                           {
-                            color: active ? colors.text : colors.disabledText,
+                            color: active ? "#000" : "#D9D9D9",
                           },
                         ]}
                       >
@@ -340,10 +369,10 @@ export default function CodigoVerificacao({
                         styles.inputLine,
                         {
                           backgroundColor: hasError
-                            ? colors.error
+                            ? "#D32F2F"
                             : active
-                              ? colors.primary
-                              : colors.border,
+                              ? "#F2A199"
+                              : "#E5E5E5",
                         },
                       ]}
                     />
@@ -376,14 +405,12 @@ export default function CodigoVerificacao({
               }}
             >
               {isLoading ? (
-                <ActivityIndicator size="small" color={colors.white} />
+                <ActivityIndicator size="small" color="#000" />
               ) : (
                 <Text
                   style={[
                     styles.resendButtonText,
-                    countdown > 0
-                      ? styles.resendButtonTextDisabled
-                      : styles.resendButtonTextActive,
+                    countdown > 0 && styles.resendButtonTextDisabled,
                   ]}
                 >
                   {countdown > 0
@@ -406,7 +433,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: "100%",
-    backgroundColor: colors.background,
+    backgroundColor: "#FFF",
   },
 
   header: {
@@ -441,14 +468,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "700",
-    color: colors.text,
+    color: "#000",
     textAlign: "center",
     marginBottom: 8,
   },
 
   subtitle: {
     fontSize: 15,
-    color: colors.textSecondary,
+    color: "#333",
     textAlign: "center",
     marginBottom: 3,
   },
@@ -502,31 +529,27 @@ const styles = StyleSheet.create({
   },
 
   resendButtonDisabled: {
-    backgroundColor: colors.disabledBg,
+    backgroundColor: "#F5F5F5",
   },
 
   resendButtonActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: "#FFD200",
   },
 
   resendButtonLoading: {
-    backgroundColor: colors.primary,
+    backgroundColor: "#FFD200",
   },
 
   resendButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: colors.text,
+    color: "#000",
   },
 
   resendButtonTextDisabled: {
     fontSize: 16,
     fontWeight: "600",
-    color: colors.disabledText,
-  },
-
-  resendButtonTextActive: {
-    color: colors.white,
+    color: "#A0A0A0",
   },
 
   testClickableContainer: {
@@ -537,8 +560,12 @@ const styles = StyleSheet.create({
 
   testClickableText: {
     fontSize: 16,
-    color: colors.primary,
+    color: "#007AFF",
     fontWeight: "600",
     textDecorationLine: "underline",
+  },
+
+  testClickableTextDisabled: {
+    color: "#A0A0A0",
   },
 });
