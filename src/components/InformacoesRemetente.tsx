@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Image,
   Pressable,
   ScrollView,
@@ -11,10 +10,9 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  useWindowDimensions,
+  View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -27,6 +25,7 @@ export default function InformacoesRemetente({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -47,7 +46,7 @@ export default function InformacoesRemetente({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -85,13 +84,22 @@ export default function InformacoesRemetente({
 
   if (!isMounted) return null;
 
-  const InputField = ({ label, value, onChangeText, icon, required = false }: any) => (
+  const InputField = ({
+    label,
+    value,
+    onChangeText,
+    icon,
+    required = false,
+  }: any) => (
     <View style={styles.inputContainer}>
-      <Text style={styles.label}>{label}{required && <Text style={{color: 'red'}}>*</Text>}</Text>
+      <Text style={styles.label}>
+        {label}
+        {required && <Text style={{ color: "red" }}>*</Text>}
+      </Text>
       <View style={styles.inputWrapper}>
-        <TextInput 
-          style={styles.input} 
-          value={value} 
+        <TextInput
+          style={styles.input}
+          value={value}
           onChangeText={onChangeText}
         />
         {icon && <Ionicons name={icon} size={20} color="#666" />}
@@ -110,12 +118,7 @@ export default function InformacoesRemetente({
         />
       </Pressable>
 
-      <Animated.View
-        style={[
-          styles.drawer,
-          { transform: [{ translateX }] },
-        ]}
-      >
+      <Animated.View style={[styles.drawer, { transform: [{ translateX }] }]}>
         {/* HEADER */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose} style={styles.backButton}>
@@ -128,40 +131,48 @@ export default function InformacoesRemetente({
         <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
           {/* FORMULÁRIO */}
           <View style={styles.formSection}>
-            <InputField 
-              label="Endereço" 
-              value={endereco} 
-              onChangeText={setEndereco} 
-              icon="chevron-forward" 
-              required 
+            <InputField
+              label="Endereço"
+              value={endereco}
+              onChangeText={setEndereco}
+              icon="chevron-forward"
+              required
             />
-            <InputField 
-              label="Detalhes do endereço" 
-              value={detalhes} 
-              onChangeText={setDetalhes} 
+            <InputField
+              label="Detalhes do endereço"
+              value={detalhes}
+              onChangeText={setDetalhes}
             />
             <View style={styles.inputContainer}>
-               <Text style={styles.label}>Nome para contato<Text style={{color: 'red'}}>*</Text></Text>
-               <View style={styles.inputWrapper}>
-                  <TextInput style={styles.input} value={nome} onChangeText={setNome} />
-                  <MaterialIcons name="contact-phone" size={22} color="#666" />
-               </View>
+              <Text style={styles.label}>
+                Nome para contato<Text style={{ color: "red" }}>*</Text>
+              </Text>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.input}
+                  value={nome}
+                  onChangeText={setNome}
+                />
+                <MaterialIcons name="contact-phone" size={22} color="#666" />
+              </View>
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Número de telefone<Text style={{color: 'red'}}>*</Text></Text>
+              <Text style={styles.label}>
+                Número de telefone<Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.phoneInputWrapper}>
                 <TouchableOpacity style={styles.countryPicker}>
-                  <Image 
-                    source={{ uri: 'https://flagcdn.com/w40/br.png' }} 
-                    style={styles.flag} 
+                  <Image
+                    source={{ uri: "https://flagcdn.com/w40/br.png" }}
+                    style={styles.flag}
                   />
                   <Text style={styles.countryCode}>+55</Text>
                   <Ionicons name="caret-down" size={12} color="#666" />
                 </TouchableOpacity>
-                <TextInput 
-                  style={[styles.input, { flex: 1, marginLeft: 10 }]} 
-                  value={telefone} 
+                <TextInput
+                  style={[styles.input, { flex: 1, marginLeft: 10 }]}
+                  value={telefone}
                   keyboardType="phone-pad"
                   onChangeText={setTelefone}
                 />
@@ -176,22 +187,60 @@ export default function InformacoesRemetente({
           {/* ENDEREÇOS RECENTES */}
           <View style={styles.recentSection}>
             <Text style={styles.recentTitle}>Endereços recentes</Text>
-            
+
             {[
-              { addr: "Rua Rui Barbosa, 1493", sub: "Feijoada", detail: "Diogo • 69981400661" },
-              { addr: "Rua Portuguesa, 6244", sub: "casa", detail: "Diana Deise • 69981195656" },
-              { addr: "Rua Portuguesa, 6374", sub: "", detail: "Diogo • 69981400661" },
-              { addr: "Rua Brasília, 2930", sub: "Pen6 Marketing", detail: "Diogo • 69981400661" },
-              { addr: "Rua Rui Barbosa, 1493", sub: "Feijoada", detail: "Diogo • 69981400661" },
-              { addr: "Rua Portuguesa, 6244", sub: "casa", detail: "Diana Deise • 69981195656" },
-              { addr: "Rua Portuguesa, 6374", sub: "", detail: "Diogo • 69981400661" },
-              { addr: "Rua Brasília, 2930", sub: "Pen6 Marketing", detail: "Diogo • 69981400661" },
+              {
+                addr: "Rua Rui Barbosa, 1493",
+                sub: "Feijoada",
+                detail: "Diogo • 69981400661",
+              },
+              {
+                addr: "Rua Portuguesa, 6244",
+                sub: "casa",
+                detail: "Diana Deise • 69981195656",
+              },
+              {
+                addr: "Rua Portuguesa, 6374",
+                sub: "",
+                detail: "Diogo • 69981400661",
+              },
+              {
+                addr: "Rua Brasília, 2930",
+                sub: "Pen6 Marketing",
+                detail: "Diogo • 69981400661",
+              },
+              {
+                addr: "Rua Rui Barbosa, 1493",
+                sub: "Feijoada",
+                detail: "Diogo • 69981400661",
+              },
+              {
+                addr: "Rua Portuguesa, 6244",
+                sub: "casa",
+                detail: "Diana Deise • 69981195656",
+              },
+              {
+                addr: "Rua Portuguesa, 6374",
+                sub: "",
+                detail: "Diogo • 69981400661",
+              },
+              {
+                addr: "Rua Brasília, 2930",
+                sub: "Pen6 Marketing",
+                detail: "Diogo • 69981400661",
+              },
             ].map((item, index) => (
               <View key={index} style={styles.recentItem}>
-                <Ionicons name="location-sharp" size={22} color="#888" style={styles.locationIcon} />
+                <Ionicons
+                  name="location-sharp"
+                  size={22}
+                  color="#888"
+                  style={styles.locationIcon}
+                />
                 <View style={styles.recentTextContainer}>
                   <Text style={styles.recentAddrText}>
-                    {item.addr}{item.sub ? ` - ${item.sub}` : ""}
+                    {item.addr}
+                    {item.sub ? ` - ${item.sub}` : ""}
                   </Text>
                   <Text style={styles.recentSubText}>{item.detail}</Text>
                 </View>
@@ -240,7 +289,7 @@ const styles = StyleSheet.create({
   },
   formSection: {
     padding: 20,
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
   },
   inputContainer: {
     marginBottom: 20,
@@ -251,10 +300,10 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: "#E0E0E0",
     paddingBottom: 8,
   },
   input: {
@@ -264,17 +313,17 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   phoneInputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: "#E0E0E0",
     paddingBottom: 8,
   },
   countryPicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderRightWidth: 1,
-    borderRightColor: '#EEE',
+    borderRightColor: "#EEE",
     paddingRight: 10,
   },
   flag: {
@@ -317,11 +366,11 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   recentItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 15,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: "#F0F0F0",
   },
   locationIcon: {
     marginRight: 15,

@@ -28,7 +28,7 @@ export default function FolhaInferiorMotorista({
   );
 
   return (
-    <View className="flex-1 pt-12 px-4">
+    <View className="flex-1 px-4 pt-12">
       <BottomSheet
         ref={sheetRef}
         snapPoints={snapPoints}

@@ -3,16 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -25,6 +23,7 @@ export default function AlterarNumero({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -40,7 +39,7 @@ export default function AlterarNumero({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -149,17 +148,22 @@ export default function AlterarNumero({
           </View>
 
           {/* Botão de Ação */}
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
-              styles.button, 
-              { backgroundColor: phoneNumber.length > 10 ? "#FFD600" : "#f0f0f0" }
+              styles.button,
+              {
+                backgroundColor:
+                  phoneNumber.length > 10 ? "#FFD600" : "#f0f0f0",
+              },
             ]}
             disabled={phoneNumber.length <= 10}
           >
-            <Text style={[
-              styles.buttonText,
-              { color: phoneNumber.length > 10 ? "#111" : "#999" }
-            ]}>
+            <Text
+              style={[
+                styles.buttonText,
+                { color: phoneNumber.length > 10 ? "#111" : "#999" },
+              ]}
+            >
               Próximo
             </Text>
           </TouchableOpacity>

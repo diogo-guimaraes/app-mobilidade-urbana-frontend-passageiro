@@ -3,17 +3,15 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Image,
   Pressable,
   StyleSheet,
   Switch,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface Props {
   visible: boolean;
@@ -26,6 +24,7 @@ export default function PreferenciasNavegacao({
   onClose,
   duration = 200,
 }: Props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -44,7 +43,7 @@ export default function PreferenciasNavegacao({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);

@@ -118,7 +118,15 @@ export default function FolhaBuscarEndereco({
       const cachedData = await AsyncStorage.getItem(CACHE_HISTORICO_KEY);
 
       if (cachedData) {
-        setHistoricoCache(JSON.parse(cachedData));
+        const historico: EnderecoItem[] = JSON.parse(cachedData);
+
+        setHistoricoCache(
+          historico.map((item) => ({
+            ...item,
+            name: item.name ?? "",
+            formattedAddress: item.formattedAddress ?? "",
+          })),
+        );
       } else {
         setHistoricoCache(enderecosPadrao);
 
@@ -197,7 +205,12 @@ export default function FolhaBuscarEndereco({
       });
 
       if (response.data) {
-        const { name, formattedAddress, latitude, longitude } = response.data;
+        const {
+          name = "",
+          formattedAddress = "",
+          latitude,
+          longitude,
+        } = response.data;
 
         const novoEnderecoObjeto: EnderecoItem = {
           name,
@@ -211,6 +224,8 @@ export default function FolhaBuscarEndereco({
         setListaEnderecos([novoEnderecoObjeto]);
       }
     } catch (error) {
+      setListaEnderecos([]);
+
       console.log("Erro ao buscar endereço no backend:", error);
     } finally {
       setLoading(false);

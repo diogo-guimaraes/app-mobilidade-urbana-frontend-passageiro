@@ -3,17 +3,15 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import RegistroMetodoResgateConta from "./RegistroMetodoResgateConta";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -26,6 +24,7 @@ export default function InformacoesMetodoResgateConta({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -49,7 +48,7 @@ export default function InformacoesMetodoResgateConta({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);

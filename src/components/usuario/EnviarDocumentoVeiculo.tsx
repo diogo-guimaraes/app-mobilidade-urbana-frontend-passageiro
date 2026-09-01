@@ -3,18 +3,16 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Image,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import RequisitoEnvioDocumentoDigital from "./RequisitoEnvioDocumentoDigital";
 import RequisitoEnvioDocumentoFisico from "./RequisitoEnvioDocumentoFisico";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -27,22 +25,27 @@ export default function EnviarDocumentoVeiculo({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
 
   const [selected, setSelected] = useState<string | null>(null);
-  const [showRequisitoEnvioDocumentoFisico, setShowRequisitoEnvioDocumentoFisico] = useState(false);
-  const [showRequisitoEnvioDocumentoDigital, setShowRequisitoEnvioDocumentoDigital] = useState(false);
+  const [
+    showRequisitoEnvioDocumentoFisico,
+    setShowRequisitoEnvioDocumentoFisico,
+  ] = useState(false);
+  const [
+    showRequisitoEnvioDocumentoDigital,
+    setShowRequisitoEnvioDocumentoDigital,
+  ] = useState(false);
 
   const documentoSelecionando = () => {
-    if (selected === 'fisico') {
+    if (selected === "fisico") {
       setShowRequisitoEnvioDocumentoFisico(true);
-
     }
-    if (selected === 'digital') {
+    if (selected === "digital") {
       setShowRequisitoEnvioDocumentoDigital(true);
-
     }
   };
 
@@ -56,7 +59,7 @@ export default function EnviarDocumentoVeiculo({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -120,12 +123,7 @@ export default function EnviarDocumentoVeiculo({
           <Text style={styles.optionDesc}>{description}</Text>
         </View>
 
-        <View
-          style={[
-            styles.radio,
-            isSelected && styles.radioSelected,
-          ]}
-        >
+        <View style={[styles.radio, isSelected && styles.radioSelected]}>
           {isSelected && <View style={styles.radioInner} />}
         </View>
       </TouchableOpacity>
@@ -165,7 +163,8 @@ export default function EnviarDocumentoVeiculo({
             <Text style={styles.title}>Faça o envio do seu CRLV</Text>
 
             <Text style={styles.subtitle}>
-              Agora aceitamos o envio do documento físico e também digital, em PDF
+              Agora aceitamos o envio do documento físico e também digital, em
+              PDF
             </Text>
 
             <Option
@@ -187,10 +186,7 @@ export default function EnviarDocumentoVeiculo({
           <View style={styles.footer}>
             <TouchableOpacity
               disabled={!selected}
-              style={[
-                styles.button,
-                !selected && { opacity: 0.5 },
-              ]}
+              style={[styles.button, !selected && { opacity: 0.5 }]}
               onPress={() => {
                 documentoSelecionando();
                 console.log("Selecionado:", selected);

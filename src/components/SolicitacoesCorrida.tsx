@@ -3,17 +3,15 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   FlatList,
   Pressable,
   RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -26,6 +24,7 @@ export default function SolicitacoesCorrida({
   onClose,
   duration = 300,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(1)).current; // 👈 controla o fade da lista
@@ -90,7 +89,7 @@ export default function SolicitacoesCorrida({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -172,9 +171,7 @@ export default function SolicitacoesCorrida({
                 <View style={styles.cardHeader}>
                   <View style={styles.tipoContainer}>
                     <Text style={styles.tipoText}>{item.tipo}</Text>
-                    {item.novo && (
-                      <Text style={styles.novoBadge}>Novo</Text>
-                    )}
+                    {item.novo && <Text style={styles.novoBadge}>Novo</Text>}
                   </View>
                   <Ionicons
                     name="document-text-outline"

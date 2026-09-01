@@ -1,12 +1,10 @@
-import * as React from 'react';
-import { Text, View } from 'react-native';
-
-
+import * as React from "react";
+import { Text, View } from "react-native";
 
 export default function Pay() {
-    return (
-      <View className='flex-1 justify-center align-items-center'>
-        <Text className='text-red-500 text-center'>Pay</Text>
-      </View>
-    );
+  return (
+    <View className="align-items-center flex-1 justify-center">
+      <Text className="text-center text-red-500">Pay</Text>
+    </View>
+  );
 }

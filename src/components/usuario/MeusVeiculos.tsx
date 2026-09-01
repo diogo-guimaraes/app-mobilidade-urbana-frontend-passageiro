@@ -3,19 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Image,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import DetalhesVeiculo from "./DetalhesVeiculo";
 import EscolherVeiculo from "./EscolherVeiculo";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -28,6 +26,7 @@ export default function MeusVeiculos({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -47,8 +46,7 @@ export default function MeusVeiculos({
       status: "Aprovado",
       placa: "NCQ-7483",
       modelo: "Chevrolet ONIX LT (FLEX)",
-      imagem:
-        "https://cdn-icons-png.flaticon.com/512/744/744465.png",
+      imagem: "https://cdn-icons-png.flaticon.com/512/744/744465.png",
       ativo: true,
     },
     {
@@ -58,8 +56,7 @@ export default function MeusVeiculos({
       placa: "ABC-1234",
       modelo: "Hyundai HB20 (FLEX)",
       ativo: false,
-      imagem:
-        "https://cdn-icons-png.flaticon.com/512/744/744465.png",
+      imagem: "https://cdn-icons-png.flaticon.com/512/744/744465.png",
     },
     {
       id: "3",
@@ -68,8 +65,7 @@ export default function MeusVeiculos({
       placa: "XYZ-9090",
       modelo: "Honda CG 160",
       ativo: false,
-      imagem:
-        "https://cdn-icons-png.flaticon.com/512/1986/1986937.png",
+      imagem: "https://cdn-icons-png.flaticon.com/512/1986/1986937.png",
     },
   ];
 
@@ -83,7 +79,7 @@ export default function MeusVeiculos({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -122,7 +118,6 @@ export default function MeusVeiculos({
   if (!isMounted) return null;
 
   const renderVeiculo = (item: any) => (
-
     <View key={item.id} style={styles.card}>
       {/* TOP */}
       <TouchableOpacity onPress={() => mostrarDetalhes(item)}>
@@ -149,7 +144,6 @@ export default function MeusVeiculos({
           <Image source={{ uri: item.imagem }} style={styles.image} />
         </View>
       </TouchableOpacity>
-
     </View>
   );
 
@@ -182,16 +176,16 @@ export default function MeusVeiculos({
           </View>
 
           {/* BODY */}
-          <ScrollView
-            style={styles.body}
-            showsVerticalScrollIndicator={false}
-          >
+          <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
             {veiculos.map(renderVeiculo)}
           </ScrollView>
 
           {/* BOTÃO FIXO */}
           <View style={styles.footer}>
-            <TouchableOpacity onPress={() => setShowEscolherVeiculo(true)} style={styles.button}>
+            <TouchableOpacity
+              onPress={() => setShowEscolherVeiculo(true)}
+              style={styles.button}
+            >
               <Text style={styles.buttonText}>Adicionar</Text>
             </TouchableOpacity>
           </View>

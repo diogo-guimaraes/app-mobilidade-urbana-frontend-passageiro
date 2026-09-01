@@ -3,18 +3,16 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   FlatList,
   ListRenderItem,
   Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
-
-const { width } = Dimensions.get("window");
 
 // 👉 DEFINIÇÃO DA INTERFACE PARA O ITEM DE ENDEREÇO
 interface AddressItem {
@@ -26,7 +24,8 @@ interface AddressItem {
 }
 
 // 👉 Dados dos destinos direcionados
-const data: AddressItem[] = [ // 👈 Tipando a lista de dados 
+const data: AddressItem[] = [
+  // 👈 Tipando a lista de dados
   {
     id: "1",
     address: "Av. Paulista, 1000",
@@ -117,6 +116,7 @@ export default function DefinirDestino({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -125,7 +125,6 @@ export default function DefinirDestino({
   const entradaInput = () => {
     console.log("entradaInput");
   };
-
 
   useEffect(() => {
     const onBackPress = () => {
@@ -137,7 +136,7 @@ export default function DefinirDestino({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -184,11 +183,7 @@ export default function DefinirDestino({
   // 👉 Componente de renderização para cada item da lista de endereços
   // 👈 Tipagem corrigida com ListRenderItem<AddressItem>
   const renderItem: ListRenderItem<AddressItem> = ({ item, index }) => (
-    <TouchableOpacity
-      style={[
-        styles.addressItem,
-      ]}
-    >
+    <TouchableOpacity style={[styles.addressItem]}>
       {/* Ícone dinâmico */}
       <Ionicons
         name={item.icon as any}
@@ -201,7 +196,7 @@ export default function DefinirDestino({
         style={[
           styles.addressContent,
           // Aplica a borda condicionalmente
-          index !== data.length - 1 && styles.addressContentSeparator
+          index !== data.length - 1 && styles.addressContentSeparator,
         ]}
       >
         <Text style={styles.addressLine1}>{item.address}</Text>
@@ -260,7 +255,7 @@ export default function DefinirDestino({
           </View>
 
           {/* Ícone de seta à direita */}
-          <TouchableOpacity >
+          <TouchableOpacity>
             <Ionicons name="close-outline" size={20} color="#aaa" />
           </TouchableOpacity>
         </View>
@@ -282,7 +277,7 @@ export default function DefinirDestino({
           </View>
 
           {/* Ícone de seta à direita */}
-          <TouchableOpacity >
+          <TouchableOpacity>
             <Ionicons name="create-outline" size={20} color="#aaa" />
           </TouchableOpacity>
         </View>

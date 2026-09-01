@@ -1,11 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Buscando from "./Buscando";
 
@@ -15,10 +10,13 @@ interface props {
   setSolicitacoesCorrida: () => void;
 }
 
-export default function MenuInferiorMotorista({ setSolicitacoesCorrida }: props) {
+export default function MenuInferiorMotorista({
+  setSolicitacoesCorrida,
+}: props) {
   // 💡 Estado para rastrear se estamos buscando corridas
   const [buscandoCorrida, setBuscandoCorrida] = useState(false);
-  const [dialogPreferenciasVisible, setDialogPreferenciasVisibleLocal] = useState(false);
+  const [dialogPreferenciasVisible, setDialogPreferenciasVisibleLocal] =
+    useState(false);
 
   // 💡 Lógica para alternar entre "Conectar" (false) e "Buscando" (true)
   const handleConnect = () => {
@@ -44,13 +42,13 @@ export default function MenuInferiorMotorista({ setSolicitacoesCorrida }: props)
     styles.connectButton,
     buscandoCorrida
       ? {
-        backgroundColor: "transparent",
-        shadowOpacity: 0,
-        elevation: 0,
-      }
+          backgroundColor: "transparent",
+          shadowOpacity: 0,
+          elevation: 0,
+        }
       : {
-        backgroundColor: "#FFD600",
-      },
+          backgroundColor: "#FFD600",
+        },
   ];
 
   return (
@@ -60,7 +58,7 @@ export default function MenuInferiorMotorista({ setSolicitacoesCorrida }: props)
         onClose={() => setDialogPreferenciasVisibleLocal(false)}
         onDisconnect={handleDisconnect}
         buscandoCorrida={buscandoCorrida}
-      />      
+      />
 
       <SafeAreaView style={styles.bottomMenuWrapper}>
         <View style={styles.bottomMenu}>
@@ -74,7 +72,6 @@ export default function MenuInferiorMotorista({ setSolicitacoesCorrida }: props)
             {/* 🔴 Pontinho vermelho de status */}
             <View style={[styles.redDot]} />
           </TouchableOpacity>
-
 
           {/* 🔹 Botão central "Conectar" / "Buscando" */}
           <TouchableOpacity

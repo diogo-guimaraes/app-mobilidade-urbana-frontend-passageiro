@@ -4,17 +4,15 @@ import {
   ActivityIndicator,
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 import HistoricoCorridas from "./HistoricoCorridas";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -29,6 +27,7 @@ export default function SeusGanhos({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
@@ -84,7 +83,7 @@ export default function SeusGanhos({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible]);
@@ -314,7 +313,7 @@ export default function SeusGanhos({
                               />
                               <Text style={styles.barDayText}>{day}</Text>
                             </View>
-                          )
+                          ),
                         )}
                   </View>
                 )}

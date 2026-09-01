@@ -3,16 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
-
-const { width } = Dimensions.get("window");
 
 interface props {
   visible: boolean;
@@ -27,6 +25,7 @@ export default function DefinirMetodoResgate({
   onClose,
   duration = 200,
 }: props) {
+  const { width } = useWindowDimensions();
   const translateX = useRef(new Animated.Value(width)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const [isMounted, setIsMounted] = useState(visible);
@@ -44,7 +43,7 @@ export default function DefinirMetodoResgate({
     };
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
-      onBackPress
+      onBackPress,
     );
     return () => subscription.remove();
   }, [visible, onClose]);
@@ -88,7 +87,7 @@ export default function DefinirMetodoResgate({
     description: string,
     icon: any,
     iconColor: string,
-    tag?: string
+    tag?: string,
   ) => (
     <TouchableOpacity
       style={styles.optionContainer}
@@ -160,7 +159,7 @@ export default function DefinirMetodoResgate({
               color="#fff"
             />,
             "#ff6600",
-            "Recomendado"
+            "Recomendado",
           )}
 
           {renderOption(
@@ -168,7 +167,7 @@ export default function DefinirMetodoResgate({
             "Chave Pix",
             "Receba transferências automáticas no seu cartão toda quarta-feira. Você receberá os ganhos em 1 ou 2 dias úteis.",
             <Ionicons name="qr-code-outline" size={20} color="#fff" />,
-            "#2db089"
+            "#2db089",
           )}
 
           {renderOption(
@@ -180,7 +179,7 @@ export default function DefinirMetodoResgate({
               size={22}
               color="#fff"
             />,
-            "#ff6600"
+            "#ff6600",
           )}
         </ScrollView>
       </Animated.View>

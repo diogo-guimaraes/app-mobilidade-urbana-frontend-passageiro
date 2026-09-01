@@ -9,13 +9,14 @@ import React, { useEffect, useRef, useState } from "react";
 
 import {
   Animated,
-  Dimensions,
   Image,
   Pressable,
   StyleSheet,
   Text,
+  useWindowDimensions,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Componente interno que usa o UiContext
 function MainLayoutContent() {
@@ -24,30 +25,23 @@ function MainLayoutContent() {
   // 🔥 CONTROLA MODAIS GLOBAIS
   const { isModalVisible } = useUi();
 
-  const [showSideMenu, setShowSideMenu] =
-    useState(false);
+  const [showSideMenu, setShowSideMenu] = useState(false);
 
-  const drawerWidth = Math.round(
-    Dimensions.get("window").width * 0.78,
-  );
+  const { width } = useWindowDimensions();
 
-  const translateX = useRef(
-    new Animated.Value(-drawerWidth),
-  ).current;
+  const insets = useSafeAreaInsets();
+
+  const drawerWidth = Math.round(width * 0.78);
+
+  const translateX = useRef(new Animated.Value(-drawerWidth)).current;
 
   useEffect(() => {
     Animated.timing(translateX, {
-      toValue: showSideMenu
-        ? 0
-        : -drawerWidth,
+      toValue: showSideMenu ? 0 : -drawerWidth,
       duration: 220,
       useNativeDriver: true,
     }).start();
-  }, [
-    showSideMenu,
-    drawerWidth,
-    translateX,
-  ]);
+  }, [showSideMenu, drawerWidth, translateX]);
 
   const closeMenu = () => {
     setShowSideMenu(false);
@@ -61,36 +55,21 @@ function MainLayoutContent() {
 
   const segments = useSegments();
 
-  const [
-    abaSelecionanda,
-    setAbaSelecionada,
-  ] = useState("corrida");
+  const [abaSelecionanda, setAbaSelecionada] = useState("corrida");
 
   useEffect(() => {
-    const currentSegment =
-      segments[segments.length - 1];
+    const currentSegment = segments[segments.length - 1];
 
-    if (
-      currentSegment ===
-      "entregas"
-    ) {
-      setAbaSelecionada(
-        "entrega",
-      );
-    } else if (
-      currentSegment === "pay"
-    ) {
+    if (currentSegment === "entregas") {
+      setAbaSelecionada("entrega");
+    } else if (currentSegment === "pay") {
       setAbaSelecionada("pay");
     } else {
-      setAbaSelecionada(
-        "corrida",
-      );
+      setAbaSelecionada("corrida");
     }
   }, [segments]);
 
-  const handleTabPress = (
-    tabKey: string,
-  ) => {
+  const handleTabPress = (tabKey: string) => {
     if (tabKey === "entrega") {
       router.push("/entregas");
 
@@ -104,97 +83,46 @@ function MainLayoutContent() {
     }
 
     if (tabKey === "pay") {
-      router.push(
-        "/(payment)/pay",
-      );
+      router.push("/(payment)/pay");
 
       return;
     }
   };
 
   return (
-    <View
-      style={styles.container}
-    >
+    <View style={styles.container}>
       {/* 🔥 HEADER SOMENTE QUANDO NÃO HÁ MODAL */}
       {!isModalVisible && (
-        <View
-          style={
-            styles.headerFloating
-          }
-        >
-          <View
-            style={
-              styles.headerContent
-            }
-          >
-            <View
-              style={
-                styles.userInfo
-              }
-            >
+        <View style={[styles.headerFloating, { paddingTop: insets.top + 8 }]}>
+          <View style={styles.headerContent}>
+            <View style={styles.userInfo}>
               <Pressable
-                onPress={
-                  handleMenuOpen
-                }
-                style={
-                  styles.avatarContainer
-                }
+                onPress={handleMenuOpen}
+                style={styles.avatarContainer}
               >
                 {user?.foto ? (
                   <Image
                     source={{
                       uri: user.foto,
                     }}
-                    style={
-                      styles.avatar
-                    }
+                    style={styles.avatar}
                   />
                 ) : (
-                  <View
-                    style={
-                      styles.avatar
-                    }
-                  >
-                    <Ionicons
-                      name="person-circle"
-                      size={40}
-                      color="#c4c4c4"
-                    />
+                  <View style={styles.avatar}>
+                    <Ionicons name="person-circle" size={40} color="#c4c4c4" />
                   </View>
                 )}
 
-                <View
-                  style={
-                    styles.notificationDot
-                  }
-                />
+                <View style={styles.notificationDot} />
               </Pressable>
 
-              <Text
-                style={
-                  styles.greetingText
-                }
-              >
-                Olá,{" "}
-                {user?.name?.split(
-                  " ",
-                )[0] ||
-                  "Usuário"}
-                !
+              <Text style={styles.greetingText}>
+                Olá, {user?.name?.split(" ")[0] || "Usuário"}!
               </Text>
             </View>
 
-            <Pressable
-              style={
-                styles.scanButton
-              }
-            >
-              <Ionicons
-                name="scan-outline"
-                size={28}
-                color="#000"
-              />
+            <Pressable style={styles.scanButton}>
+              <Ionicons name="scan-outline" size={28} color="#000" />
             </Pressable>
           </View>
         </View>
@@ -202,21 +130,15 @@ function MainLayoutContent() {
 
       {showSideMenu && (
         <Pressable
-          style={
-            styles.backdrop
-          }
-          onPress={() =>
-            setShowSideMenu(
-              false,
-            )
-          }
+          style={styles.backdrop}
+          onPress={() => setShowSideMenu(false)}
         />
       )}
 
       <SideMenu
         visible={showSideMenu}
         onClose={closeMenu}
-        drawerWidth={280}
+        drawerWidth={drawerWidth}
       />
 
       <Slot />
@@ -224,15 +146,9 @@ function MainLayoutContent() {
       {/* 🔥 MENU INFERIOR SOMENTE QUANDO NÃO HÁ MODAL */}
       {!isModalVisible && (
         <MenuInferior
-          abaSelecionanda={
-            abaSelecionanda
-          }
-          setAbaSelecionada={
-            setAbaSelecionada
-          }
-          onPressTab={
-            handleTabPress
-          }
+          abaSelecionanda={abaSelecionanda}
+          setAbaSelecionada={setAbaSelecionada}
+          onPressTab={handleTabPress}
         />
       )}
     </View>
@@ -248,146 +164,133 @@ export default function RootLayout() {
   );
 }
 
-const styles =
-  StyleSheet.create({
-    container: {
-      flex: 1,
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+
+  headerFloating: {
+    position: "absolute",
+
+    top: 0,
+
+    left: 0,
+
+    right: 0,
+
+    zIndex: 10,
+
+    backgroundColor: "#fff",
+
+    paddingBottom: 15,
+
+    paddingHorizontal: 20,
+
+    elevation: 4,
+
+    shadowColor: "#000",
+
+    shadowOffset: {
+      width: 0,
+      height: 2,
     },
 
-    headerFloating: {
-      position:
-        "absolute",
+    shadowOpacity: 0.15,
 
-      top: 0,
+    shadowRadius: 3.84,
+  },
 
-      left: 0,
+  headerContent: {
+    flexDirection: "row",
 
-      right: 0,
+    alignItems: "center",
 
-      zIndex: 10,
+    justifyContent: "space-between",
+  },
 
-      backgroundColor:
-        "#fff",
+  userInfo: {
+    flexDirection: "row",
 
-      paddingTop: 50,
+    alignItems: "center",
+  },
 
-      paddingBottom: 15,
+  avatarContainer: {
+    width: 48,
 
-      paddingHorizontal: 20,
+    height: 48,
 
-      elevation: 4,
+    marginRight: 12,
 
-      shadowColor: "#000",
+    justifyContent: "center",
 
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
+    alignItems: "center",
 
-      shadowOpacity: 0.15,
+    position: "relative",
+  },
 
-      shadowRadius: 3.84,
-    },
+  avatar: {
+    width: 48,
 
-    headerContent: {
-      flexDirection: "row",
+    height: 48,
 
-      alignItems: "center",
+    borderRadius: 24,
 
-      justifyContent:
-        "space-between",
-    },
+    overflow: "hidden",
 
-    userInfo: {
-      flexDirection: "row",
+    justifyContent: "center",
 
-      alignItems: "center",
-    },
+    alignItems: "center",
 
-    avatarContainer: {
-      width: 48,
+    backgroundColor: "#F2F2F2",
+  },
 
-      height: 48,
+  notificationDot: {
+    position: "absolute",
 
-      marginRight: 12,
+    top: 0.5,
 
-      justifyContent:
-        "center",
+    right: 0.5,
 
-      alignItems: "center",
+    width: 13,
 
-      position: "relative",
-    },
+    height: 13,
 
-    avatar: {
-      width: 48,
+    borderRadius: 6.5,
 
-      height: 48,
+    backgroundColor: "#FF3B30",
 
-      borderRadius: 24,
+    borderWidth: 2,
 
-      overflow: "hidden",
+    borderColor: "#fff",
 
-      justifyContent:
-        "center",
+    zIndex: 2,
+  },
 
-      alignItems: "center",
+  greetingText: {
+    fontSize: 22,
 
-      backgroundColor:
-        "#F2F2F2",
-    },
+    fontWeight: "bold",
 
-    notificationDot: {
-      position:
-        "absolute",
+    color: "#000",
+  },
 
-      top: 0.5,
+  scanButton: {
+    padding: 8,
+  },
 
-      right: 0.5,
+  backdrop: {
+    position: "absolute",
 
-      width: 13,
+    top: 0,
 
-      height: 13,
+    left: 0,
 
-      borderRadius: 6.5,
+    right: 0,
 
-      backgroundColor:
-        "#FF3B30",
+    bottom: 0,
 
-      borderWidth: 2,
+    backgroundColor: "rgba(0,0,0,0.28)",
 
-      borderColor: "#fff",
-
-      zIndex: 2,
-    },
-
-    greetingText: {
-      fontSize: 22,
-
-      fontWeight: "bold",
-
-      color: "#000",
-    },
-
-    scanButton: {
-      padding: 8,
-    },
-
-    backdrop: {
-      position:
-        "absolute",
-
-      top: 0,
-
-      left: 0,
-
-      right: 0,
-
-      bottom: 0,
-
-      backgroundColor:
-        "rgba(0,0,0,0.28)",
-
-      zIndex: 18,
-    },
-  });
+    zIndex: 18,
+  },
+});

@@ -1,6 +1,9 @@
 import { InterfaceEndereco } from "@/app/(main)/home";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetBackdrop,
+  BottomSheetFlatList,
+} from "@gorhom/bottom-sheet";
 import React, {
   useCallback,
   useEffect,
@@ -275,7 +278,7 @@ export default function FolhaEscolherOferta({
         disappearsOnIndex={1} // Some completamente no index 0 (30%)
       />
     ),
-    []
+    [],
   );
 
   const renderIcone = (tipo: string) => {

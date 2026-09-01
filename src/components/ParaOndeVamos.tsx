@@ -3,14 +3,20 @@
 import { InterfaceEndereco } from "@/app/(main)/home";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useRef, useState } from "react";
+import BottomSheet, {
+  BottomSheetScrollView,
+  BottomSheetTextInput,
+} from "@gorhom/bottom-sheet";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Animated,
   BackHandler,
-  Dimensions,
-  Keyboard,
-  Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -18,7 +24,6 @@ import {
   View,
 } from "react-native";
 import { api } from "../Services/api";
-const { width } = Dimensions.get("window");
 const CACHE_HISTORICO_KEY = "@historico_enderecos";
 
 interface props {
@@ -34,17 +39,21 @@ interface props {
 
 const enderecosPadrao: InterfaceEndereco[] = [];
 
+// 🔥 índice baixo = mais mapa visível, índice alto = foco na busca
+const SNAP_POINTS = ["45%", "90%"];
+
 export default function ParaOndeVamos({
   visible,
   onClose,
-  duration = 300,
   onAdicionarParada,
   itinerario,
   setItinerario,
   onSucesso,
 }: props) {
-  const translateX = useRef(new Animated.Value(width)).current;
-  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const bottomSheetRef = useRef<BottomSheet>(null);
+
+  const snapPoints = useMemo(() => SNAP_POINTS, []);
+
   const skeletonOpacity = useRef(new Animated.Value(0.4)).current;
 
   const [isMounted, setIsMounted] = useState(visible);
@@ -60,11 +69,10 @@ export default function ParaOndeVamos({
     listaEnderecos.length > 0 ? listaEnderecos : historicoCache;
 
   const handleAdicionarParada = () => {
-    Keyboard.dismiss();
-      onClose();
-      if (onAdicionarParada) {
-        onAdicionarParada();
-      }
+    onClose();
+    if (onAdicionarParada) {
+      onAdicionarParada();
+    }
   };
 
   // Animação do Skeleton
@@ -101,7 +109,15 @@ export default function ParaOndeVamos({
     try {
       const cachedData = await AsyncStorage.getItem(CACHE_HISTORICO_KEY);
       if (cachedData) {
-        setHistoricoCache(JSON.parse(cachedData));
+        const historico: InterfaceEndereco[] = JSON.parse(cachedData);
+
+        setHistoricoCache(
+          historico.map((item) => ({
+            ...item,
+            name: item.name ?? "",
+            formattedAddress: item.formattedAddress ?? "",
+          })),
+        );
       } else {
         setHistoricoCache(enderecosPadrao);
         await AsyncStorage.setItem(
@@ -167,7 +183,12 @@ export default function ParaOndeVamos({
       });
 
       if (response.data) {
-        const { name, formattedAddress, latitude, longitude } = response.data;
+        const {
+          name = "",
+          formattedAddress = "",
+          latitude,
+          longitude,
+        } = response.data;
         const novoEnderecoObjeto = {
           name,
           formattedAddress,
@@ -178,6 +199,8 @@ export default function ParaOndeVamos({
         setListaEnderecos([novoEnderecoObjeto]);
       }
     } catch (error) {
+      setListaEnderecos([]);
+
       console.log("Erro ao buscar endereço no backend:", error);
     } finally {
       setLoading(false);
@@ -212,13 +235,13 @@ export default function ParaOndeVamos({
       prev.map((input, index) =>
         index === inputSelecionado
           ? {
-            ...input,
-            name: item.name,
-            formattedAddress: item.formattedAddress,
-            latitude: item.latitude,
-            longitude: item.longitude,
-            order: index,
-          }
+              ...input,
+              name: item.name,
+              formattedAddress: item.formattedAddress,
+              latitude: item.latitude,
+              longitude: item.longitude,
+              order: index,
+            }
           : input,
       ),
     );
@@ -257,90 +280,47 @@ export default function ParaOndeVamos({
     return () => subscription.remove();
   }, [visible, onClose]);
 
-  // Controle de Animações de Entrada/Saída (Drawer Lateral)
+  // Controla abertura/fechamento do BottomSheet a partir da prop `visible`
   useEffect(() => {
     if (visible) {
       setIsMounted(true);
-      Animated.parallel([
-        Animated.timing(translateX, {
-          toValue: 0,
-          duration,
-          useNativeDriver: true,
-        }),
-        Animated.timing(overlayOpacity, {
-          toValue: 1,
-          duration: duration * 0.8,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setTimeout(() => {
-          // Sempre foca no destino ao abrir, a menos que esteja vazio
-          inputRefs.current[1]?.focus();
-        }, 100);
-      });
+
+      bottomSheetRef.current?.snapToIndex(1);
+
+      setTimeout(() => {
+        inputRefs.current[1]?.focus();
+      }, 250);
     } else {
-      Animated.parallel([
-        Animated.timing(translateX, {
-          toValue: width,
-          duration,
-          useNativeDriver: true,
-        }),
-        Animated.timing(overlayOpacity, {
-          toValue: 0,
-          duration: duration * 0.8,
-          useNativeDriver: true,
-        }),
-      ]).start(({ finished }) => {
-        if (finished) {
-          setIsMounted(false);
-          setListaEnderecos([]);
-          setLoading(false);
-        }
-      });
+      bottomSheetRef.current?.close();
     }
-  }, [visible, translateX, overlayOpacity, duration]);
+  }, [visible]);
+
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      if (index === -1) {
+        setIsMounted(false);
+        setListaEnderecos([]);
+        setLoading(false);
+
+        onClose();
+      }
+    },
+    [onClose],
+  );
 
   if (!isMounted) return null;
 
   return (
-    <View
-      style={[
-        {
-          flex: 1,
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-        },
-        { zIndex: 30 },
-      ]}
-    >
-      {/* Overlay */}
-      <Pressable
-        style={[{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }]}
-        onPress={onClose}
-      >
-        <Animated.View
-          style={[
-            { position: "absolute", top: 0, left: 0, right: 0, bottom: 0 },
-            {
-              backgroundColor: "rgba(0,0,0,0.25)",
-              opacity: overlayOpacity,
-            },
-          ]}
-        />
-      </Pressable>
-
-      {/* Drawer */}
-      <Animated.View
-        style={[
-          styles.drawer,
-          {
-            transform: [{ translateX }],
-            zIndex: 31,
-          },
-        ]}
+    <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={1}
+        snapPoints={snapPoints}
+        enableDynamicSizing={false}
+        onChange={handleSheetChange}
+        enablePanDownToClose={false}
+        backgroundStyle={styles.bottomSheetBackground}
+        handleIndicatorStyle={styles.handleIndicator}
       >
         {/* HEADER */}
         <View style={styles.header}>
@@ -360,7 +340,6 @@ export default function ParaOndeVamos({
           <View style={{ width: 24 }} />
         </View>
 
-        <View style={{ padding: 10 }} />
         <Text style={styles.title}>Para onde vamos?</Text>
 
         {/* INPUTS MUDADOS PARA ESCUTAR O ITINERÁRIO GLOBAL */}
@@ -394,7 +373,7 @@ export default function ParaOndeVamos({
                     isDestino && styles.searchInputDestination,
                   ]}
                 >
-                  <TextInput
+                  <BottomSheetTextInput
                     ref={(ref) => {
                       if (ref) {
                         inputRefs.current[index] = ref;
@@ -406,7 +385,10 @@ export default function ParaOndeVamos({
                     }
                     placeholderTextColor="#999"
                     value={item.name}
-                    onFocus={() => setInputSelecionado(index)}
+                    onFocus={() => {
+                      setInputSelecionado(index);
+                      bottomSheetRef.current?.snapToIndex(1);
+                    }}
                     onChangeText={(texto) => {
                       setItinerario((prev) =>
                         prev.map((inp, idx) =>
@@ -433,7 +415,7 @@ export default function ParaOndeVamos({
         </View>
 
         {/* HISTÓRICO / RESULTADOS */}
-        <ScrollView
+        <BottomSheetScrollView
           style={styles.container}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -467,116 +449,106 @@ export default function ParaOndeVamos({
           <View style={styles.list}>
             {loading
               ? Array.from({ length: 4 }).map((_, i) => (
-                <Animated.View
-                  key={i}
-                  style={[styles.listItem, { opacity: skeletonOpacity }]}
-                >
-                  <View
-                    style={[
-                      styles.listIconContainer,
-                      { backgroundColor: "#EBEBEB" },
-                    ]}
-                  />
-                  <View style={styles.listContent}>
-                    <View
-                      style={{
-                        width: "60%",
-                        height: 14,
-                        backgroundColor: "#EBEBEB",
-                        borderRadius: 4,
-                        marginBottom: 8,
-                      }}
-                    />
-                    <View
-                      style={{
-                        width: "90%",
-                        height: 10,
-                        backgroundColor: "#EBEBEB",
-                        borderRadius: 4,
-                      }}
-                    />
-                  </View>
-                </Animated.View>
-              ))
-              : listaExibicao.map((endereco, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.listItem}
-                  onPress={() => handleSelecionarEndereco(endereco)}
-                >
-                  <TouchableOpacity
-                    style={styles.listIconContainer}
-                    onPress={() => removerEnderecoDoCache(endereco)}
+                  <Animated.View
+                    key={i}
+                    style={[styles.listItem, { opacity: skeletonOpacity }]}
                   >
-                    <Ionicons name="close" size={14} color="#111" />
-                  </TouchableOpacity>
+                    <View
+                      style={[
+                        styles.listIconContainer,
+                        { backgroundColor: "#EBEBEB" },
+                      ]}
+                    />
+                    <View style={styles.listContent}>
+                      <View
+                        style={{
+                          width: "60%",
+                          height: 14,
+                          backgroundColor: "#EBEBEB",
+                          borderRadius: 4,
+                          marginBottom: 8,
+                        }}
+                      />
+                      <View
+                        style={{
+                          width: "90%",
+                          height: 10,
+                          backgroundColor: "#EBEBEB",
+                          borderRadius: 4,
+                        }}
+                      />
+                    </View>
+                  </Animated.View>
+                ))
+              : listaExibicao.map((endereco, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.listItem}
+                    onPress={() => handleSelecionarEndereco(endereco)}
+                  >
+                    <TouchableOpacity
+                      style={styles.listIconContainer}
+                      onPress={() => removerEnderecoDoCache(endereco)}
+                    >
+                      <Ionicons name="close" size={14} color="#111" />
+                    </TouchableOpacity>
 
-                  <View style={styles.listContent}>
-                    <Text style={styles.listText}>{endereco.name}</Text>
-                    <Text style={styles.listSubText}>
-                      {endereco.formattedAddress}
+                    <View style={styles.listContent}>
+                      <Text style={styles.listText}>{endereco.name}</Text>
+                      <Text style={styles.listSubText}>
+                        {endereco.formattedAddress}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.distanceText}>
+                      {endereco.distancia}
                     </Text>
-                  </View>
-
-                  <Text style={styles.distanceText}>
-                    {endereco.distancia}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                  </TouchableOpacity>
+                ))}
           </View>
 
           {/* FOOTER */}
           <View style={styles.footerButtonsContainer}>
             <TouchableOpacity style={styles.footerButton}>
               <View
-                style={[
-                  styles.listIconContainer,
-                  styles.footerIconContainer,
-                ]}
+                style={[styles.listIconContainer, styles.footerIconContainer]}
               >
                 <Ionicons name="map" size={16} color="#111" />
               </View>
-              <Text style={styles.footerButtonText}>
-                Definir local no mapa
-              </Text>
+              <Text style={styles.footerButtonText}>Definir local no mapa</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.footerButton}>
               <View
-                style={[
-                  styles.listIconContainer,
-                  styles.footerIconContainer,
-                ]}
+                style={[styles.listIconContainer, styles.footerIconContainer]}
               >
                 <Ionicons name="add" size={18} color="#111" />
               </View>
-              <Text style={styles.footerButtonText}>
-                Inserir mais tarde
-              </Text>
+              <Text style={styles.footerButtonText}>Inserir mais tarde</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
-      </Animated.View>
+        </BottomSheetScrollView>
+      </BottomSheet>
     </View>
   );
 }
 const styles = StyleSheet.create({
-  drawer: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: "100%",
+  bottomSheetBackground: {
     backgroundColor: "#FFF",
-    paddingHorizontal: 24,
-    paddingTop: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+
+  handleIndicator: {
+    backgroundColor: "#DDD",
+    width: 40,
   },
 
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginTop: 30,
+    paddingHorizontal: 24,
   },
 
   backButton: {
@@ -589,8 +561,7 @@ const styles = StyleSheet.create({
 
   userContainer: {
     alignItems: "center",
-    marginTop: 24,
-    marginBottom: 30,
+    marginBottom: 12,
   },
 
   userPill: {
@@ -613,13 +584,14 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "700",
     color: "#000",
-    marginBottom: 28,
+    marginBottom: 20,
+    paddingHorizontal: 24,
   },
 
   searchContainer: {
     flexDirection: "column",
     marginBottom: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: 40,
   },
 
   rowContainer: {
@@ -721,7 +693,7 @@ const styles = StyleSheet.create({
 
   container: {
     width: "100%",
-    maxHeight: 600,
+    paddingHorizontal: 24,
   },
 
   quickActions: {
