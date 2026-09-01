@@ -10,6 +10,7 @@ import Svg, { Path } from "react-native-svg";
 
 import MapView, {
   Marker,
+  Polyline,
   Region,
   UserLocationChangeEvent,
 } from "react-native-maps";
@@ -41,7 +42,41 @@ const DEFAULT_REGION: Region = {
 
 const CACHE_KEY = "@last_user_location";
 
-const OFFSET_LATITUDE = 0.0064;
+// Cache de rota em memória (nível de módulo, sobrevive a remounts do Map
+// enquanto o app está aberto) — evita chamar a Directions API de novo pra
+// uma origem/destino já calculada há pouco tempo.
+interface RotaCacheada {
+  coordinates: { latitude: number; longitude: number }[];
+  timestamp: number;
+}
+
+const CACHE_ROTA_TTL_MS = 5 * 60 * 1000; // 5 minutos
+
+// "globalThis.Map" porque o componente deste arquivo se chama "Map" e
+// sombreia o Map global do JS dentro deste escopo
+const cacheRotas = new globalThis.Map<string, RotaCacheada>();
+
+// arredonda pra ~1m de precisão — pequenas variações de GPS não devem
+// invalidar o cache
+const chaveDaRota = (pontos: { latitude: number; longitude: number }[]) =>
+  pontos
+    .map((p) => `${p.latitude.toFixed(5)},${p.longitude.toFixed(5)}`)
+    .join("|");
+
+// Cache de geocodificação reversa ("qual o endereço dessa coordenada?") —
+// evita repetir a mesma consulta se o usuário estiver parado/quase parado
+// no mesmo lugar. Arredondado a ~11m de precisão (4 casas decimais).
+interface EnderecoCacheado {
+  formattedAddress: string;
+  timestamp: number;
+}
+
+const CACHE_GEOCODE_TTL_MS = 10 * 60 * 1000; // 10 minutos
+
+const cacheGeocodeReverso = new globalThis.Map<string, EnderecoCacheado>();
+
+const chaveGeocode = (lat: number, lon: number) =>
+  `${lat.toFixed(4)},${lon.toFixed(4)}`;
 
 export default function Map({
   mapBottomPadding = 320,
@@ -74,10 +109,46 @@ export default function Map({
   const locationWatchSubscription =
     useRef<Location.LocationSubscription | null>(null);
 
+  // Itinerário "assentado" — só atualiza 600ms depois da última mudança,
+  // pra não disparar uma chamada de Directions a cada edição em sequência
+  // (endereço trocado, parada adicionada/removida). Os marcadores no mapa
+  // continuam usando o itinerário em tempo real; só a rota (API paga) espera.
+  const [itinerarioParaRota, setItinerarioParaRota] = useState(itinerario);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setItinerarioParaRota(itinerario);
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [itinerario]);
+
+  // Verifica se já existe uma rota em cache pra esse itinerário exato —
+  // se tiver e ainda for recente, desenha ela direto (Polyline) em vez de
+  // chamar a Directions API de novo.
+  const chaveRotaAtual =
+    itinerarioParaRota.length >= 2 ? chaveDaRota(itinerarioParaRota) : null;
+
+  const [rotaCacheada, setRotaCacheada] = useState<RotaCacheada | null>(null);
+
+  useEffect(() => {
+    if (!chaveRotaAtual) {
+      setRotaCacheada(null);
+      return;
+    }
+
+    const cache = cacheRotas.get(chaveRotaAtual);
+
+    if (cache && Date.now() - cache.timestamp < CACHE_ROTA_TTL_MS) {
+      setRotaCacheada(cache);
+    } else {
+      setRotaCacheada(null);
+    }
+  }, [chaveRotaAtual]);
+
   // 🔥 NOVO
   // renderiza rota automaticamente
   useEffect(() => {
-    console.log(itinerario, "itinerario");
     if (!mapRef.current) {
       return;
     }
@@ -128,23 +199,41 @@ export default function Map({
     currentRegion: Region,
   ) => {
     try {
-      const reverseGeocode = await Location.reverseGeocodeAsync({
-        latitude: lat,
-        longitude: lon,
-      });
+      const chave = chaveGeocode(lat, lon);
+      const cacheado = cacheGeocodeReverso.get(chave);
 
-      let formattedAddress = "Localização Atual";
+      let formattedAddress: string;
 
-      if (reverseGeocode && reverseGeocode.length > 0) {
-        const address = reverseGeocode[0];
+      if (cacheado && Date.now() - cacheado.timestamp < CACHE_GEOCODE_TTL_MS) {
+        // mesma coordenada (usuário parado/quase parado) já resolvida há
+        // pouco tempo — reaproveita sem chamar o serviço de geocode de novo
+        formattedAddress = cacheado.formattedAddress;
+      } else {
+        const reverseGeocode = await Location.reverseGeocodeAsync({
+          latitude: lat,
+          longitude: lon,
+        });
 
-        const rua = address.street || "";
+        formattedAddress = "Localização Atual";
 
-        const numero = address.streetNumber ? `, ${address.streetNumber}` : "";
+        if (reverseGeocode && reverseGeocode.length > 0) {
+          const address = reverseGeocode[0];
 
-        formattedAddress = rua
-          ? `${rua}${numero}`
-          : address.district || "Minha Localização";
+          const rua = address.street || "";
+
+          const numero = address.streetNumber
+            ? `, ${address.streetNumber}`
+            : "";
+
+          formattedAddress = rua
+            ? `${rua}${numero}`
+            : address.district || "Minha Localização";
+        }
+
+        cacheGeocodeReverso.set(chave, {
+          formattedAddress,
+          timestamp: Date.now(),
+        });
       }
 
       const updatedRegionWithAddress = {
@@ -181,7 +270,7 @@ export default function Map({
         const location = JSON.parse(cached);
 
         const cachedRegion: Region = {
-          latitude: location.latitude - OFFSET_LATITUDE,
+          latitude: location.latitude,
 
           longitude: location.longitude,
 
@@ -250,16 +339,18 @@ export default function Map({
             {
               accuracy: Location.Accuracy.Balanced,
 
-              timeInterval: 5000,
+              // menos atualizações = menos geocodificação reversa disparada;
+              // 8s/20m ainda acompanha bem bem o usuário em um carro/trânsito
+              timeInterval: 8000,
 
-              distanceInterval: 10,
+              distanceInterval: 20,
             },
 
             (location) => {
               if (!isMounted) return;
 
               const userRegion: Region = {
-                latitude: location.coords.latitude - OFFSET_LATITUDE,
+                latitude: location.coords.latitude,
 
                 longitude: location.coords.longitude,
 
@@ -340,13 +431,36 @@ export default function Map({
     };
   }, [loadCachedLocation, onUserLocationFound, isMapReady]);
 
+  // 🔥 no primeiro login (sem cache salvo ainda), é comum o GPS retornar a
+  // primeira posição ANTES do MapView terminar de inicializar — nesse caso
+  // o `animateToRegion` lá em cima é pulado (`isMapReady` ainda false) e
+  // nunca mais é tentado de novo, porque a flag `userInitialRegion.current`
+  // já foi marcada como "resolvido". Resultado: o mapa carrega centralizado
+  // no `DEFAULT_REGION` (São Paulo) e nunca vai pra localização real.
+  // Esse efeito cobre exatamente essa janela: assim que o mapa fica
+  // pronto, se já tivermos uma localização resolvida, centraliza nela.
+  const jaCentralizouAoFicarPronto = useRef(false);
+
+  useEffect(() => {
+    if (
+      isMapReady &&
+      userLocation &&
+      mapRef.current &&
+      !jaCentralizouAoFicarPronto.current
+    ) {
+      jaCentralizouAoFicarPronto.current = true;
+
+      mapRef.current.animateToRegion(userLocation, 1000);
+    }
+  }, [isMapReady, userLocation]);
+
   // Atualiza localização
   const handleUserLocationChange = (event: UserLocationChangeEvent) => {
     const { coordinate } = event.nativeEvent;
 
     if (coordinate && userInitialRegion.current) {
       const newUserRegion = {
-        latitude: coordinate.latitude - OFFSET_LATITUDE,
+        latitude: coordinate.latitude,
 
         longitude: coordinate.longitude,
 
@@ -365,7 +479,7 @@ export default function Map({
       const regionWithOffset = {
         ...userInitialRegion.current,
 
-        latitude: userInitialRegion.current.latitude - OFFSET_LATITUDE,
+        latitude: userInitialRegion.current.latitude,
       };
 
       mapRef.current.animateToRegion(regionWithOffset, 1000);
@@ -380,7 +494,7 @@ export default function Map({
         });
 
         const newUserRegion = {
-          latitude: location.coords.latitude - OFFSET_LATITUDE,
+          latitude: location.coords.latitude,
 
           longitude: location.coords.longitude,
 
@@ -452,7 +566,7 @@ export default function Map({
       const initialRegion: Region = {
         ...userInitialRegion.current,
 
-        latitude: userInitialRegion.current.latitude - OFFSET_LATITUDE,
+        latitude: userInitialRegion.current.latitude,
 
         latitudeDelta: userInitialRegion.current.latitudeDelta ?? 0.01,
 
@@ -507,6 +621,11 @@ export default function Map({
           return (
             <Marker
               anchor={{ x: 0.5, y: 0.3 }}
+              // o Android tira uma "foto" do conteúdo do marker antes do
+              // texto terminar de medir/layoutar quando isso fica false —
+              // é o que cortava "Parada 1" pra "Par". Itinerário tem no
+              // máximo 5 itens, então manter sempre true não pesa.
+              tracksViewChanges={true}
               key={`${item.latitude}-${item.longitude}-${index}`}
               coordinate={{
                 latitude: item.latitude,
@@ -556,27 +675,45 @@ export default function Map({
         })}
 
         {/* 🔥 POLYLINE */}
-        {/* 🔥 ROTA REAL */}
-        {itinerario.length >= 2 && (
-          <MapViewDirections
-            origin={{
-              latitude: itinerario[0].latitude,
-              longitude: itinerario[0].longitude,
-            }}
-            destination={{
-              latitude: itinerario[itinerario.length - 1].latitude,
-              longitude: itinerario[itinerario.length - 1].longitude,
-            }}
-            waypoints={itinerario.slice(1, -1).map((item) => ({
-              latitude: item.latitude,
-              longitude: item.longitude,
-            }))}
-            apikey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY as string}
-            strokeWidth={4}
-            strokeColor="#2563EB"
-            // optimizeWaypoints={true}
-          />
-        )}
+        {/* 🔥 ROTA REAL — usa o itinerário assentado (debounced) */}
+        {itinerarioParaRota.length >= 2 &&
+          (rotaCacheada ? (
+            // já tem essa rota em cache recente — desenha sem gastar API
+            <Polyline
+              coordinates={rotaCacheada.coordinates}
+              strokeWidth={4}
+              strokeColor="#2563EB"
+            />
+          ) : (
+            <MapViewDirections
+              origin={{
+                latitude: itinerarioParaRota[0].latitude,
+                longitude: itinerarioParaRota[0].longitude,
+              }}
+              destination={{
+                latitude:
+                  itinerarioParaRota[itinerarioParaRota.length - 1].latitude,
+                longitude:
+                  itinerarioParaRota[itinerarioParaRota.length - 1].longitude,
+              }}
+              waypoints={itinerarioParaRota.slice(1, -1).map((item) => ({
+                latitude: item.latitude,
+                longitude: item.longitude,
+              }))}
+              apikey={process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY as string}
+              strokeWidth={4}
+              strokeColor="#2563EB"
+              // optimizeWaypoints={true}
+              onReady={(result) => {
+                if (chaveRotaAtual) {
+                  cacheRotas.set(chaveRotaAtual, {
+                    coordinates: result.coordinates,
+                    timestamp: Date.now(),
+                  });
+                }
+              }}
+            />
+          ))}
       </MapView>
 
       {isLoading && !userLocation && (
@@ -797,9 +934,9 @@ const styles = StyleSheet.create({
   locationButton: {
     position: "absolute",
 
-    bottom: 32,
+    bottom: 12,
 
-    right: 16,
+    right: 12,
 
     backgroundColor: "white",
 
